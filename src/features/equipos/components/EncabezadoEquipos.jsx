@@ -1,6 +1,6 @@
 import { Boton } from '../../../components/atoms/Boton'
 
-export function EncabezadoEquipos({ alCrear }) {
+export function EncabezadoEquipos({ alCrear, alImportar }) {
   return (
     <div className="flex flex-col gap-4 rounded-md border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -11,10 +11,15 @@ export function EncabezadoEquipos({ alCrear }) {
           Equipos inscritos
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Administra equipos, robots, representantes y estados de inscripción.
+          Importa equipos desde CSV o registra casos puntuales de forma manual.
         </p>
       </div>
-      <Boton onClick={alCrear}>Crear equipo</Boton>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Boton onClick={alImportar}>Importar archivo</Boton>
+        <Boton onClick={alCrear} variante="secundario">
+          Crear equipo
+        </Boton>
+      </div>
     </div>
   )
 }

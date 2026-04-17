@@ -3,37 +3,37 @@ import { useState } from 'react'
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
 import { EncabezadoEquipos } from '../components/EncabezadoEquipos'
 import { FormularioEquipo } from '../components/FormularioEquipo'
+import { ResumenImportacion } from '../components/ResumenImportacion'
+import { SelectorArchivoEquipos } from '../components/SelectorArchivoEquipos'
 import { TablaEquipos } from '../components/TablaEquipos'
+import { VistaPreviaImportacion } from '../components/VistaPreviaImportacion'
 import { useEquipos } from '../hooks/useEquipos'
+import { useImportacionEquipos } from '../hooks/useImportacionEquipos'
 
 export function PaginaEquipos() {
-  const {
-    borrarEquipo,
-    cargando,
-    equipos,
-    guardarEquipo,
-    mensaje,
-    setMensaje,
-    subcategorias,
-  } = useEquipos()
-  const [formularioVisible, setFormularioVisible] = useState(false)
+  const equipos = useEquipos()
+  const importacion = useImportacionEquipos({
+    alFinalizar: equipos.recargarEquipos,
+    subcategorias: equipos.subcategorias,
+  })
+  const [modo, setModo] = useState('importar')
   const [equipoSeleccionado, setEquipoSeleccionado] = useState(null)
 
   function abrirCreacion() {
     setEquipoSeleccionado(null)
-    setFormularioVisible(true)
-    setMensaje('')
+    setModo('crear')
+    equipos.setMensaje('')
   }
 
   function abrirEdicion(equipo) {
     setEquipoSeleccionado(equipo)
-    setFormularioVisible(true)
-    setMensaje('')
+    setModo('editar')
+    equipos.setMensaje('')
   }
 
   async function manejarGuardar(equipo) {
-    await guardarEquipo(equipo)
-    setFormularioVisible(false)
+    await equipos.guardarEquipo(equipo)
+    setModo('importar')
     setEquipoSeleccionado(null)
   }
 
@@ -43,26 +43,46 @@ export function PaginaEquipos() {
     if (!confirmar) return
 
     try {
-      await borrarEquipo(idEquipo)
+      await equipos.borrarEquipo(idEquipo)
     } catch (error) {
-      setMensaje(error.message)
+      equipos.setMensaje(error.message)
     }
   }
 
   return (
     <section className="space-y-6">
-      <EncabezadoEquipos alCrear={abrirCreacion} />
-      <MensajeEstado>{mensaje}</MensajeEstado>
-      {formularioVisible ? (
+      <EncabezadoEquipos
+        alCrear={abrirCreacion}
+        alImportar={() => setModo('importar')}
+      />
+      <MensajeEstado>{equipos.mensaje}</MensajeEstado>
+      {modo === 'importar' ? (
+        <>
+          <ResumenImportacion resumen={importacion.resumen} />
+          <SelectorArchivoEquipos
+            archivo={importacion.archivo}
+            cargando={importacion.cargando}
+            mensaje={importacion.mensaje}
+            onProcesar={importacion.procesarArchivo}
+            onSeleccionar={importacion.seleccionarArchivo}
+          />
+          <VistaPreviaImportacion
+            cargando={importacion.cargando}
+            filas={importacion.filas}
+            filasValidas={importacion.filasValidas}
+            onConfirmar={importacion.confirmarImportacion}
+          />
+        </>
+      ) : (
         <FormularioEquipo
-          alCancelar={() => setFormularioVisible(false)}
+          alCancelar={() => setModo('importar')}
           alGuardar={manejarGuardar}
           equipo={equipoSeleccionado}
           key={equipoSeleccionado?.id || 'nuevo-equipo'}
-          subcategorias={subcategorias}
+          subcategorias={equipos.subcategorias}
         />
-      ) : null}
-      {cargando ? (
+      )}
+      {equipos.cargando ? (
         <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
           Cargando equipos...
         </div>
@@ -70,7 +90,7 @@ export function PaginaEquipos() {
         <TablaEquipos
           alEditar={abrirEdicion}
           alEliminar={manejarEliminar}
-          equipos={equipos}
+          equipos={equipos.equipos}
         />
       )}
     </section>
