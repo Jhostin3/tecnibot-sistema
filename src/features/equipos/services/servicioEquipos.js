@@ -36,6 +36,14 @@ export async function crearEquipo(datosEquipo) {
   }
 }
 
+export async function importarEquipos(datosEquipos) {
+  const { error } = await supabase.from('equipos').insert(datosEquipos)
+
+  if (error) {
+    throw new Error('No se pudieron importar los equipos válidos.')
+  }
+}
+
 export async function actualizarEquipo(idEquipo, datosEquipo) {
   const { error } = await supabase
     .from('equipos')
