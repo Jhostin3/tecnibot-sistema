@@ -1,0 +1,2 @@
+-- Tabla de perfiles del sistema.
+-- Pendiente de definir según las reglas de autenticación y roles.

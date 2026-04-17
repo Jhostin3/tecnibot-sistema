@@ -1,0 +1,2 @@
+-- Tabla de subcategorías asociadas a categorías.
+-- Pendiente de definir antes de ejecutar en Supabase.

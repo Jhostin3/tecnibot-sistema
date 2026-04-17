@@ -1,0 +1,2 @@
+-- Tabla de categorías de competencia.
+-- Pendiente de definir antes de ejecutar en Supabase.

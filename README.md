@@ -1,16 +1,51 @@
-# React + Vite
+# Sistema de Gestión de Competencias de Robótica
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Base inicial construida con React, Vite, React Router DOM, Tailwind CSS y
+Supabase JS. Esta primera etapa prepara el módulo de inicio de sesión, el panel
+privado y una arquitectura escalable con Atomic Design.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js
+- npm
 
-## React Compiler
+## Configuración local
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Instalar dependencias:
 
-## Expanding the ESLint configuration
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+2. Crear el archivo de entorno:
+
+```bash
+cp .env.example .env
+```
+
+3. Completar las variables de Supabase cuando el proyecto real esté creado:
+
+```env
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_CLAVE_ANONIMA=tu-clave-anonima
+```
+
+4. Ejecutar el servidor local:
+
+```bash
+npm run dev
+```
+
+## Rutas iniciales
+
+- `/login`: inicio de sesión público.
+- `/panel`: panel privado protegido.
+
+## Estructura principal
+
+- `src/components`: componentes Atomic Design.
+- `src/features/autenticacion`: lógica, servicios, páginas y componentes de autenticación.
+- `src/layouts`: layouts públicos y privados.
+- `src/routes`: configuración central de rutas.
+- `src/lib`: clientes externos, como Supabase.
+- `Codigo Sql`: scripts SQL preparados para Supabase.

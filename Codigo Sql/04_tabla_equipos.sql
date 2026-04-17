@@ -1,0 +1,2 @@
+-- Tabla de equipos participantes.
+-- Pendiente de definir antes de ejecutar en Supabase.
