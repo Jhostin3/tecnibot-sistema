@@ -14,7 +14,7 @@ export function FormularioInicioSesion({ alEnviar }) {
     setMensaje('')
 
     const datos = new FormData(evento.currentTarget)
-    const correo = datos.get('correo')
+    const correo = datos.get('correo')?.trim()
     const contrasena = datos.get('contrasena')
 
     if (!correo || !contrasena) {
@@ -23,8 +23,13 @@ export function FormularioInicioSesion({ alEnviar }) {
       return
     }
 
-    await alEnviar({ correo, contrasena })
-    setCargando(false)
+    try {
+      await alEnviar({ correo, contrasena })
+    } catch (error) {
+      setMensaje(error.message)
+    } finally {
+      setCargando(false)
+    }
   }
 
   return (
@@ -33,7 +38,7 @@ export function FormularioInicioSesion({ alEnviar }) {
         autoComplete="email"
         etiqueta="Correo institucional"
         id="correo"
-        placeholder="coordinador@institucion.edu"
+        placeholder="organizador@tecnibot.com"
         type="email"
       />
       <CampoFormulario
@@ -48,7 +53,7 @@ export function FormularioInicioSesion({ alEnviar }) {
         {cargando ? 'Validando acceso...' : 'Ingresar al sistema'}
       </Boton>
       <p className="text-center text-xs leading-5 text-slate-500">
-        Acceso de demostración preparado para conectar Supabase Auth.
+        Acceso protegido con Supabase Auth.
       </p>
     </form>
   )

@@ -1,6 +1,6 @@
 import { Boton } from '../atoms/Boton'
 
-export function BarraSuperiorPrivada({ alCerrarSesion, usuario }) {
+export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -8,7 +8,9 @@ export function BarraSuperiorPrivada({ alCerrarSesion, usuario }) {
           <p className="text-sm font-semibold text-cyan-800">
             Sistema de Gestión de Competencias de Robótica
           </p>
-          <p className="text-xs text-slate-500">{usuario?.correo}</p>
+          <p className="text-xs text-slate-500">
+            {perfil?.nombre} · {usuario?.email}
+          </p>
         </div>
         <Boton variante="secundario" onClick={alCerrarSesion}>
           Cerrar sesión

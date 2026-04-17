@@ -1,13 +1,14 @@
 # Sistema de Gestión de Competencias de Robótica
 
 Base inicial construida con React, Vite, React Router DOM, Tailwind CSS y
-Supabase JS. Esta primera etapa prepara el módulo de inicio de sesión, el panel
-privado y una arquitectura escalable con Atomic Design.
+Supabase JS. La autenticación real usa Supabase Auth y la tabla `perfiles`.
 
 ## Requisitos
 
 - Node.js
 - npm
+- Proyecto de Supabase con usuarios creados en Auth.
+- Tabla `perfiles` relacionada con `auth.users.id`.
 
 ## Configuración local
 
@@ -17,20 +18,14 @@ privado y una arquitectura escalable con Atomic Design.
 npm install
 ```
 
-2. Crear el archivo de entorno:
-
-```bash
-cp .env.example .env
-```
-
-3. Completar las variables de Supabase cuando el proyecto real esté creado:
+2. Crear o completar el archivo `.env`:
 
 ```env
 VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_CLAVE_ANONIMA=tu-clave-anonima
 ```
 
-4. Ejecutar el servidor local:
+3. Ejecutar el servidor local:
 
 ```bash
 npm run dev
@@ -40,6 +35,14 @@ npm run dev
 
 - `/login`: inicio de sesión público.
 - `/panel`: panel privado protegido.
+
+## Flujo de autenticación
+
+1. El usuario ingresa correo y contraseña.
+2. Supabase Auth valida las credenciales.
+3. El sistema consulta la tabla `perfiles` con el id del usuario autenticado.
+4. Si el perfil existe y `estado` es verdadero, se permite el acceso a `/panel`.
+5. Si el perfil no existe o está inactivo, se cierra la sesión y se muestra un error.
 
 ## Estructura principal
 

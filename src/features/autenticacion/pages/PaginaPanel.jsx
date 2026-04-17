@@ -1,10 +1,13 @@
-const metricasIniciales = [
-  { etiqueta: 'Categorías preparadas', valor: '0' },
-  { etiqueta: 'Equipos registrados', valor: '0' },
-  { etiqueta: 'Subcategorías definidas', valor: '0' },
+import { useAutenticacion } from '../hooks/useAutenticacion'
+
+const camposPerfil = [
+  { etiqueta: 'Nombre', propiedad: 'nombre' },
+  { etiqueta: 'Rol', propiedad: 'rol' },
 ]
 
 export function PaginaPanel() {
+  const { perfil, usuario } = useAutenticacion()
+
   return (
     <section className="space-y-6">
       <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
@@ -12,23 +15,31 @@ export function PaginaPanel() {
           Panel principal
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-normal text-slate-950">
-          Sistema de Gestión de Competencias de Robótica
+          Sesión activa
         </h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-          Base privada inicial lista para conectar módulos, datos y permisos con
-          Supabase.
+          Acceso validado con Supabase Auth y perfil consultado desde la tabla
+          perfiles.
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
-        {metricasIniciales.map((metrica) => (
+        {camposPerfil.map((campo) => (
           <article
             className="rounded-md border border-slate-200 bg-white p-5 shadow-sm"
-            key={metrica.etiqueta}
+            key={campo.propiedad}
           >
-            <p className="text-sm text-slate-500">{metrica.etiqueta}</p>
-            <p className="mt-2 text-3xl font-bold text-slate-950">{metrica.valor}</p>
+            <p className="text-sm text-slate-500">{campo.etiqueta}</p>
+            <p className="mt-2 text-xl font-bold capitalize text-slate-950">
+              {perfil?.[campo.propiedad]}
+            </p>
           </article>
         ))}
+        <article className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">Correo</p>
+          <p className="mt-2 break-words text-xl font-bold text-slate-950">
+            {usuario?.email}
+          </p>
+        </article>
       </div>
     </section>
   )

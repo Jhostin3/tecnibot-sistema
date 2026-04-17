@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { EncabezadoSeccion } from '../../../components/molecules/EncabezadoSeccion'
 import { PlantillaAutenticacion } from '../../../components/templates/PlantillaAutenticacion'
@@ -7,12 +8,20 @@ import { FormularioInicioSesion } from '../components/FormularioInicioSesion'
 import { useAutenticacion } from '../hooks/useAutenticacion'
 
 export function PaginaLogin() {
+  const location = useLocation()
   const navigate = useNavigate()
-  const { iniciarSesion } = useAutenticacion()
+  const { cargandoSesion, iniciarSesion, usuarioAutenticado } = useAutenticacion()
+  const rutaDestino = location.state?.desde?.pathname || rutas.panel
+
+  useEffect(() => {
+    if (!cargandoSesion && usuarioAutenticado) {
+      navigate(rutaDestino, { replace: true })
+    }
+  }, [cargandoSesion, navigate, rutaDestino, usuarioAutenticado])
 
   async function manejarInicioSesion(credenciales) {
     await iniciarSesion(credenciales)
-    navigate(rutas.panel, { replace: true })
+    navigate(rutaDestino, { replace: true })
   }
 
   return (

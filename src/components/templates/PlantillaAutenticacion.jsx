@@ -15,13 +15,13 @@ export function PlantillaAutenticacion({ children }) {
                 Control académico para torneos de robótica
               </h2>
               <p className="text-sm leading-6 text-slate-600">
-                Base preparada para gestionar perfiles, categorías, equipos y
-                accesos administrativos.
+                Acceso seguro para gestionar perfiles, categorías, equipos y
+                competencias.
               </p>
             </div>
           </div>
           <p className="text-xs leading-5 text-slate-500">
-            Entorno inicial listo para integrar autenticación real con Supabase.
+            Autenticación conectada con Supabase Auth y la tabla perfiles.
           </p>
         </aside>
       </div>
