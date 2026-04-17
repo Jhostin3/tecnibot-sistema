@@ -2,6 +2,7 @@ const variantes = {
   primario: 'bg-cyan-700 text-white hover:bg-cyan-800 focus-visible:ring-cyan-700',
   secundario:
     'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-cyan-700',
+  peligro: 'bg-rose-700 text-white hover:bg-rose-800 focus-visible:ring-rose-700',
 }
 
 export function Boton({
