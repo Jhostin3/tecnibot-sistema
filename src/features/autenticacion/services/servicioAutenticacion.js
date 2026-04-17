@@ -1,29 +1,41 @@
-const claveSesion = 'sesion_tecnibot'
+import { supabase } from '../../../lib/supabaseCliente'
+import { obtenerMensajeErrorAutenticacion } from '../utils/erroresAutenticacion'
 
-export function obtenerSesionActual() {
-  const sesionGuardada = window.localStorage.getItem(claveSesion)
+export async function iniciarSesionConSupabase({ correo, contrasena }) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: correo,
+    password: contrasena,
+  })
 
-  if (!sesionGuardada) {
-    return null
+  if (error) {
+    throw new Error(obtenerMensajeErrorAutenticacion(error))
   }
 
-  return JSON.parse(sesionGuardada)
+  return data.session
 }
 
-export async function iniciarSesionSimulada({ correo }) {
-  const sesion = {
-    usuario: {
-      correo,
-      nombre: 'Coordinador de competencia',
-      rol: 'Administrador',
-    },
-    creadaEn: new Date().toISOString(),
+export async function cerrarSesionConSupabase() {
+  const { error } = await supabase.auth.signOut()
+
+  if (error) {
+    throw new Error('No se pudo cerrar la sesión. Intenta nuevamente.')
+  }
+}
+
+export async function obtenerSesionSupabase() {
+  const { data, error } = await supabase.auth.getSession()
+
+  if (error) {
+    throw new Error('No se pudo recuperar la sesión actual.')
   }
 
-  window.localStorage.setItem(claveSesion, JSON.stringify(sesion))
-  return sesion
+  return data.session
 }
 
-export function cerrarSesionSimulada() {
-  window.localStorage.removeItem(claveSesion)
+export function escucharCambiosSesion(manejarCambioSesion) {
+  const { data } = supabase.auth.onAuthStateChange((_evento, sesion) => {
+    manejarCambioSesion(sesion)
+  })
+
+  return data.subscription
 }

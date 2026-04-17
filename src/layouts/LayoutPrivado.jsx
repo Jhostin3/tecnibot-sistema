@@ -6,17 +6,18 @@ import { rutas } from '../utils/rutas'
 
 export function LayoutPrivado() {
   const navigate = useNavigate()
-  const { cerrarSesion, sesion } = useAutenticacion()
+  const { cerrarSesion, perfil, usuario } = useAutenticacion()
 
-  function manejarCierreSesion() {
-    cerrarSesion()
+  async function manejarCierreSesion() {
+    await cerrarSesion()
     navigate(rutas.login, { replace: true })
   }
 
   return (
     <PlantillaPanel
       alCerrarSesion={manejarCierreSesion}
-      usuario={sesion?.usuario}
+      perfil={perfil}
+      usuario={usuario}
     >
       <Outlet />
     </PlantillaPanel>

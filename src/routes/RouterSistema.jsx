@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
+import { ProveedorAutenticacion } from '../features/autenticacion/hooks/ContextoAutenticacion'
 import { PaginaLogin } from '../features/autenticacion/pages/PaginaLogin'
 import { PaginaPanel } from '../features/autenticacion/pages/PaginaPanel'
 import { LayoutPrivado } from '../layouts/LayoutPrivado'
@@ -9,19 +10,21 @@ import { RutaProtegida } from './RutaProtegida'
 
 export function RouterSistema() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<LayoutPublico />}>
-          <Route path={rutas.login} element={<PaginaLogin />} />
-        </Route>
-        <Route element={<RutaProtegida />}>
-          <Route element={<LayoutPrivado />}>
-            <Route path={rutas.panel} element={<PaginaPanel />} />
+    <ProveedorAutenticacion>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<LayoutPublico />}>
+            <Route path={rutas.login} element={<PaginaLogin />} />
           </Route>
-        </Route>
-        <Route path={rutas.inicio} element={<Navigate replace to={rutas.panel} />} />
-        <Route path="*" element={<Navigate replace to={rutas.login} />} />
-      </Routes>
-    </BrowserRouter>
+          <Route element={<RutaProtegida />}>
+            <Route element={<LayoutPrivado />}>
+              <Route path={rutas.panel} element={<PaginaPanel />} />
+            </Route>
+          </Route>
+          <Route path={rutas.inicio} element={<Navigate replace to={rutas.panel} />} />
+          <Route path="*" element={<Navigate replace to={rutas.login} />} />
+        </Routes>
+      </BrowserRouter>
+    </ProveedorAutenticacion>
   )
 }

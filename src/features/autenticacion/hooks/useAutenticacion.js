@@ -1,32 +1,13 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useContext } from 'react'
 
-import {
-  cerrarSesionSimulada,
-  iniciarSesionSimulada,
-  obtenerSesionActual,
-} from '../services/servicioAutenticacion'
+import { ContextoAutenticacion } from './contextoAutenticacionBase'
 
 export function useAutenticacion() {
-  const [sesion, setSesion] = useState(() => obtenerSesionActual())
+  const contexto = useContext(ContextoAutenticacion)
 
-  const iniciarSesion = useCallback(async (credenciales) => {
-    const nuevaSesion = await iniciarSesionSimulada(credenciales)
-    setSesion(nuevaSesion)
-    return nuevaSesion
-  }, [])
+  if (!contexto) {
+    throw new Error('useAutenticacion debe usarse dentro de ProveedorAutenticacion.')
+  }
 
-  const cerrarSesion = useCallback(() => {
-    cerrarSesionSimulada()
-    setSesion(null)
-  }, [])
-
-  return useMemo(
-    () => ({
-      cerrarSesion,
-      iniciarSesion,
-      sesion,
-      usuarioAutenticado: Boolean(sesion),
-    }),
-    [cerrarSesion, iniciarSesion, sesion],
-  )
+  return contexto
 }
