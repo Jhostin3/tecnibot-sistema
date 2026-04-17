@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom'
+
+import { rutas } from '../../../utils/rutas'
 import { useAutenticacion } from '../hooks/useAutenticacion'
 
 const camposPerfil = [
@@ -7,6 +10,7 @@ const camposPerfil = [
 
 export function PaginaPanel() {
   const { perfil, usuario } = useAutenticacion()
+  const esOrganizador = perfil?.rol === 'organizador'
 
   return (
     <section className="space-y-6">
@@ -21,6 +25,14 @@ export function PaginaPanel() {
           Acceso validado con Supabase Auth y perfil consultado desde la tabla
           perfiles.
         </p>
+        {esOrganizador ? (
+          <Link
+            className="mt-5 inline-flex min-h-11 items-center rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
+            to={rutas.equipos}
+          >
+            Gestionar equipos
+          </Link>
+        ) : null}
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {camposPerfil.map((campo) => (
