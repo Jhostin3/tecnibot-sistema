@@ -2,40 +2,56 @@ import { supabase } from '../../../lib/supabaseCliente'
 import { obtenerMensajeErrorAutenticacion } from '../utils/erroresAutenticacion'
 
 export async function iniciarSesionConSupabase({ correo, contrasena }) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: correo,
-    password: contrasena,
-  })
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: correo,
+      password: contrasena,
+    })
 
-  if (error) {
-    throw new Error(obtenerMensajeErrorAutenticacion(error))
+    if (error) {
+      throw new Error(obtenerMensajeErrorAutenticacion(error))
+    }
+
+    return data.session
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo iniciar sesion.')
   }
-
-  return data.session
 }
 
 export async function cerrarSesionConSupabase() {
-  const { error } = await supabase.auth.signOut()
+  try {
+    const { error } = await supabase.auth.signOut()
 
-  if (error) {
-    throw new Error('No se pudo cerrar la sesión. Intenta nuevamente.')
+    if (error) {
+      throw new Error('No se pudo cerrar la sesion. Intenta nuevamente.')
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo cerrar la sesion.')
   }
 }
 
 export async function obtenerSesionSupabase() {
-  const { data, error } = await supabase.auth.getSession()
+  try {
+    const { data, error } = await supabase.auth.getSession()
 
-  if (error) {
-    throw new Error('No se pudo recuperar la sesión actual.')
+    if (error) {
+      throw new Error('No se pudo recuperar la sesion actual.')
+    }
+
+    return data.session
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo recuperar la sesion actual.')
   }
-
-  return data.session
 }
 
 export function escucharCambiosSesion(manejarCambioSesion) {
-  const { data } = supabase.auth.onAuthStateChange((_evento, sesion) => {
-    manejarCambioSesion(sesion)
-  })
+  try {
+    const { data } = supabase.auth.onAuthStateChange((_evento, sesion) => {
+      manejarCambioSesion(sesion)
+    })
 
-  return data.subscription
+    return data.subscription
+  } catch {
+    throw new Error('No se pudo escuchar los cambios de sesion.')
+  }
 }
