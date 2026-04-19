@@ -6,8 +6,10 @@ const DURACION_TIEMPO = 90
 const DURACION_DESCANSO = 30
 const estadosTimer = {
   descanso: 'descanso',
+  descansoFinalizado: 'descanso_finalizado',
   finalizado: 'finalizado',
   listo: 'listo',
+  primerTiempoFinalizado: 'primer_tiempo_finalizado',
   primerTiempo: 'primer_tiempo',
   segundoTiempo: 'segundo_tiempo',
 }
@@ -61,17 +63,17 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
           vibrar([500])
 
           return {
-            estado: estadosTimer.descanso,
+            estado: estadosTimer.primerTiempoFinalizado,
             pausado: false,
-            segundos: DURACION_DESCANSO,
+            segundos: 0,
           }
         }
 
         if (actual.estado === estadosTimer.descanso) {
           return {
-            estado: estadosTimer.segundoTiempo,
+            estado: estadosTimer.descansoFinalizado,
             pausado: false,
-            segundos: DURACION_TIEMPO,
+            segundos: 0,
           }
         }
 
@@ -90,9 +92,34 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
   if (!partido) return null
 
-  function iniciarPartido() {
+  function iniciarPrimerTiempo() {
     setTimer({
       estado: estadosTimer.primerTiempo,
+      pausado: false,
+      segundos: DURACION_TIEMPO,
+    })
+  }
+
+  function terminarPrimerTiempo() {
+    vibrar([500])
+    setTimer({
+      estado: estadosTimer.primerTiempoFinalizado,
+      pausado: false,
+      segundos: 0,
+    })
+  }
+
+  function iniciarMedioTiempo() {
+    setTimer({
+      estado: estadosTimer.descanso,
+      pausado: false,
+      segundos: DURACION_DESCANSO,
+    })
+  }
+
+  function iniciarSegundoTiempo() {
+    setTimer({
+      estado: estadosTimer.segundoTiempo,
       pausado: false,
       segundos: DURACION_TIEMPO,
     })
@@ -119,8 +146,10 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   )
   const tituloTimer = {
     [estadosTimer.descanso]: 'Medio tiempo',
+    [estadosTimer.descansoFinalizado]: 'Medio tiempo finalizado',
     [estadosTimer.finalizado]: 'Tiempo finalizado',
     [estadosTimer.listo]: 'Listo para iniciar',
+    [estadosTimer.primerTiempoFinalizado]: 'Primer tiempo terminado',
     [estadosTimer.primerTiempo]: 'Primer tiempo',
     [estadosTimer.segundoTiempo]: 'Segundo tiempo',
   }[timer.estado]
@@ -174,10 +203,10 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         {timer.estado === estadosTimer.listo ? (
           <button
             className="mt-5 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
-            onClick={iniciarPartido}
+            onClick={iniciarPrimerTiempo}
             type="button"
           >
-            Iniciar partido
+            Iniciar primer tiempo
           </button>
         ) : null}
 
@@ -200,6 +229,37 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
           </>
         ) : null}
 
+        {timer.estado === estadosTimer.primerTiempoFinalizado ? (
+          <div className="mt-5 space-y-4">
+            <p className="text-base font-semibold text-gray-400">
+              Primer tiempo terminado - cambio de cancha
+            </p>
+            <button
+              className="min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+              onClick={iniciarMedioTiempo}
+              type="button"
+            >
+              Iniciar medio tiempo (30s)
+            </button>
+          </div>
+        ) : null}
+
+        {timer.estado === estadosTimer.descansoFinalizado ? (
+          <button
+            className="mt-5 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+            onClick={iniciarSegundoTiempo}
+            type="button"
+          >
+            Iniciar segundo tiempo
+          </button>
+        ) : null}
+
+        {timer.estado === estadosTimer.finalizado ? (
+          <p className="mt-5 text-base font-semibold text-gray-400">
+            Tiempo finalizado
+          </p>
+        ) : null}
+
         {esTiempoJuego ? (
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
@@ -211,10 +271,16 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
             </button>
             <button
               className="min-h-14 rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
-              onClick={finalizarPartido}
+              onClick={
+                timer.estado === estadosTimer.primerTiempo
+                  ? terminarPrimerTiempo
+                  : finalizarPartido
+              }
               type="button"
             >
-              Finalizar
+              {timer.estado === estadosTimer.primerTiempo
+                ? 'Terminar primer tiempo'
+                : 'Terminar segundo tiempo'}
             </button>
           </div>
         ) : null}
