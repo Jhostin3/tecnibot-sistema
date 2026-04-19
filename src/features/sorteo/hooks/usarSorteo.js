@@ -1,53 +1,60 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import {
   guardarSorteoYGenerarCuartos,
   listarEquiposAprobadosPorSubcategoria,
-  listarSubcategoriasSorteo,
+  listarSubcategoriasListasParaSorteo,
   obtenerSorteoPorSubcategoria,
 } from '../services/servicioSorteo'
 
-function crearAsignacionesIniciales(equipos) {
-  return Object.fromEntries(equipos.map((equipo) => [equipo.id, '']))
-}
+const duracionGiro = 3600
 
-function obtenerNumerosRepetidos(asignaciones) {
-  const conteo = new Map()
+function elegirEquipoAleatorio(equipos) {
+  const indice = Math.floor(Math.random() * equipos.length)
 
-  Object.values(asignaciones)
-    .filter(Boolean)
-    .forEach((numero) => {
-      conteo.set(numero, (conteo.get(numero) || 0) + 1)
-    })
-
-  return new Set(
-    Array.from(conteo.entries())
-      .filter(([, cantidad]) => cantidad > 1)
-      .map(([numero]) => numero),
-  )
+  return equipos[indice]
 }
 
 export function useSorteo() {
   const { perfil } = useAutenticacion()
+  const temporizadorGiro = useRef(null)
   const [subcategorias, setSubcategorias] = useState([])
   const [subcategoriaId, setSubcategoriaId] = useState('')
   const [equipos, setEquipos] = useState([])
+  const [equiposDisponibles, setEquiposDisponibles] = useState([])
+  const [ordenSorteo, setOrdenSorteo] = useState([])
   const [sorteoExistente, setSorteoExistente] = useState([])
-  const [asignaciones, setAsignaciones] = useState({})
+  const [equipoGirado, setEquipoGirado] = useState(null)
+  const [anguloRuleta, setAnguloRuleta] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [cargandoEquipos, setCargandoEquipos] = useState(false)
+  const [girando, setGirando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+
+  const cargarSubcategorias = useCallback(async () => {
+    setCargando(true)
+    setMensaje('')
+
+    try {
+      const subcategoriasActuales = await listarSubcategoriasListasParaSorteo()
+      setSubcategorias(subcategoriasActuales)
+    } catch (error) {
+      setMensaje(error.message)
+    } finally {
+      setCargando(false)
+    }
+  }, [])
 
   useEffect(() => {
     let componenteActivo = true
 
-    async function cargarSubcategorias() {
+    async function prepararSubcategorias() {
       setCargando(true)
 
       try {
-        const subcategoriasActuales = await listarSubcategoriasSorteo()
+        const subcategoriasActuales = await listarSubcategoriasListasParaSorteo()
 
         if (componenteActivo) {
           setSubcategorias(subcategoriasActuales)
@@ -63,23 +70,27 @@ export function useSorteo() {
       }
     }
 
-    cargarSubcategorias()
+    prepararSubcategorias()
 
     return () => {
       componenteActivo = false
+      clearTimeout(temporizadorGiro.current)
     }
   }, [])
 
   const cargarDatosSubcategoria = useCallback(async (idSubcategoria) => {
     if (!idSubcategoria) {
       setEquipos([])
+      setEquiposDisponibles([])
+      setOrdenSorteo([])
       setSorteoExistente([])
-      setAsignaciones({})
+      setEquipoGirado(null)
       return
     }
 
     setCargandoEquipos(true)
     setMensaje('')
+    setEquipoGirado(null)
 
     try {
       const [equiposAprobados, sorteoActual] = await Promise.all([
@@ -88,8 +99,9 @@ export function useSorteo() {
       ])
 
       setEquipos(equiposAprobados)
+      setEquiposDisponibles(equiposAprobados)
+      setOrdenSorteo([])
       setSorteoExistente(sorteoActual)
-      setAsignaciones(crearAsignacionesIniciales(equiposAprobados))
     } catch (error) {
       setMensaje(error.message)
     } finally {
@@ -98,43 +110,41 @@ export function useSorteo() {
   }, [])
 
   async function seleccionarSubcategoria(idSubcategoria) {
+    clearTimeout(temporizadorGiro.current)
+    setGirando(false)
     setSubcategoriaId(idSubcategoria)
     await cargarDatosSubcategoria(idSubcategoria)
   }
 
-  function asignarBola(equipoId, numeroBola) {
+  function girarRuleta() {
+    if (girando || !equiposDisponibles.length) return
+
     setMensaje('')
-    setAsignaciones((actuales) => ({
-      ...actuales,
-      [equipoId]: numeroBola,
-    }))
+    setEquipoGirado(null)
+    setGirando(true)
+    setAnguloRuleta((anguloActual) => anguloActual + 1440 + Math.floor(Math.random() * 720))
+
+    const equipoElegido = elegirEquipoAleatorio(equiposDisponibles)
+
+    temporizadorGiro.current = setTimeout(() => {
+      setEquipoGirado(equipoElegido)
+      setEquiposDisponibles((actuales) =>
+        actuales.filter((equipo) => equipo.id !== equipoElegido.id),
+      )
+      setOrdenSorteo((actual) => [
+        ...actual,
+        {
+          equipo: equipoElegido,
+          numero_bola: actual.length + 1,
+        },
+      ])
+      setGirando(false)
+    }, duracionGiro)
   }
-
-  const numerosRepetidos = useMemo(
-    () => obtenerNumerosRepetidos(asignaciones),
-    [asignaciones],
-  )
-
-  const puedeGuardar = useMemo(() => {
-    const numerosAsignados = Object.values(asignaciones).filter(Boolean)
-
-    return (
-      subcategoriaId &&
-      equipos.length === 8 &&
-      !sorteoExistente.length &&
-      numerosAsignados.length === 8 &&
-      numerosRepetidos.size === 0
-    )
-  }, [asignaciones, equipos.length, numerosRepetidos.size, sorteoExistente.length, subcategoriaId])
 
   async function guardarSorteo() {
     if (!perfil?.id) {
-      setMensaje('No se pudo identificar al organizador actual.')
-      return
-    }
-
-    if (equipos.length !== 8) {
-      setMensaje('La subcategoria debe tener exactamente 8 equipos aprobados.')
+      setMensaje('No se pudo identificar al homologador actual.')
       return
     }
 
@@ -143,8 +153,8 @@ export function useSorteo() {
       return
     }
 
-    if (!puedeGuardar) {
-      setMensaje('Asigna una bola unica del 1 al 8 para cada equipo.')
+    if (ordenSorteo.length !== 8) {
+      setMensaje('Completa los 8 giros antes de confirmar el sorteo.')
       return
     }
 
@@ -153,15 +163,16 @@ export function useSorteo() {
 
     try {
       await guardarSorteoYGenerarCuartos({
-        asignaciones: equipos.map((equipo) => ({
-          equipo_id: equipo.id,
-          numero_bola: asignaciones[equipo.id],
+        asignaciones: ordenSorteo.map((asignacion) => ({
+          equipo_id: asignacion.equipo.id,
+          numero_bola: asignacion.numero_bola,
         })),
         registradoPor: perfil.id,
         subcategoriaId,
       })
       await cargarDatosSubcategoria(subcategoriaId)
-      setMensaje('Sorteo guardado y cuartos de final generados.')
+      await cargarSubcategorias()
+      setMensaje('Sorteo guardado y bracket de cuartos generado correctamente.')
     } catch (error) {
       setMensaje(error.message)
       throw error
@@ -171,16 +182,20 @@ export function useSorteo() {
   }
 
   return {
-    asignaciones,
-    asignarBola,
+    anguloRuleta,
     cargando,
     cargandoEquipos,
+    duracionGiro,
+    equipoGirado,
     equipos,
+    equiposDisponibles,
+    girando,
+    girarRuleta,
     guardarSorteo,
     guardando,
     mensaje,
-    numerosRepetidos,
-    puedeGuardar,
+    ordenSorteo,
+    puedeConfirmar: ordenSorteo.length === 8 && !sorteoExistente.length,
     seleccionarSubcategoria,
     sorteoExistente,
     subcategoriaId,
