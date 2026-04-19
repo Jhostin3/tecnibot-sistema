@@ -5,6 +5,7 @@ import { PaginaLogin } from '../features/autenticacion/pages/PaginaLogin'
 import { PaginaPanel } from '../features/autenticacion/pages/PaginaPanel'
 import { PaginaEquipos } from '../features/equipos/pages/PaginaEquipos'
 import { PaginaHomologacion } from '../features/homologacion/pages/PaginaHomologacion'
+import { PaginaJuez } from '../features/juez/pages/PaginaJuez'
 import { PaginaLlavePublica } from '../features/sorteo/pages/PaginaLlavePublica'
 import { PaginaSorteo } from '../features/sorteo/pages/PaginaSorteo'
 import { LayoutPrivado } from '../layouts/LayoutPrivado'
@@ -30,6 +31,9 @@ export function RouterSistema() {
               </Route>
               <Route element={<RutaPorRol rolesPermitidos={['homologador']} />}>
                 <Route path={rutas.sorteo} element={<PaginaSorteo />} />
+              </Route>
+              <Route element={<RutaPorRol rolesPermitidos={['juez']} />}>
+                <Route path={rutas.juez} element={<PaginaJuez />} />
               </Route>
               <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
                 <Route path={rutas.homologacion} element={<PaginaHomologacion />} />
