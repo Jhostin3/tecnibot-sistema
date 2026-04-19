@@ -28,7 +28,11 @@ function obtenerCanchasGuardadas() {
 }
 
 function crearClaveGrupo(partido) {
-  return `${partido.subcategoria?.nombre || 'Subcategoria'} - ${partido.etiqueta_ronda}`
+  return `${partido.subcategoria?.nombre || 'Subcategoria'} - ${partido.ronda}`
+}
+
+function crearTituloGrupo(partido) {
+  return `${partido.subcategoria?.nombre || 'Subcategoria'} · ${partido.etiqueta_ronda}`
 }
 
 function agruparPartidos(partidos) {
@@ -46,9 +50,11 @@ function agruparPartidos(partidos) {
 
 function ListaPartidos({
   alActivar,
+  alActivarGrupo,
   alDesactivar,
   guardando,
   mensajeVacio,
+  mostrarBotonGrupo = false,
   partidos,
 }) {
   const grupos = useMemo(() => agruparPartidos(partidos || []), [partidos])
@@ -66,7 +72,26 @@ function ListaPartidos({
     <div className="space-y-6">
       {entradas.map(([grupo, partidosGrupo]) => (
         <section className="space-y-3" key={grupo}>
-          <h2 className="text-lg font-bold text-slate-800">{grupo}</h2>
+          <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-normal text-cyan-800">
+                Grupo de ronda
+              </p>
+              <h2 className="mt-1 text-lg font-bold text-slate-800">
+                {crearTituloGrupo(partidosGrupo[0])}
+              </h2>
+            </div>
+            {mostrarBotonGrupo ? (
+              <button
+                className="min-h-10 rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                disabled={guardando}
+                onClick={() => alActivarGrupo(partidosGrupo)}
+                type="button"
+              >
+                Activar ronda completa
+              </button>
+            ) : null}
+          </div>
           <div className="grid gap-4">
             {partidosGrupo.map((partido) => (
               <TarjetaEnfrentamiento
@@ -98,6 +123,7 @@ export function PaginaPartidos() {
   } = usePartidos()
   const [pestanaActiva, setPestanaActiva] = useState('pendientes')
   const [partidoParaActivar, setPartidoParaActivar] = useState(null)
+  const [, setGrupoParaActivar] = useState([])
   const [canchas, setCanchas] = useState(obtenerCanchasGuardadas)
   const [nuevaCancha, setNuevaCancha] = useState('')
 
@@ -231,9 +257,11 @@ export function PaginaPartidos() {
       ) : (
         <ListaPartidos
           alActivar={setPartidoParaActivar}
+          alActivarGrupo={setGrupoParaActivar}
           alDesactivar={desactivarPartido}
           guardando={guardando}
           mensajeVacio={mensajesVacios[pestanaActiva]}
+          mostrarBotonGrupo={pestanaActiva === 'pendientes'}
           partidos={partidosPorPestana[pestanaActiva]}
         />
       )}
