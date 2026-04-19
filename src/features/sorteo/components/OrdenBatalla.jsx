@@ -1,34 +1,59 @@
 import { Boton } from '../../../components/atoms/Boton'
 
-function obtenerParejas(ordenSorteo) {
-  return [
-    [1, 2],
-    [3, 4],
-    [5, 6],
-    [7, 8],
-  ].map(([bolaA, bolaB], indice) => ({
-    bolaA,
-    bolaB,
-    equipoA: ordenSorteo.find((asignacion) => asignacion.numero_bola === bolaA),
-    equipoB: ordenSorteo.find((asignacion) => asignacion.numero_bola === bolaB),
-    orden: indice + 1,
-  }))
-}
-
 function obtenerNombreAsignacion(asignacion) {
-  if (!asignacion) return 'Pendiente'
-  if (asignacion.esBye) return 'BYE'
+  if (!asignacion) return 'Por definir'
+  if (asignacion.tipo === 'bye') return 'BYE'
 
   return asignacion.equipo.nombre_equipo
 }
 
+function crearSlotsBracket(ordenSorteo, tamanoBracket) {
+  const slotsEquipos = ordenSorteo.map((asignacion) => ({
+    ...asignacion,
+    tipo: 'equipo',
+  }))
+  const slotsBye = Array.from({
+    length: Math.max(0, tamanoBracket - slotsEquipos.length),
+  }).map((_, indice) => ({
+    equipo: null,
+    numero_bola: slotsEquipos.length + indice + 1,
+    tipo: 'bye',
+  }))
+
+  return [...slotsEquipos, ...slotsBye]
+}
+
+function obtenerParejasPrimeraRonda(ordenSorteo, tamanoBracket, cantidadByes) {
+  const slots = crearSlotsBracket(ordenSorteo, tamanoBracket)
+
+  if (!cantidadByes) {
+    return Array.from({ length: slots.length / 2 }).map((_, indice) => ({
+      equipoA: slots[indice * 2],
+      equipoB: slots[indice * 2 + 1],
+      orden: indice + 1,
+    }))
+  }
+
+  return Array.from({ length: slots.length / 2 }).map((_, indice) => ({
+    equipoA: slots[indice],
+    equipoB: slots[slots.length - 1 - indice],
+    orden: indice + 1,
+  }))
+}
+
 export function OrdenBatalla({
+  cantidadByes = 0,
   guardando,
   onConfirmar,
   ordenSorteo = [],
+  partidosPrimeraRonda = 0,
   puedeConfirmar,
+  tamanoBracket = 2,
 }) {
-  const parejas = obtenerParejas(ordenSorteo)
+  const totalEquipos = tamanoBracket - cantidadByes
+  const parejas = puedeConfirmar
+    ? obtenerParejasPrimeraRonda(ordenSorteo, tamanoBracket, cantidadByes)
+    : []
 
   return (
     <aside className="space-y-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
@@ -37,36 +62,43 @@ export function OrdenBatalla({
           Orden de batalla
         </p>
         <h2 className="mt-2 text-xl font-bold text-slate-950">
-          {ordenSorteo.length} de 8 equipos asignados
+          {ordenSorteo.length} de {totalEquipos} equipos sorteados
         </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Bracket de {tamanoBracket} con {cantidadByes} BYEs inferidos.
+        </p>
       </div>
       <div className="space-y-2">
-        {Array.from({ length: 8 }).map((_, indice) => {
-          const numero = indice + 1
-          const asignacion = ordenSorteo.find((item) => item.numero_bola === numero)
-
-          return (
+        {ordenSorteo.length ? (
+          ordenSorteo.map((asignacion) => (
             <div
               className="rounded-md border border-slate-200 bg-slate-50 p-3"
-              key={numero}
+              key={asignacion.equipo.id}
             >
               <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">
-                Bola {numero}
+                Bola {asignacion.numero_bola}
               </p>
               <p className="mt-1 font-bold text-slate-950">
-                {obtenerNombreAsignacion(asignacion)}
+                {asignacion.equipo.nombre_equipo}
               </p>
             </div>
-          )
-        })}
+          ))
+        ) : (
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+            Gira la ruleta para construir el orden.
+          </div>
+        )}
       </div>
       {puedeConfirmar ? (
         <div className="space-y-3 border-t border-slate-200 pt-4">
-          <h3 className="font-bold text-slate-950">Bracket generado</h3>
+          <h3 className="font-bold text-slate-950">Primera ronda generada</h3>
+          <p className="text-sm text-slate-600">
+            {partidosPrimeraRonda} partidos con BYEs aplicados al final del bracket.
+          </p>
           <div className="space-y-2">
             {parejas.map((pareja) => (
               <p className="text-sm text-slate-600" key={pareja.orden}>
-                Cuartos {pareja.orden}: {obtenerNombreAsignacion(pareja.equipoA)} vs{' '}
+                Partido {pareja.orden}: {obtenerNombreAsignacion(pareja.equipoA)} vs{' '}
                 {obtenerNombreAsignacion(pareja.equipoB)}
               </p>
             ))}
