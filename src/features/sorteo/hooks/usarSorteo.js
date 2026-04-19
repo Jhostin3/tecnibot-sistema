@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import {
@@ -17,19 +17,14 @@ function elegirEquipoAleatorio(equipos) {
   return equipos[indice]
 }
 
-function completarOrdenConBye(ordenActual, totalEquipos) {
-  if (totalEquipos === 7 && ordenActual.length === 7) {
-    return [
-      ...ordenActual,
-      {
-        equipo: null,
-        esBye: true,
-        numero_bola: 8,
-      },
-    ]
+function calcularSiguientePotenciaDeDos(cantidad) {
+  let potencia = 1
+
+  while (potencia < Math.max(2, cantidad)) {
+    potencia *= 2
   }
 
-  return ordenActual
+  return potencia
 }
 
 export function useSorteo() {
@@ -51,6 +46,12 @@ export function useSorteo() {
   const [girando, setGirando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const tamanoBracket = useMemo(
+    () => calcularSiguientePotenciaDeDos(equipos.length),
+    [equipos.length],
+  )
+  const cantidadByes = Math.max(0, tamanoBracket - equipos.length)
+  const partidosPrimeraRonda = tamanoBracket / 2
 
   const cargarOpciones = useCallback(async () => {
     setCargando(true)
@@ -170,17 +171,11 @@ export function useSorteo() {
         actuales.filter((equipo) => equipo.id !== equipoElegido.id),
       )
       setOrdenSorteo((actual) => [
-        ...completarOrdenConBye(
-          [
-            ...actual,
-            {
-              equipo: equipoElegido,
-              esBye: false,
-              numero_bola: actual.length + 1,
-            },
-          ],
-          equipos.length,
-        ),
+        ...actual,
+        {
+          equipo: equipoElegido,
+          numero_bola: actual.length + 1,
+        },
       ])
       setGirando(false)
     }, duracionGiro)
@@ -197,7 +192,7 @@ export function useSorteo() {
       return
     }
 
-    if (ordenSorteo.length !== 8) {
+    if (ordenSorteo.length !== equipos.length) {
       setMensaje('Completa el sorteo antes de confirmar.')
       return
     }
@@ -231,6 +226,7 @@ export function useSorteo() {
     anguloRuleta,
     cargando,
     cargandoEquipos,
+    cantidadByes,
     categoriaId,
     categorias,
     duracionGiro,
@@ -244,11 +240,16 @@ export function useSorteo() {
     guardando,
     mensaje,
     ordenSorteo,
-    puedeConfirmar: ordenSorteo.length === 8 && !sorteoExistente.length,
+    partidosPrimeraRonda,
+    puedeConfirmar:
+      equipos.length >= 2 &&
+      ordenSorteo.length === equipos.length &&
+      !sorteoExistente.length,
     seleccionarCategoria,
     seleccionarSubcategoria,
     sorteoExistente,
     subcategoriaId,
     subcategorias,
+    tamanoBracket,
   }
 }
