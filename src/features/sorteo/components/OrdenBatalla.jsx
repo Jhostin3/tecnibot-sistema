@@ -15,6 +15,13 @@ function obtenerParejas(ordenSorteo) {
   }))
 }
 
+function obtenerNombreAsignacion(asignacion) {
+  if (!asignacion) return 'Pendiente'
+  if (asignacion.esBye) return 'BYE'
+
+  return asignacion.equipo.nombre_equipo
+}
+
 export function OrdenBatalla({
   guardando,
   onConfirmar,
@@ -47,7 +54,7 @@ export function OrdenBatalla({
                 Bola {numero}
               </p>
               <p className="mt-1 font-bold text-slate-950">
-                {asignacion?.equipo.nombre_equipo || 'Pendiente'}
+                {obtenerNombreAsignacion(asignacion)}
               </p>
             </div>
           )
@@ -59,8 +66,8 @@ export function OrdenBatalla({
           <div className="space-y-2">
             {parejas.map((pareja) => (
               <p className="text-sm text-slate-600" key={pareja.orden}>
-                Cuartos {pareja.orden}: {pareja.equipoA?.equipo.nombre_equipo} vs{' '}
-                {pareja.equipoB?.equipo.nombre_equipo}
+                Cuartos {pareja.orden}: {obtenerNombreAsignacion(pareja.equipoA)} vs{' '}
+                {obtenerNombreAsignacion(pareja.equipoB)}
               </p>
             ))}
           </div>

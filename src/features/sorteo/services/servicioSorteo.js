@@ -57,7 +57,10 @@ export async function listarSubcategoriasListasParaSorteo() {
       return {
         ...subcategoria,
         equipos_aprobados: equiposAprobados.length,
-        lista: equiposAprobados.length === 8 && !sorteoActual.length,
+        lista:
+          equiposAprobados.length >= 7 &&
+          equiposAprobados.length <= 8 &&
+          !sorteoActual.length,
       }
     }),
   )
@@ -117,15 +120,23 @@ function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
     [2, 3, 4],
     [3, 5, 6],
     [4, 7, 8],
-  ].map(([orden, bolaA, bolaB]) => ({
-    bye: false,
-    equipo_a_id: equiposPorBola.get(bolaA),
-    equipo_b_id: equiposPorBola.get(bolaB),
-    estado: 'pendiente',
-    orden,
-    ronda: 'cuartos',
-    subcategoria_id: subcategoriaId,
-  }))
+  ].map(([orden, bolaA, bolaB]) => {
+    const equipoA = equiposPorBola.get(bolaA)
+    const equipoB = equiposPorBola.get(bolaB)
+    const tieneBye = !equipoA || !equipoB
+    const equipoGanador = tieneBye ? equipoA || equipoB : null
+
+    return {
+      bye: tieneBye,
+      equipo_a_id: equipoGanador || equipoA,
+      equipo_b_id: tieneBye ? null : equipoB,
+      estado: tieneBye ? 'finalizado' : 'pendiente',
+      ganador_id: equipoGanador,
+      orden,
+      ronda: 'cuartos',
+      subcategoria_id: subcategoriaId,
+    }
+  })
 }
 
 export async function guardarSorteoYGenerarCuartos({

@@ -17,6 +17,21 @@ function elegirEquipoAleatorio(equipos) {
   return equipos[indice]
 }
 
+function completarOrdenConBye(ordenActual, totalEquipos) {
+  if (totalEquipos === 7 && ordenActual.length === 7) {
+    return [
+      ...ordenActual,
+      {
+        equipo: null,
+        esBye: true,
+        numero_bola: 8,
+      },
+    ]
+  }
+
+  return ordenActual
+}
+
 export function useSorteo() {
   const { perfil } = useAutenticacion()
   const temporizadorGiro = useRef(null)
@@ -148,11 +163,17 @@ export function useSorteo() {
         actuales.filter((equipo) => equipo.id !== equipoElegido.id),
       )
       setOrdenSorteo((actual) => [
-        ...actual,
-        {
-          equipo: equipoElegido,
-          numero_bola: actual.length + 1,
-        },
+        ...completarOrdenConBye(
+          [
+            ...actual,
+            {
+              equipo: equipoElegido,
+              esBye: false,
+              numero_bola: actual.length + 1,
+            },
+          ],
+          equipos.length,
+        ),
       ])
       setGirando(false)
     }, duracionGiro)
@@ -170,7 +191,7 @@ export function useSorteo() {
     }
 
     if (ordenSorteo.length !== 8) {
-      setMensaje('Completa los 8 giros antes de confirmar el sorteo.')
+      setMensaje('Completa el sorteo antes de confirmar.')
       return
     }
 
@@ -180,7 +201,7 @@ export function useSorteo() {
     try {
       await guardarSorteoYGenerarCuartos({
         asignaciones: ordenSorteo.map((asignacion) => ({
-          equipo_id: asignacion.equipo.id,
+          equipo_id: asignacion.equipo?.id || null,
           numero_bola: asignacion.numero_bola,
         })),
         registradoPor: perfil.id,

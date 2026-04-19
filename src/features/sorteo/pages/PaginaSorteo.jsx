@@ -8,7 +8,7 @@ import { useSorteo } from '../hooks/usarSorteo'
 
 function obtenerMensajeValidacion({ equipos, sorteoExistente, subcategoriaId, subcategorias }) {
   if (!subcategorias.length) {
-    return 'No hay subcategorías listas para sorteo. Se necesitan exactamente 8 equipos aprobados.'
+    return 'No hay subcategorías listas para sorteo. Se necesitan al menos 7 equipos aprobados.'
   }
 
   if (!subcategoriaId) {
@@ -19,8 +19,12 @@ function obtenerMensajeValidacion({ equipos, sorteoExistente, subcategoriaId, su
     return 'El sorteo ya fue registrado para esta subcategoría.'
   }
 
-  if (equipos.length !== 8) {
-    return `Hay ${equipos.length} equipos aprobados. El sorteo requiere exactamente 8.`
+  if (equipos.length < 7) {
+    return `Hay ${equipos.length} equipos aprobados. El sorteo requiere al menos 7.`
+  }
+
+  if (equipos.length === 7) {
+    return 'Hay 7 equipos aprobados. La ranura 8 será BYE y avanzará automáticamente.'
   }
 
   return 'Gira la ruleta para asignar el orden de batalla.'
