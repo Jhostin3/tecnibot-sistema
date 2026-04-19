@@ -22,6 +22,12 @@ export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
             <nav className="flex flex-wrap gap-2">
               <Link
                 className="inline-flex min-h-10 items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                to={rutas.inicio}
+              >
+                Inicio
+              </Link>
+              <Link
+                className="inline-flex min-h-10 items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 to={rutas.equipos}
               >
                 Equipos
