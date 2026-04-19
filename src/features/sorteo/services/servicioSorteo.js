@@ -32,6 +32,26 @@ export async function listarSubcategoriasSorteo() {
   return data
 }
 
+export async function listarSubcategoriasListasParaSorteo() {
+  const subcategorias = await listarSubcategoriasSorteo()
+  const revisiones = await Promise.all(
+    subcategorias.map(async (subcategoria) => {
+      const [equiposAprobados, sorteoActual] = await Promise.all([
+        listarEquiposAprobadosPorSubcategoria(subcategoria.id),
+        obtenerSorteoPorSubcategoria(subcategoria.id),
+      ])
+
+      return {
+        ...subcategoria,
+        equipos_aprobados: equiposAprobados.length,
+        lista: equiposAprobados.length === 8 && !sorteoActual.length,
+      }
+    }),
+  )
+
+  return revisiones.filter((subcategoria) => subcategoria.lista)
+}
+
 export async function listarEquiposAprobadosPorSubcategoria(subcategoriaId) {
   const { data, error } = await supabase
     .from('equipos')
@@ -110,6 +130,7 @@ export async function guardarSorteoYGenerarCuartos({
 
   const filasSorteo = asignaciones.map((asignacion) => ({
     equipo_id: asignacion.equipo_id,
+    fecha: new Date().toISOString(),
     numero_bola: Number(asignacion.numero_bola),
     registrado_por: registradoPor,
     subcategoria_id: subcategoriaId,
