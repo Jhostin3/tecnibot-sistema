@@ -4,4 +4,5 @@ export const rutas = {
   panel: '/panel',
   equipos: '/equipos',
   homologacion: '/homologacion',
+  sorteo: '/sorteo',
 }

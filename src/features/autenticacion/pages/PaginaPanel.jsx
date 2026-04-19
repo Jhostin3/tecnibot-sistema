@@ -35,6 +35,14 @@ export function PaginaPanel() {
               Gestionar equipos
             </Link>
           ) : null}
+          {esOrganizador ? (
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
+              to={rutas.sorteo}
+            >
+              Realizar sorteo
+            </Link>
+          ) : null}
           {puedeHomologar ? (
             <Link
               className="inline-flex min-h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
