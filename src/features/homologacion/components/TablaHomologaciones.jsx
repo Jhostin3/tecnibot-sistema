@@ -43,11 +43,16 @@ function obtenerVarianteAccion(estado) {
   return 'secundario'
 }
 
-export function TablaHomologaciones({ equipos, guardando, onSeleccionarCambio }) {
+export function TablaHomologaciones({
+  equipos,
+  guardando,
+  mensajeVacio = 'No hay equipos que coincidan con los filtros seleccionados.',
+  onSeleccionarCambio,
+}) {
   if (!equipos.length) {
     return (
       <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-        No hay equipos que coincidan con los filtros seleccionados.
+        {mensajeVacio}
       </div>
     )
   }
