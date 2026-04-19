@@ -5,6 +5,7 @@ import { PaginaLogin } from '../features/autenticacion/pages/PaginaLogin'
 import { PaginaPanel } from '../features/autenticacion/pages/PaginaPanel'
 import { PaginaEquipos } from '../features/equipos/pages/PaginaEquipos'
 import { PaginaHomologacion } from '../features/homologacion/pages/PaginaHomologacion'
+import { PaginaLlavePublica } from '../features/sorteo/pages/PaginaLlavePublica'
 import { PaginaSorteo } from '../features/sorteo/pages/PaginaSorteo'
 import { LayoutPrivado } from '../layouts/LayoutPrivado'
 import { LayoutPublico } from '../layouts/LayoutPublico'
@@ -19,6 +20,7 @@ export function RouterSistema() {
         <Routes>
           <Route element={<LayoutPublico />}>
             <Route path={rutas.login} element={<PaginaLogin />} />
+            <Route path={rutas.llave} element={<PaginaLlavePublica />} />
           </Route>
           <Route element={<RutaProtegida />}>
             <Route element={<LayoutPrivado />}>
