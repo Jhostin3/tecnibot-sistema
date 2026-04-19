@@ -45,7 +45,7 @@ export function FormularioResultado({ alCancelar, alGuardar, guardando, partido 
 
   return (
     <form
-      className="rounded-xl border border-gray-700 bg-gray-800 p-6 shadow-xl"
+      className="rounded-2xl border border-gray-700 bg-gray-800 p-6 shadow-xl"
       onSubmit={manejarEnvio}
     >
       <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
@@ -68,7 +68,7 @@ export function FormularioResultado({ alCancelar, alGuardar, guardando, partido 
         <label className="flex flex-col items-center gap-3 text-base font-semibold text-blue-400">
           Goles A
           <input
-            className="h-24 w-24 rounded-xl border-2 border-blue-400 bg-gray-700 text-center text-5xl font-bold text-white outline-none focus:ring-4 focus:ring-blue-400/30"
+            className="h-24 w-24 rounded-2xl border-2 border-blue-400 bg-gray-700 text-center text-5xl font-bold text-white outline-none focus:ring-4 focus:ring-blue-400/30"
             inputMode="numeric"
             min="0"
             onChange={(evento) => setGolesA(limpiarNumero(evento.target.value) || '0')}
@@ -81,7 +81,7 @@ export function FormularioResultado({ alCancelar, alGuardar, guardando, partido 
         <label className="flex flex-col items-center gap-3 text-base font-semibold text-red-400">
           Goles B
           <input
-            className="h-24 w-24 rounded-xl border-2 border-red-400 bg-gray-700 text-center text-5xl font-bold text-white outline-none focus:ring-4 focus:ring-red-400/30"
+            className="h-24 w-24 rounded-2xl border-2 border-red-400 bg-gray-700 text-center text-5xl font-bold text-white outline-none focus:ring-4 focus:ring-red-400/30"
             inputMode="numeric"
             min="0"
             onChange={(evento) => setGolesB(limpiarNumero(evento.target.value) || '0')}
@@ -95,7 +95,7 @@ export function FormularioResultado({ alCancelar, alGuardar, guardando, partido 
       <label className="mt-8 block text-base font-semibold text-gray-200">
         Observacion
         <textarea
-          className="mt-3 min-h-28 w-full rounded-xl border border-gray-600 bg-gray-700 p-4 text-base text-white outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20"
+          className="mt-3 min-h-28 w-full rounded-2xl border border-gray-600 bg-gray-700 p-4 text-base text-white outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20"
           onChange={(evento) => setObservacion(evento.target.value)}
           placeholder="Detalle opcional del partido"
           value={observacion}
@@ -103,21 +103,21 @@ export function FormularioResultado({ alCancelar, alGuardar, guardando, partido 
       </label>
 
       {hayEmpate || errorLocal ? (
-        <p className="mt-4 rounded-xl border border-red-500 bg-red-950 p-4 text-base font-semibold text-red-200">
+        <p className="mt-4 rounded-2xl border border-red-500 bg-red-900 p-4 text-base font-semibold text-red-300">
           {errorLocal || 'Debe haber un ganador. Modifica el marcador.'}
         </p>
       ) : null}
 
       <div className="mt-6 grid gap-3">
         <button
-          className="min-h-14 rounded-xl bg-green-500 px-5 py-3 text-lg font-semibold text-gray-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
+          className="min-h-14 rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
           disabled={formularioBloqueado}
           type="submit"
         >
           {guardando ? 'Guardando...' : 'Registrar resultado'}
         </button>
         <button
-          className="min-h-14 rounded-xl border border-gray-600 bg-gray-900 px-5 py-3 text-lg font-semibold text-gray-100 transition hover:bg-gray-700"
+          className="min-h-14 rounded-2xl bg-gray-700 px-5 py-3 text-lg font-bold text-white transition hover:bg-gray-600"
           onClick={alCancelar}
           type="button"
         >

@@ -15,7 +15,7 @@ export function PartidoFinalizado({ alCerrar, partido }) {
   const ganoB = partido.ganador_id === partido.equipo_b_id
 
   return (
-    <article className="rounded-xl border border-green-500 bg-gray-800 p-6 shadow-xl">
+    <article className="rounded-2xl border border-gray-700 bg-gray-800 p-6 shadow-xl">
       <p className="text-base font-semibold uppercase tracking-normal text-green-300">
         Resultado registrado
       </p>
@@ -24,7 +24,7 @@ export function PartidoFinalizado({ alCerrar, partido }) {
       </h2>
 
       <div className="mt-6 grid gap-4">
-        <div className={`rounded-xl border p-5 ${claseEquipo(ganoA)}`}>
+        <div className={`rounded-2xl border p-5 ${claseEquipo(ganoA)}`}>
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="break-words text-lg font-bold">
@@ -36,7 +36,7 @@ export function PartidoFinalizado({ alCerrar, partido }) {
           </div>
         </div>
 
-        <div className={`rounded-xl border p-5 ${claseEquipo(ganoB)}`}>
+        <div className={`rounded-2xl border p-5 ${claseEquipo(ganoB)}`}>
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="break-words text-lg font-bold">
@@ -50,13 +50,13 @@ export function PartidoFinalizado({ alCerrar, partido }) {
       </div>
 
       {partido.observacion ? (
-        <p className="mt-5 rounded-xl border border-gray-700 bg-gray-900 p-4 text-base text-gray-200">
+        <p className="mt-5 rounded-2xl border border-gray-700 bg-gray-900 p-4 text-base text-gray-200">
           {partido.observacion}
         </p>
       ) : null}
 
       <button
-        className="mt-6 min-h-14 w-full rounded-xl bg-cyan-500 px-5 py-3 text-lg font-semibold text-gray-950 transition hover:bg-cyan-400"
+        className="mt-6 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
         onClick={alCerrar}
         type="button"
       >

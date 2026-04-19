@@ -7,8 +7,8 @@ import { useJuez } from '../hooks/usarJuez'
 
 function EstadoVacio() {
   return (
-    <div className="rounded-xl border border-gray-700 bg-gray-800 p-6 text-center shadow-lg">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-xl border border-gray-600 bg-gray-900 text-4xl text-gray-300">
+    <div className="rounded-2xl border border-gray-700 bg-gray-800 p-6 text-center shadow-lg">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-gray-600 bg-gray-900 text-4xl text-gray-300">
         !
       </div>
       <h2 className="mt-6 text-2xl font-bold text-white">
@@ -57,13 +57,13 @@ export function PaginaJuez() {
         </header>
 
         {mensaje ? (
-          <p className="rounded-xl border border-cyan-500 bg-cyan-950 p-4 text-base font-semibold text-cyan-100">
+          <p className="rounded-2xl border border-cyan-500 bg-cyan-950 p-4 text-base font-semibold text-cyan-100">
             {mensaje}
           </p>
         ) : null}
 
         {error ? (
-          <p className="rounded-xl border border-red-500 bg-red-950 p-4 text-base font-semibold text-red-100">
+          <p className="rounded-2xl border border-red-500 bg-red-900 p-4 text-base font-semibold text-red-300">
             {error}
           </p>
         ) : null}
@@ -87,7 +87,7 @@ export function PaginaJuez() {
         {!partidoSeleccionado && !partidoFinalizado ? (
           <div className="space-y-4">
             {cargando ? (
-              <p className="rounded-xl border border-gray-700 bg-gray-800 p-6 text-center text-lg font-semibold text-gray-200">
+              <p className="rounded-2xl border border-gray-700 bg-gray-800 p-6 text-center text-lg font-semibold text-gray-200">
                 Cargando partidos activos...
               </p>
             ) : null}
