@@ -1,3 +1,15 @@
+import { useEffect, useState } from 'react'
+
+const DURACION_TIEMPO = 90
+const DURACION_DESCANSO = 30
+const estadosTimer = {
+  descanso: 'descanso',
+  finalizado: 'finalizado',
+  listo: 'listo',
+  primerTiempo: 'primer_tiempo',
+  segundoTiempo: 'segundo_tiempo',
+}
+
 function obtenerNombreEquipo(equipo, respaldo) {
   return equipo?.nombre_equipo || respaldo
 }
@@ -6,8 +18,99 @@ function obtenerNombreRobot(equipo) {
   return equipo?.nombre_robot || 'Robot sin nombre registrado'
 }
 
+function formatearTiempo(segundos) {
+  const minutos = Math.floor(segundos / 60)
+  const segundosRestantes = segundos % 60
+
+  return `${String(minutos).padStart(2, '0')}:${String(segundosRestantes).padStart(2, '0')}`
+}
+
 export function TarjetaPartido({ alRegistrar, partido }) {
+  const [timer, setTimer] = useState({
+    estado: estadosTimer.listo,
+    pausado: false,
+    segundos: DURACION_TIEMPO,
+  })
+  const timerActivo = [
+    estadosTimer.primerTiempo,
+    estadosTimer.descanso,
+    estadosTimer.segundoTiempo,
+  ].includes(timer.estado)
+
+  useEffect(() => {
+    if (!timerActivo || timer.pausado) return undefined
+
+    const intervalo = setInterval(() => {
+      setTimer((actual) => {
+        if (actual.segundos > 1) {
+          return {
+            ...actual,
+            segundos: actual.segundos - 1,
+          }
+        }
+
+        if (actual.estado === estadosTimer.primerTiempo) {
+          return {
+            estado: estadosTimer.descanso,
+            pausado: false,
+            segundos: DURACION_DESCANSO,
+          }
+        }
+
+        if (actual.estado === estadosTimer.descanso) {
+          return {
+            estado: estadosTimer.segundoTiempo,
+            pausado: false,
+            segundos: DURACION_TIEMPO,
+          }
+        }
+
+        return {
+          estado: estadosTimer.finalizado,
+          pausado: false,
+          segundos: 0,
+        }
+      })
+    }, 1000)
+
+    return () => clearInterval(intervalo)
+  }, [timer.pausado, timerActivo])
+
   if (!partido) return null
+
+  function iniciarPartido() {
+    setTimer({
+      estado: estadosTimer.primerTiempo,
+      pausado: false,
+      segundos: DURACION_TIEMPO,
+    })
+  }
+
+  function finalizarPartido() {
+    setTimer({
+      estado: estadosTimer.finalizado,
+      pausado: false,
+      segundos: 0,
+    })
+  }
+
+  function alternarPausa() {
+    setTimer((actual) => ({
+      ...actual,
+      pausado: !actual.pausado,
+    }))
+  }
+
+  const esTiempoJuego = [estadosTimer.primerTiempo, estadosTimer.segundoTiempo].includes(
+    timer.estado,
+  )
+  const tituloTimer = {
+    [estadosTimer.descanso]: 'Medio tiempo',
+    [estadosTimer.finalizado]: 'Tiempo finalizado',
+    [estadosTimer.listo]: 'Listo para iniciar',
+    [estadosTimer.primerTiempo]: 'Primer tiempo',
+    [estadosTimer.segundoTiempo]: 'Segundo tiempo',
+  }[timer.estado]
 
   return (
     <article className="rounded-2xl border border-gray-700 bg-gray-800 p-6 shadow-lg">
@@ -44,6 +147,64 @@ export function TarjetaPartido({ alRegistrar, partido }) {
             {obtenerNombreRobot(partido.equipo_b)}
           </p>
         </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl bg-gray-900 p-6 text-center">
+        <p
+          className={`text-lg font-black uppercase tracking-normal ${
+            timer.estado === estadosTimer.descanso ? 'text-orange-400' : 'text-white'
+          }`}
+        >
+          {tituloTimer}
+        </p>
+
+        {timer.estado === estadosTimer.listo ? (
+          <button
+            className="mt-5 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+            onClick={iniciarPartido}
+            type="button"
+          >
+            Iniciar partido
+          </button>
+        ) : null}
+
+        {timerActivo ? (
+          <>
+            <p
+              className={`mt-4 font-mono text-6xl font-bold ${
+                timer.estado === estadosTimer.descanso
+                  ? 'text-orange-400'
+                  : 'animate-pulse text-green-400'
+              }`}
+            >
+              {formatearTiempo(timer.segundos)}
+            </p>
+            {timer.estado === estadosTimer.descanso ? (
+              <p className="mt-3 text-base font-semibold text-gray-400">
+                Cambio de cancha
+              </p>
+            ) : null}
+          </>
+        ) : null}
+
+        {esTiempoJuego ? (
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              className="min-h-14 rounded-2xl bg-gray-700 px-5 py-3 text-lg font-bold text-white transition hover:bg-gray-600"
+              onClick={alternarPausa}
+              type="button"
+            >
+              {timer.pausado ? 'Reanudar' : 'Pausar'}
+            </button>
+            <button
+              className="min-h-14 rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+              onClick={finalizarPartido}
+              type="button"
+            >
+              Finalizar
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <button
