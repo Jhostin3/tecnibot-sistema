@@ -1,24 +1,29 @@
 import { EncabezadoSeccion } from '../../../components/molecules/EncabezadoSeccion'
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
+import { OrdenBatalla } from '../components/OrdenBatalla'
 import { ResumenSorteoExistente } from '../components/ResumenSorteoExistente'
+import { RuletaEquipos } from '../components/RuletaEquipos'
 import { SelectorSubcategoriaSorteo } from '../components/SelectorSubcategoriaSorteo'
-import { TablaAsignacionBolas } from '../components/TablaAsignacionBolas'
 import { useSorteo } from '../hooks/usarSorteo'
 
-function obtenerMensajeValidacion({ equipos, sorteoExistente, subcategoriaId }) {
+function obtenerMensajeValidacion({ equipos, sorteoExistente, subcategoriaId, subcategorias }) {
+  if (!subcategorias.length) {
+    return 'No hay subcategorías listas para sorteo. Se necesitan exactamente 8 equipos aprobados.'
+  }
+
   if (!subcategoriaId) {
-    return 'Selecciona una subcategoria para revisar sus equipos aprobados.'
+    return 'Selecciona una subcategoría lista para iniciar la ruleta.'
   }
 
   if (sorteoExistente.length) {
-    return 'El sorteo ya fue registrado para esta subcategoria.'
+    return 'El sorteo ya fue registrado para esta subcategoría.'
   }
 
   if (equipos.length !== 8) {
     return `Hay ${equipos.length} equipos aprobados. El sorteo requiere exactamente 8.`
   }
 
-  return 'Todo listo para asignar bolas del 1 al 8.'
+  return 'Gira la ruleta para asignar el orden de batalla.'
 }
 
 export function PaginaSorteo() {
@@ -27,22 +32,25 @@ export function PaginaSorteo() {
     equipos: sorteo.equipos,
     sorteoExistente: sorteo.sorteoExistente,
     subcategoriaId: sorteo.subcategoriaId,
+    subcategorias: sorteo.subcategorias,
   })
 
   return (
     <section className="space-y-6">
       <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
         <EncabezadoSeccion
-          descripcion="Selecciona una subcategoria, asigna bolas fisicas a los equipos aprobados y genera los cuartos de final."
-          etiqueta="Llave inicial"
-          titulo="Sorteo de Soccer"
+          descripcion="Selecciona una subcategoría lista, gira la ruleta con los equipos aprobados y genera los cuartos de final."
+          etiqueta="Ruleta de homologacion"
+          titulo="Sorteo Soccer"
         />
       </div>
-      <SelectorSubcategoriaSorteo
-        onSeleccionar={sorteo.seleccionarSubcategoria}
-        subcategoriaId={sorteo.subcategoriaId}
-        subcategorias={sorteo.subcategorias}
-      />
+      {sorteo.subcategorias.length ? (
+        <SelectorSubcategoriaSorteo
+          onSeleccionar={sorteo.seleccionarSubcategoria}
+          subcategoriaId={sorteo.subcategoriaId}
+          subcategorias={sorteo.subcategorias}
+        />
+      ) : null}
       <MensajeEstado>{sorteo.mensaje}</MensajeEstado>
       {sorteo.cargando || sorteo.cargandoEquipos ? (
         <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
@@ -54,16 +62,23 @@ export function PaginaSorteo() {
             {mensajeValidacion}
           </div>
           <ResumenSorteoExistente sorteo={sorteo.sorteoExistente} />
-          {!sorteo.sorteoExistente.length ? (
-            <TablaAsignacionBolas
-              asignaciones={sorteo.asignaciones}
-              equipos={sorteo.equipos}
-              guardando={sorteo.guardando}
-              numerosRepetidos={sorteo.numerosRepetidos}
-              onAsignarBola={sorteo.asignarBola}
-              onGuardar={sorteo.guardarSorteo}
-              puedeGuardar={sorteo.puedeGuardar}
-            />
+          {sorteo.subcategoriaId && !sorteo.sorteoExistente.length ? (
+            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+              <RuletaEquipos
+                angulo={sorteo.anguloRuleta}
+                duracion={sorteo.duracionGiro}
+                equipoGirado={sorteo.equipoGirado}
+                equipos={sorteo.equiposDisponibles}
+                girando={sorteo.girando}
+                onGirar={sorteo.girarRuleta}
+              />
+              <OrdenBatalla
+                guardando={sorteo.guardando}
+                onConfirmar={sorteo.guardarSorteo}
+                ordenSorteo={sorteo.ordenSorteo}
+                puedeConfirmar={sorteo.puedeConfirmar}
+              />
+            </div>
           ) : null}
         </>
       )}
