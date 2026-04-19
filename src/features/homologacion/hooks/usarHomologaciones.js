@@ -27,11 +27,13 @@ export function useHomologaciones() {
     subcategoriaId: '',
   })
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
   const cargarDatos = useCallback(async () => {
     setCargando(true)
+    setError(null)
     setMensaje('')
 
     try {
@@ -43,6 +45,7 @@ export function useHomologaciones() {
       setEquipos(equiposActuales)
       setSubcategorias(subcategoriasActuales)
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
     } finally {
       setCargando(false)
@@ -54,6 +57,7 @@ export function useHomologaciones() {
 
     async function cargarDatosIniciales() {
       setCargando(true)
+      setError(null)
 
       try {
         const [equiposActuales, subcategoriasActuales] = await Promise.all([
@@ -67,6 +71,7 @@ export function useHomologaciones() {
         setSubcategorias(subcategoriasActuales)
       } catch (error) {
         if (componenteActivo) {
+          setError(error.message)
           setMensaje(error.message)
         }
       } finally {
@@ -112,6 +117,7 @@ export function useHomologaciones() {
     }
 
     setGuardando(true)
+    setError(null)
     setMensaje('')
 
     try {
@@ -124,6 +130,7 @@ export function useHomologaciones() {
       await cargarDatos()
       setMensaje('Estado de homologacion actualizado correctamente.')
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
       throw error
     } finally {
@@ -137,6 +144,7 @@ export function useHomologaciones() {
     cargando,
     equipos: equiposFiltrados,
     estados: estadosHomologacion,
+    error,
     filtros,
     guardando,
     mensaje,

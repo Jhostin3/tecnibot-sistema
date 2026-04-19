@@ -47,12 +47,14 @@ export function useSorteo() {
   const [anguloRuleta, setAnguloRuleta] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [cargandoEquipos, setCargandoEquipos] = useState(false)
+  const [error, setError] = useState(null)
   const [girando, setGirando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
   const cargarOpciones = useCallback(async () => {
     setCargando(true)
+    setError(null)
     setMensaje('')
 
     try {
@@ -63,6 +65,7 @@ export function useSorteo() {
       setCategorias(categoriasActuales)
       setSubcategorias(subcategoriasActuales)
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
     } finally {
       setCargando(false)
@@ -74,6 +77,7 @@ export function useSorteo() {
 
     async function prepararOpciones() {
       setCargando(true)
+      setError(null)
 
       try {
         const [categoriasActuales, subcategoriasActuales] = await Promise.all([
@@ -87,6 +91,7 @@ export function useSorteo() {
         }
       } catch (error) {
         if (componenteActivo) {
+          setError(error.message)
           setMensaje(error.message)
         }
       } finally {
@@ -115,6 +120,7 @@ export function useSorteo() {
     }
 
     setCargandoEquipos(true)
+    setError(null)
     setMensaje('')
     setEquipoGirado(null)
 
@@ -129,6 +135,7 @@ export function useSorteo() {
       setOrdenSorteo([])
       setSorteoExistente(sorteoActual)
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
     } finally {
       setCargandoEquipos(false)
@@ -196,6 +203,7 @@ export function useSorteo() {
     }
 
     setGuardando(true)
+    setError(null)
     setMensaje('')
 
     try {
@@ -211,6 +219,7 @@ export function useSorteo() {
       await cargarOpciones()
       setMensaje('Sorteo guardado y bracket de cuartos generado correctamente.')
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
       throw error
     } finally {
@@ -226,6 +235,7 @@ export function useSorteo() {
     categorias,
     duracionGiro,
     equipoGirado,
+    error,
     equipos,
     equiposDisponibles,
     girando,

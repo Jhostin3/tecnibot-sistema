@@ -4,6 +4,7 @@ import { listarBracketPorSubcategoria } from '../services/servicioSorteo'
 
 export function useBracketSorteo(subcategoriaId) {
   const [cargando, setCargando] = useState(Boolean(subcategoriaId))
+  const [error, setError] = useState(null)
   const [enfrentamientos, setEnfrentamientos] = useState([])
   const [mensaje, setMensaje] = useState('')
 
@@ -15,12 +16,14 @@ export function useBracketSorteo(subcategoriaId) {
     }
 
     setCargando(true)
+    setError(null)
     setMensaje('')
 
     try {
       const bracket = await listarBracketPorSubcategoria(subcategoriaId)
       setEnfrentamientos(bracket)
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
     } finally {
       setCargando(false)
@@ -40,6 +43,7 @@ export function useBracketSorteo(subcategoriaId) {
       }
 
       setCargando(true)
+      setError(null)
       setMensaje('')
 
       try {
@@ -50,6 +54,7 @@ export function useBracketSorteo(subcategoriaId) {
         }
       } catch (error) {
         if (componenteActivo) {
+          setError(error.message)
           setMensaje(error.message)
         }
       } finally {
@@ -68,6 +73,7 @@ export function useBracketSorteo(subcategoriaId) {
 
   return {
     cargando,
+    error,
     enfrentamientos,
     mensaje,
     recargar: cargarBracket,

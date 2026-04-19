@@ -6,6 +6,7 @@ import { procesarCsvEquipos } from '../utils/procesarCsvEquipos'
 export function useImportacionEquipos({ alFinalizar, subcategorias }) {
   const [archivo, setArchivo] = useState(null)
   const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState(null)
   const [filas, setFilas] = useState([])
   const [mensaje, setMensaje] = useState('')
   const [resumen, setResumen] = useState(null)
@@ -18,6 +19,7 @@ export function useImportacionEquipos({ alFinalizar, subcategorias }) {
   function seleccionarArchivo(archivoSeleccionado) {
     setArchivo(archivoSeleccionado)
     setFilas([])
+    setError(null)
     setMensaje('')
     setResumen(null)
   }
@@ -39,8 +41,10 @@ export function useImportacionEquipos({ alFinalizar, subcategorias }) {
     try {
       const filasProcesadas = await procesarCsvEquipos(archivo, subcategorias)
       setFilas(filasProcesadas)
+      setError(null)
       setResumen(null)
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
     } finally {
       setCargando(false)
@@ -58,6 +62,7 @@ export function useImportacionEquipos({ alFinalizar, subcategorias }) {
 
     try {
       await importarEquipos(filasValidas.map((fila) => fila.datos))
+      setError(null)
       setResumen({
         conError: filas.length - filasValidas.length,
         importadas: filasValidas.length,
@@ -66,6 +71,7 @@ export function useImportacionEquipos({ alFinalizar, subcategorias }) {
       setFilas([])
       await alFinalizar()
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
     } finally {
       setCargando(false)
@@ -76,6 +82,7 @@ export function useImportacionEquipos({ alFinalizar, subcategorias }) {
     archivo,
     cargando,
     confirmarImportacion,
+    error,
     filas,
     filasValidas,
     mensaje,

@@ -12,10 +12,12 @@ export function useEquipos() {
   const [equipos, setEquipos] = useState([])
   const [subcategorias, setSubcategorias] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
   const [mensaje, setMensaje] = useState('')
 
   const cargarDatos = useCallback(async () => {
     setCargando(true)
+    setError(null)
     setMensaje('')
 
     try {
@@ -27,6 +29,7 @@ export function useEquipos() {
       setEquipos(equiposActuales)
       setSubcategorias(subcategoriasActuales)
     } catch (error) {
+      setError(error.message)
       setMensaje(error.message)
     } finally {
       setCargando(false)
@@ -49,6 +52,7 @@ export function useEquipos() {
         setSubcategorias(subcategoriasActuales)
       } catch (error) {
         if (componenteActivo) {
+          setError(error.message)
           setMensaje(error.message)
         }
       } finally {
@@ -84,6 +88,7 @@ export function useEquipos() {
     borrarEquipo,
     cargando,
     equipos,
+    error,
     guardarEquipo,
     mensaje,
     recargarEquipos: cargarDatos,
