@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
+import { Boton } from '../../../components/atoms/Boton'
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
 import { EncabezadoEquipos } from '../components/EncabezadoEquipos'
 import { FormularioEquipo } from '../components/FormularioEquipo'
@@ -10,6 +11,8 @@ import { VistaPreviaImportacion } from '../components/VistaPreviaImportacion'
 import { useEquipos } from '../hooks/useEquipos'
 import { useImportacionEquipos } from '../hooks/useImportacionEquipos'
 
+const equiposPorPagina = 20
+
 export function PaginaEquipos() {
   const equipos = useEquipos()
   const importacion = useImportacionEquipos({
@@ -18,6 +21,16 @@ export function PaginaEquipos() {
   })
   const [modo, setModo] = useState('importar')
   const [equipoSeleccionado, setEquipoSeleccionado] = useState(null)
+  const [paginaActual, setPaginaActual] = useState(1)
+  const totalEquipos = equipos.equipos.length
+  const totalPaginas = Math.max(1, Math.ceil(totalEquipos / equiposPorPagina))
+  const paginaSegura = Math.min(paginaActual, totalPaginas)
+  const inicio = totalEquipos ? (paginaSegura - 1) * equiposPorPagina + 1 : 0
+  const fin = Math.min(paginaSegura * equiposPorPagina, totalEquipos)
+  const equiposPaginados = useMemo(
+    () => equipos.equipos.slice(inicio ? inicio - 1 : 0, fin),
+    [equipos.equipos, fin, inicio],
+  )
 
   function abrirCreacion() {
     setEquipoSeleccionado(null)
@@ -87,11 +100,34 @@ export function PaginaEquipos() {
           Cargando equipos...
         </div>
       ) : (
-        <TablaEquipos
-          alEditar={abrirEdicion}
-          alEliminar={manejarEliminar}
-          equipos={equipos.equipos}
-        />
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              Mostrando {inicio}-{fin} de {totalEquipos} equipos
+            </p>
+            <div className="flex gap-3">
+              <Boton
+                disabled={paginaSegura === 1}
+                onClick={() => setPaginaActual((actual) => Math.max(1, actual - 1))}
+                variante="secundario"
+              >
+                Anterior
+              </Boton>
+              <Boton
+                disabled={paginaSegura === totalPaginas}
+                onClick={() => setPaginaActual((actual) => Math.min(totalPaginas, actual + 1))}
+                variante="secundario"
+              >
+                Siguiente
+              </Boton>
+            </div>
+          </div>
+          <TablaEquipos
+            alEditar={abrirEdicion}
+            alEliminar={manejarEliminar}
+            equipos={equiposPaginados}
+          />
+        </div>
       )}
     </section>
   )
