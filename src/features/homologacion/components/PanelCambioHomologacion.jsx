@@ -23,11 +23,16 @@ export function PanelCambioHomologacion({
     evento.preventDefault()
     setMensaje('')
 
+    if (!observacion.trim()) {
+      setMensaje('Ingresa el motivo del rechazo.')
+      return
+    }
+
     try {
       await onConfirmar({
         equipoId: cambio.equipo.id,
         estado: cambio.estado,
-        observacion,
+        observacion: observacion.trim(),
       })
       setObservacion('')
     } catch (error) {
@@ -39,7 +44,7 @@ export function PanelCambioHomologacion({
     <form className="space-y-4 rounded-md border border-cyan-200 bg-cyan-50 p-5" onSubmit={manejarEnvio}>
       <div>
         <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
-          Cambio de homologacion
+          Rechazo de homologacion
         </p>
         <h2 className="mt-2 text-xl font-bold text-slate-950">
           {cambio.equipo.nombre_equipo}
@@ -54,7 +59,8 @@ export function PanelCambioHomologacion({
           id="observacion"
           name="observacion"
           onChange={(evento) => setObservacion(evento.target.value)}
-          placeholder="Registra detalles de la revision realizada."
+          placeholder="Explica el motivo del rechazo."
+          required
           value={observacion}
         />
       </div>

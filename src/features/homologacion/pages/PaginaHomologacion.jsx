@@ -11,9 +11,19 @@ export function PaginaHomologacion() {
   const homologaciones = useHomologaciones()
   const [cambio, setCambio] = useState(null)
 
-  function seleccionarCambio(equipo, estado) {
+  async function seleccionarCambio(equipo, estado) {
     homologaciones.setMensaje('')
-    setCambio({ equipo, estado })
+
+    if (estado === 'rechazado') {
+      setCambio({ equipo, estado })
+      return
+    }
+
+    await homologaciones.cambiarEstadoHomologacion({
+      equipoId: equipo.id,
+      estado,
+      observacion: '',
+    })
   }
 
   async function confirmarCambio(datosCambio) {
@@ -25,7 +35,7 @@ export function PaginaHomologacion() {
     <section className="space-y-6">
       <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
         <EncabezadoSeccion
-          descripcion="Revisa equipos por subcategoria, registra observaciones y actualiza el estado de homologacion."
+          descripcion="Revisa equipos por subcategoria, aprueba revisiones tecnicas y registra motivos cuando un equipo sea rechazado."
           etiqueta="Control tecnico"
           titulo="Homologacion de equipos"
         />
@@ -53,6 +63,7 @@ export function PaginaHomologacion() {
       ) : (
         <TablaHomologaciones
           equipos={homologaciones.equipos}
+          guardando={homologaciones.guardando}
           onSeleccionarCambio={seleccionarCambio}
         />
       )}
