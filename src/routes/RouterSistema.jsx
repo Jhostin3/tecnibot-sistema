@@ -25,6 +25,8 @@ export function RouterSistema() {
               <Route path={rutas.panel} element={<PaginaPanel />} />
               <Route element={<RutaPorRol rolesPermitidos={['organizador']} />}>
                 <Route path={rutas.equipos} element={<PaginaEquipos />} />
+              </Route>
+              <Route element={<RutaPorRol rolesPermitidos={['homologador']} />}>
                 <Route path={rutas.sorteo} element={<PaginaSorteo />} />
               </Route>
               <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
