@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { FormularioResultado } from './FormularioResultado'
+
 const DURACION_TIEMPO = 90
 const DURACION_DESCANSO = 30
 const estadosTimer = {
@@ -31,7 +33,7 @@ function vibrar(patron) {
   }
 }
 
-export function TarjetaPartido({ alRegistrar, partido }) {
+export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   const [timer, setTimer] = useState({
     estado: estadosTimer.listo,
     pausado: false,
@@ -217,15 +219,15 @@ export function TarjetaPartido({ alRegistrar, partido }) {
           </div>
         ) : null}
 
-        {timer.estado === estadosTimer.finalizado ? (
-          <button
-            className="mt-5 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
-            onClick={() => alRegistrar(partido)}
-            type="button"
-          >
-            Registrar resultado
-          </button>
-        ) : null}
+      </div>
+
+      <div className="mt-6">
+        <FormularioResultado
+          alGuardar={alGuardarResultado}
+          guardando={guardando}
+          mostrarEncabezado={false}
+          partido={partido}
+        />
       </div>
     </article>
   )

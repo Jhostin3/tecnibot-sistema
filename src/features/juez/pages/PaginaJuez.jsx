@@ -1,6 +1,3 @@
-import { useState } from 'react'
-
-import { FormularioResultado } from '../components/FormularioResultado'
 import { PartidoFinalizado } from '../components/PartidoFinalizado'
 import { TarjetaPartido } from '../components/TarjetaPartido'
 import { useJuez } from '../hooks/usarJuez'
@@ -32,11 +29,9 @@ export function PaginaJuez() {
     partidos,
     setPartidoFinalizado,
   } = useJuez()
-  const [partidoSeleccionado, setPartidoSeleccionado] = useState(null)
 
   async function manejarGuardarResultado(datosResultado) {
     await guardarResultado(datosResultado)
-    setPartidoSeleccionado(null)
   }
 
   function cerrarPartidoFinalizado() {
@@ -75,16 +70,7 @@ export function PaginaJuez() {
           />
         ) : null}
 
-        {partidoSeleccionado ? (
-          <FormularioResultado
-            alCancelar={() => setPartidoSeleccionado(null)}
-            alGuardar={manejarGuardarResultado}
-            guardando={guardando}
-            partido={partidoSeleccionado}
-          />
-        ) : null}
-
-        {!partidoSeleccionado && !partidoFinalizado ? (
+        {!partidoFinalizado ? (
           <div className="space-y-4">
             {cargando ? (
               <p className="rounded-2xl border border-gray-700 bg-gray-800 p-6 text-center text-lg font-semibold text-gray-200">
@@ -97,7 +83,8 @@ export function PaginaJuez() {
             {!cargando && partidos.length > 0
               ? partidos.map((partido) => (
                   <TarjetaPartido
-                    alRegistrar={setPartidoSeleccionado}
+                    alGuardarResultado={manejarGuardarResultado}
+                    guardando={guardando}
                     key={partido.id}
                     partido={partido}
                   />
