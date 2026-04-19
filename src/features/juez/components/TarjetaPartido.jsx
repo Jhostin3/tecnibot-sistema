@@ -4,6 +4,7 @@ import { FormularioResultado } from './FormularioResultado'
 
 const DURACION_TIEMPO = 90
 const DURACION_DESCANSO = 30
+const DURACION_REPARACION = 60
 const estadosTimer = {
   descanso: 'descanso',
   descansoFinalizado: 'descanso_finalizado',
@@ -40,6 +41,12 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
     estado: estadosTimer.listo,
     pausado: false,
     segundos: DURACION_TIEMPO,
+  })
+  const [reparacion, setReparacion] = useState({
+    activa: false,
+    equipo: null,
+    nombreEquipo: '',
+    segundos: DURACION_REPARACION,
   })
   const timerActivo = [
     estadosTimer.primerTiempo,
@@ -89,6 +96,35 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
     return () => clearInterval(intervalo)
   }, [timer.pausado, timerActivo])
+
+  useEffect(() => {
+    if (!reparacion.activa) return undefined
+
+    const intervalo = setInterval(() => {
+      setReparacion((actual) => {
+        if (actual.segundos > 1) {
+          return {
+            ...actual,
+            segundos: actual.segundos - 1,
+          }
+        }
+
+        setTimer((timerActual) => ({
+          ...timerActual,
+          pausado: false,
+        }))
+
+        return {
+          activa: false,
+          equipo: null,
+          nombreEquipo: '',
+          segundos: DURACION_REPARACION,
+        }
+      })
+    }, 1000)
+
+    return () => clearInterval(intervalo)
+  }, [reparacion.activa])
 
   if (!partido) return null
 
@@ -141,6 +177,34 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
     }))
   }
 
+  function iniciarReparacion(equipo, nombreEquipo) {
+    if (!esTiempoJuego) return
+
+    setTimer((actual) => ({
+      ...actual,
+      pausado: true,
+    }))
+    setReparacion({
+      activa: true,
+      equipo,
+      nombreEquipo,
+      segundos: DURACION_REPARACION,
+    })
+  }
+
+  function terminarReparacion() {
+    setReparacion({
+      activa: false,
+      equipo: null,
+      nombreEquipo: '',
+      segundos: DURACION_REPARACION,
+    })
+    setTimer((actual) => ({
+      ...actual,
+      pausado: false,
+    }))
+  }
+
   const esTiempoJuego = [estadosTimer.primerTiempo, estadosTimer.segundoTiempo].includes(
     timer.estado,
   )
@@ -153,6 +217,8 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
     [estadosTimer.primerTiempo]: 'Primer tiempo',
     [estadosTimer.segundoTiempo]: 'Segundo tiempo',
   }[timer.estado]
+  const nombreEquipoA = obtenerNombreEquipo(partido.equipo_a, 'Equipo A')
+  const nombreEquipoB = obtenerNombreEquipo(partido.equipo_b, 'Equipo B')
 
   return (
     <article className="rounded-2xl border border-gray-700 bg-gray-800 p-6 shadow-lg">
@@ -172,7 +238,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
       <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-start gap-3">
         <div className="min-w-0 rounded-2xl border border-blue-400 bg-gray-900 p-4 text-center">
           <p className="break-words text-lg font-bold text-blue-400">
-            {obtenerNombreEquipo(partido.equipo_a, 'Equipo A')}
+            {nombreEquipoA}
           </p>
           <p className="mt-2 break-words text-base text-gray-300">
             {obtenerNombreRobot(partido.equipo_a)}
@@ -183,7 +249,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
         <div className="min-w-0 rounded-2xl border border-red-400 bg-gray-900 p-4 text-center">
           <p className="break-words text-lg font-bold text-red-400">
-            {obtenerNombreEquipo(partido.equipo_b, 'Equipo B')}
+            {nombreEquipoB}
           </p>
           <p className="mt-2 break-words text-base text-gray-300">
             {obtenerNombreRobot(partido.equipo_b)}
@@ -285,6 +351,42 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
           </div>
         ) : null}
 
+        {reparacion.activa ? (
+          <div className="mt-5 rounded-2xl border border-yellow-500 bg-yellow-950/40 p-4">
+            <p className="text-base font-black uppercase tracking-normal text-yellow-300">
+              Reparacion - {reparacion.nombreEquipo}
+            </p>
+            <p className="mt-3 font-mono text-4xl font-bold text-yellow-400">
+              {formatearTiempo(reparacion.segundos)}
+            </p>
+            <button
+              className="mt-4 min-h-14 w-full rounded-2xl bg-yellow-600 px-5 py-3 text-lg font-bold text-black transition hover:bg-yellow-500"
+              onClick={terminarReparacion}
+              type="button"
+            >
+              Terminar reparacion
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button
+          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-left text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+          disabled={!esTiempoJuego || reparacion.activa}
+          onClick={() => iniciarReparacion('equipoA', nombreEquipoA)}
+          type="button"
+        >
+          Reparacion {nombreEquipoA}
+        </button>
+        <button
+          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-right text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+          disabled={!esTiempoJuego || reparacion.activa}
+          onClick={() => iniciarReparacion('equipoB', nombreEquipoB)}
+          type="button"
+        >
+          Reparacion {nombreEquipoB}
+        </button>
       </div>
 
       <div className="mt-6">
