@@ -48,6 +48,10 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
     nombreEquipo: '',
     segundos: DURACION_REPARACION,
   })
+  const [reparacionesUsadas, setReparacionesUsadas] = useState({
+    equipoA: false,
+    equipoB: false,
+  })
   const timerActivo = [
     estadosTimer.primerTiempo,
     estadosTimer.descanso,
@@ -178,11 +182,15 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   }
 
   function iniciarReparacion(equipo, nombreEquipo) {
-    if (!esTiempoJuego) return
+    if (!esTiempoJuego || reparacionesUsadas[equipo]) return
 
     setTimer((actual) => ({
       ...actual,
       pausado: true,
+    }))
+    setReparacionesUsadas((actuales) => ({
+      ...actuales,
+      [equipo]: true,
     }))
     setReparacion({
       activa: true,
@@ -372,20 +380,24 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button
-          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-left text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
-          disabled={!esTiempoJuego || reparacion.activa}
+          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-left text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:line-through"
+          disabled={!esTiempoJuego || reparacion.activa || reparacionesUsadas.equipoA}
           onClick={() => iniciarReparacion('equipoA', nombreEquipoA)}
           type="button"
         >
-          Reparacion {nombreEquipoA}
+          {reparacionesUsadas.equipoA
+            ? `Reparacion usada - ${nombreEquipoA}`
+            : `Reparacion ${nombreEquipoA}`}
         </button>
         <button
-          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-right text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
-          disabled={!esTiempoJuego || reparacion.activa}
+          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-right text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:line-through"
+          disabled={!esTiempoJuego || reparacion.activa || reparacionesUsadas.equipoB}
           onClick={() => iniciarReparacion('equipoB', nombreEquipoB)}
           type="button"
         >
-          Reparacion {nombreEquipoB}
+          {reparacionesUsadas.equipoB
+            ? `Reparacion usada - ${nombreEquipoB}`
+            : `Reparacion ${nombreEquipoB}`}
         </button>
       </div>
 
