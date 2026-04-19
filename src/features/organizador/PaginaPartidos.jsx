@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { ModalActivarPartido } from './components/ModalActivarPartido'
+import { ModalActivarRonda } from './components/ModalActivarRonda'
 import { TarjetaEnfrentamiento } from './components/TarjetaEnfrentamiento'
 import { usePartidos } from './usarPartidos'
 
@@ -112,6 +113,7 @@ function ListaPartidos({
 export function PaginaPartidos() {
   const {
     activarPartido,
+    activarRonda,
     activos,
     cargando,
     desactivarPartido,
@@ -123,7 +125,7 @@ export function PaginaPartidos() {
   } = usePartidos()
   const [pestanaActiva, setPestanaActiva] = useState('pendientes')
   const [partidoParaActivar, setPartidoParaActivar] = useState(null)
-  const [, setGrupoParaActivar] = useState([])
+  const [grupoParaActivar, setGrupoParaActivar] = useState([])
   const [canchas, setCanchas] = useState(obtenerCanchasGuardadas)
   const [nuevaCancha, setNuevaCancha] = useState('')
 
@@ -273,6 +275,16 @@ export function PaginaPartidos() {
           canchas={canchas}
           guardando={guardando}
           partido={partidoParaActivar}
+        />
+      ) : null}
+
+      {grupoParaActivar.length ? (
+        <ModalActivarRonda
+          alCerrar={() => setGrupoParaActivar([])}
+          alConfirmar={activarRonda}
+          canchas={canchas}
+          guardando={guardando}
+          partidos={grupoParaActivar}
         />
       ) : null}
     </section>

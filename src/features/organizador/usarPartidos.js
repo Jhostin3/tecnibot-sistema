@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseCliente'
 import {
   activarEnfrentamiento,
+  activarRondaCompleta,
   desactivarEnfrentamiento,
   listarEnfrentamientosFinalizados,
   listarEnfrentamientosPorEstado,
@@ -116,6 +117,24 @@ export function usePartidos() {
     }
   }
 
+  async function activarRonda(enfrentamientos) {
+    setGuardando(true)
+    setError(null)
+    setMensaje('')
+
+    try {
+      await activarRondaCompleta(enfrentamientos)
+      await cargarPartidos({ mostrarCarga: false })
+      setMensaje('Ronda activada correctamente.')
+    } catch (error) {
+      setError(error.message)
+      setMensaje(error.message)
+      throw error
+    } finally {
+      setGuardando(false)
+    }
+  }
+
   async function desactivarPartido(partidoId) {
     setGuardando(true)
     setError(null)
@@ -136,6 +155,7 @@ export function usePartidos() {
 
   return {
     activarPartido,
+    activarRonda,
     activos,
     cargando,
     desactivarPartido,

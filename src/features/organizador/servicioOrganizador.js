@@ -176,6 +176,36 @@ export async function activarEnfrentamiento(id, cancha) {
   }
 }
 
+export async function activarRondaCompleta(enfrentamientos) {
+  try {
+    if (!Array.isArray(enfrentamientos) || !enfrentamientos.length) {
+      throw new Error('No hay partidos para activar en esta ronda.')
+    }
+
+    await Promise.all(
+      enfrentamientos.map(async (enfrentamiento) => {
+        if (!enfrentamiento.id) {
+          throw new Error('No se pudo identificar un partido de la ronda.')
+        }
+
+        const { error } = await supabase
+          .from('enfrentamientos')
+          .update({
+            cancha: enfrentamiento.cancha?.trim() || null,
+            estado: 'activo',
+          })
+          .eq('id', enfrentamiento.id)
+
+        if (error) {
+          throw new Error('No se pudo activar uno de los partidos de la ronda.')
+        }
+      }),
+    )
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo activar la ronda completa.')
+  }
+}
+
 export async function desactivarEnfrentamiento(id) {
   try {
     if (!id) {
