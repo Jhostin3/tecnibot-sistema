@@ -216,15 +216,17 @@ export function TarjetaPartido({ alRegistrar, partido }) {
             </button>
           </div>
         ) : null}
-      </div>
 
-      <button
-        className="mt-6 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
-        onClick={() => alRegistrar(partido)}
-        type="button"
-      >
-        Registrar resultado
-      </button>
+        {timer.estado === estadosTimer.finalizado ? (
+          <button
+            className="mt-5 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
+            onClick={() => alRegistrar(partido)}
+            type="button"
+          >
+            Registrar resultado
+          </button>
+        ) : null}
+      </div>
     </article>
   )
 }
