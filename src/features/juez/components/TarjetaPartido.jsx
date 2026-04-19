@@ -18,6 +18,12 @@ export function TarjetaPartido({ alRegistrar, partido }) {
         <h2 className="text-2xl font-bold text-white">Partido #{partido.orden}</h2>
       </div>
 
+      {partido.cancha ? (
+        <p className="mt-5 rounded-xl border border-cyan-400 bg-gray-900 p-4 text-lg font-bold text-cyan-200">
+          Cancha: {partido.cancha}
+        </p>
+      ) : null}
+
       <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-start gap-3">
         <div className="min-w-0 rounded-xl border border-blue-400 bg-gray-900 p-4 text-center">
           <p className="break-words text-lg font-bold text-blue-400">

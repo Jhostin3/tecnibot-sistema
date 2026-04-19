@@ -9,7 +9,8 @@ const seleccionEnfrentamientos = `
   ganador_id,
   estado,
   orden,
-  bye
+  bye,
+  cancha
 `
 
 const etiquetasRonda = {
