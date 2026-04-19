@@ -35,7 +35,7 @@ export function ResumenSorteoExistente({ sorteo }) {
               Bola {asignacion.numero_bola}
             </p>
             <p className="mt-2 font-bold text-slate-950">
-              {asignacion.equipos?.nombre_equipo || 'Equipo sin nombre'}
+              {asignacion.equipos?.nombre_equipo || 'BYE'}
             </p>
           </article>
         ))}
