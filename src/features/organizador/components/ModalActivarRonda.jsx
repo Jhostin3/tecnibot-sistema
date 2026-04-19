@@ -12,9 +12,9 @@ function obtenerTituloRonda(partidos) {
   return `${primerPartido.subcategoria?.nombre || 'Subcategoria'} · ${primerPartido.etiqueta_ronda}`
 }
 
-function crearAsignacionesIniciales(partidos) {
-  return partidos.reduce((asignaciones, partido) => {
-    asignaciones[partido.id] = ''
+function crearAsignacionesIniciales(partidos, canchas) {
+  return partidos.reduce((asignaciones, partido, indice) => {
+    asignaciones[partido.id] = canchas.length ? canchas[indice % canchas.length] : ''
     return asignaciones
   }, {})
 }
@@ -27,7 +27,7 @@ export function ModalActivarRonda({
   partidos,
 }) {
   const [asignaciones, setAsignaciones] = useState(() =>
-    crearAsignacionesIniciales(partidos || []),
+    crearAsignacionesIniciales(partidos || [], canchas || []),
   )
   const [error, setError] = useState('')
 
