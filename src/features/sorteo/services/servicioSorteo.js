@@ -81,10 +81,7 @@ export async function listarSubcategoriasListasParaSorteo() {
         return {
           ...subcategoria,
           equipos_aprobados: equiposAprobados.length,
-          lista:
-            equiposAprobados.length >= 7 &&
-            equiposAprobados.length <= 8 &&
-            !sorteoActual.length,
+          lista: equiposAprobados.length >= 2 && !sorteoActual.length,
         }
       }),
     )
@@ -238,31 +235,85 @@ export async function listarBracketPorSubcategoria(subcategoriaId) {
 }
 
 function validarAsignaciones(asignaciones) {
+  if (asignaciones.length < 2) {
+    throw new Error('Se necesitan al menos 2 equipos aprobados para sortear.')
+  }
+
   const numeros = asignaciones.map((asignacion) => Number(asignacion.numero_bola))
   const numerosUnicos = new Set(numeros)
-  const tieneRangoValido = numeros.every((numero) => numero >= 1 && numero <= 8)
+  const tieneRangoValido = numeros.every(
+    (numero) => numero >= 1 && numero <= asignaciones.length,
+  )
 
-  if (asignaciones.length !== 8 || numerosUnicos.size !== 8 || !tieneRangoValido) {
-    throw new Error('Asigna una bola unica del 1 al 8 para cada equipo.')
+  if (numerosUnicos.size !== asignaciones.length || !tieneRangoValido) {
+    throw new Error('Asigna una bola unica para cada equipo.')
   }
 }
 
-function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
-  const equiposPorBola = new Map(
-    asignaciones.map((asignacion) => [
-      Number(asignacion.numero_bola),
-      asignacion.equipo_id,
-    ]),
-  )
+function calcularSiguientePotenciaDeDos(cantidad) {
+  let potencia = 1
 
-  return [
-    [1, 1, 2],
-    [2, 3, 4],
-    [3, 5, 6],
-    [4, 7, 8],
-  ].map(([orden, bolaA, bolaB]) => {
-    const equipoA = equiposPorBola.get(bolaA)
-    const equipoB = equiposPorBola.get(bolaB)
+  while (potencia < cantidad) {
+    potencia *= 2
+  }
+
+  return potencia
+}
+
+function obtenerRondaInicial(tamanoBracket) {
+  const rondas = {
+    2: 'final',
+    4: 'semifinal',
+    8: 'cuartos',
+    16: 'octavos',
+    32: 'dieciseisavos',
+    64: 'treintaidosavos',
+  }
+
+  return rondas[tamanoBracket] || `ronda_${Math.log2(tamanoBracket)}`
+}
+
+function crearSlotsBracket(asignaciones, tamanoBracket) {
+  const slotsEquipos = [...asignaciones]
+    .sort((a, b) => Number(a.numero_bola) - Number(b.numero_bola))
+    .map((asignacion) => ({
+      equipo_id: asignacion.equipo_id,
+      numero_bola: Number(asignacion.numero_bola),
+      tipo: 'equipo',
+    }))
+  const cantidadByes = tamanoBracket - slotsEquipos.length
+  const slotsBye = Array.from({ length: cantidadByes }).map((_, indice) => ({
+    equipo_id: null,
+    numero_bola: slotsEquipos.length + indice + 1,
+    tipo: 'bye',
+  }))
+
+  return [...slotsEquipos, ...slotsBye]
+}
+
+function crearParejasIniciales(slots, cantidadByes) {
+  if (!cantidadByes) {
+    return Array.from({ length: slots.length / 2 }).map((_, indice) => [
+      slots[indice * 2],
+      slots[indice * 2 + 1],
+    ])
+  }
+
+  return Array.from({ length: slots.length / 2 }).map((_, indice) => [
+    slots[indice],
+    slots[slots.length - 1 - indice],
+  ])
+}
+
+function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
+  const tamanoBracket = calcularSiguientePotenciaDeDos(asignaciones.length)
+  const cantidadByes = tamanoBracket - asignaciones.length
+  const rondaInicial = obtenerRondaInicial(tamanoBracket)
+  const slots = crearSlotsBracket(asignaciones, tamanoBracket)
+
+  return crearParejasIniciales(slots, cantidadByes).map(([slotA, slotB], indice) => {
+    const equipoA = slotA.equipo_id
+    const equipoB = slotB.equipo_id
     const tieneBye = !equipoA || !equipoB
     const equipoGanador = tieneBye ? equipoA || equipoB : null
 
@@ -272,8 +323,8 @@ function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
       equipo_b_id: tieneBye ? null : equipoB,
       estado: tieneBye ? 'finalizado' : 'pendiente',
       ganador_id: equipoGanador,
-      orden,
-      ronda: 'cuartos',
+      orden: indice + 1,
+      ronda: rondaInicial,
       subcategoria_id: subcategoriaId,
     }
   })
