@@ -4,6 +4,7 @@ import { ProveedorAutenticacion } from '../features/autenticacion/hooks/Contexto
 import { PaginaLogin } from '../features/autenticacion/pages/PaginaLogin'
 import { PaginaEquipos } from '../features/equipos/pages/PaginaEquipos'
 import { PaginaHomologacion } from '../features/homologacion/pages/PaginaHomologacion'
+import { PaginaPartidoActivo } from '../features/juez/PaginaPartidoActivo'
 import { PaginaJuez } from '../features/juez/pages/PaginaJuez'
 import { PaginaDashboard } from '../features/organizador/PaginaDashboard'
 import { PaginaPartidos } from '../features/organizador/PaginaPartidos'
@@ -38,6 +39,7 @@ export function RouterSistema() {
               </Route>
               <Route element={<RutaPorRol rolesPermitidos={['juez']} />}>
                 <Route path={rutas.juez} element={<PaginaJuez />} />
+                <Route path={rutas.juezPartido} element={<PaginaPartidoActivo />} />
               </Route>
               <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
                 <Route path={rutas.homologacion} element={<PaginaHomologacion />} />
