@@ -135,6 +135,36 @@ export async function listarPartidosActivos() {
   }
 }
 
+export async function obtenerPartidoActivoPorId(enfrentamientoId) {
+  try {
+    if (!enfrentamientoId) {
+      throw new Error('No se pudo identificar el partido.')
+    }
+
+    const { data, error } = await supabase
+      .from('enfrentamientos')
+      .select(seleccionEnfrentamientos)
+      .eq('id', enfrentamientoId)
+      .eq('estado', 'activo')
+      .eq('bye', false)
+      .single()
+
+    if (error) {
+      throw new Error('No se pudo cargar el partido activo.')
+    }
+
+    const idsEquipos = [data.equipo_a_id, data.equipo_b_id]
+    const [equiposPorId, subcategoriasPorId] = await Promise.all([
+      listarEquiposPorIds(idsEquipos),
+      listarSubcategoriasPorIds([data.subcategoria_id]),
+    ])
+
+    return adjuntarDatosPartido(data, equiposPorId, subcategoriasPorId)
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo cargar el partido activo.')
+  }
+}
+
 async function listarRondaPorPartido(partido) {
   try {
     const { data, error } = await supabase
