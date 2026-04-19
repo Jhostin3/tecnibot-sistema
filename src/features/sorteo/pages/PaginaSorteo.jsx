@@ -7,32 +7,31 @@ import { SelectorSubcategoriaSorteo } from '../components/SelectorSubcategoriaSo
 import { useSorteo } from '../hooks/usarSorteo'
 
 function obtenerMensajeValidacion({
+  cantidadByes,
   equipos = [],
+  partidosPrimeraRonda,
   sorteoExistente = [],
   subcategoriaId,
   subcategorias = [],
+  tamanoBracket,
 }) {
   if (!subcategorias || !subcategorias.length) {
-    return 'No hay subcategorías listas para sorteo. Se necesitan al menos 7 equipos aprobados.'
+    return 'No hay subcategorias listas para sorteo. Se necesitan al menos 2 equipos aprobados.'
   }
 
   if (!subcategoriaId) {
-    return 'Selecciona una subcategoría lista para iniciar la ruleta.'
+    return 'Selecciona una subcategoria lista para iniciar la ruleta.'
   }
 
   if (sorteoExistente.length) {
-    return 'El sorteo ya fue registrado para esta subcategoría.'
+    return 'El sorteo ya fue registrado para esta subcategoria.'
   }
 
-  if (equipos.length < 7) {
-    return `Hay ${equipos.length} equipos aprobados. El sorteo requiere al menos 7.`
+  if (equipos.length < 2) {
+    return `Hay ${equipos.length} equipos aprobados. El sorteo requiere al menos 2.`
   }
 
-  if (equipos.length === 7) {
-    return 'Hay 7 equipos aprobados. La ranura 8 será BYE y avanzará automáticamente.'
-  }
-
-  return 'Gira la ruleta para asignar el orden de batalla.'
+  return `Hay ${equipos.length} equipos aprobados. Bracket de ${tamanoBracket}, ${cantidadByes} BYEs y ${partidosPrimeraRonda} partidos en primera ronda.`
 }
 
 export function PaginaSorteo() {
@@ -43,17 +42,20 @@ export function PaginaSorteo() {
       )
     : []
   const mensajeValidacion = obtenerMensajeValidacion({
+    cantidadByes: sorteo.cantidadByes,
     equipos: sorteo.equipos,
+    partidosPrimeraRonda: sorteo.partidosPrimeraRonda,
     sorteoExistente: sorteo.sorteoExistente,
     subcategoriaId: sorteo.subcategoriaId,
     subcategorias: sorteo.subcategorias,
+    tamanoBracket: sorteo.tamanoBracket,
   })
 
   return (
     <section className="space-y-6">
       <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
         <EncabezadoSeccion
-          descripcion="Selecciona una subcategoría lista, gira la ruleta con los equipos aprobados y genera los cuartos de final."
+          descripcion="Selecciona una subcategoria lista, gira la ruleta con los equipos aprobados y genera la primera ronda del bracket."
           etiqueta="Ruleta de homologacion"
           titulo="Sorteo Soccer"
         />
@@ -93,10 +95,13 @@ export function PaginaSorteo() {
                 onGirar={sorteo.girarRuleta}
               />
               <OrdenBatalla
+                cantidadByes={sorteo.cantidadByes}
                 guardando={sorteo.guardando}
                 onConfirmar={sorteo.guardarSorteo}
                 ordenSorteo={sorteo.ordenSorteo}
+                partidosPrimeraRonda={sorteo.partidosPrimeraRonda}
                 puedeConfirmar={sorteo.puedeConfirmar}
+                tamanoBracket={sorteo.tamanoBracket}
               />
             </div>
           ) : null}
