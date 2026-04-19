@@ -2,7 +2,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { ProveedorAutenticacion } from '../features/autenticacion/hooks/ContextoAutenticacion'
 import { PaginaLogin } from '../features/autenticacion/pages/PaginaLogin'
-import { PaginaPanel } from '../features/autenticacion/pages/PaginaPanel'
 import { PaginaEquipos } from '../features/equipos/pages/PaginaEquipos'
 import { PaginaHomologacion } from '../features/homologacion/pages/PaginaHomologacion'
 import { PaginaJuez } from '../features/juez/pages/PaginaJuez'
@@ -11,6 +10,7 @@ import { PaginaSorteo } from '../features/sorteo/pages/PaginaSorteo'
 import { LayoutPrivado } from '../layouts/LayoutPrivado'
 import { LayoutPublico } from '../layouts/LayoutPublico'
 import { rutas } from '../utils/rutas'
+import { RedireccionPorRol } from './RedireccionPorRol'
 import { RutaPorRol } from './RutaPorRol'
 import { RutaProtegida } from './RutaProtegida'
 
@@ -25,7 +25,7 @@ export function RouterSistema() {
           </Route>
           <Route element={<RutaProtegida />}>
             <Route element={<LayoutPrivado />}>
-              <Route path={rutas.panel} element={<PaginaPanel />} />
+              <Route path={rutas.panel} element={<RedireccionPorRol />} />
               <Route element={<RutaPorRol rolesPermitidos={['organizador']} />}>
                 <Route path={rutas.equipos} element={<PaginaEquipos />} />
               </Route>
