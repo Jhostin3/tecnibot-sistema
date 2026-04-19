@@ -43,14 +43,31 @@ export function RuletaEquipos({
           <div className="relative flex aspect-square w-full max-w-md items-center justify-center">
             <div className="absolute right-2 top-1/2 z-10 h-0 w-0 -translate-y-1/2 border-y-[14px] border-r-[24px] border-y-transparent border-r-slate-950" />
             <div
-              className="flex h-full w-full items-center justify-center rounded-full border-8 border-white shadow-lg transition-transform ease-out"
+              className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-8 border-white shadow-lg transition-transform ease-out"
               style={{
                 background: crearFondoRuleta(equipos.length),
                 transform: `rotate(${angulo}deg)`,
                 transitionDuration: girando ? `${duracion}ms` : '300ms',
               }}
             >
-              <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-slate-950 px-4 text-center text-sm font-bold text-white shadow-md">
+              {equipos.map((equipo, indice) => {
+                const anguloEquipo = (360 / equipos.length) * indice
+
+                return (
+                  <div
+                    className="absolute left-1/2 top-1/2 w-28 origin-center text-center text-xs font-bold leading-4 text-white drop-shadow"
+                    key={equipo.id}
+                    style={{
+                      transform: `translate(-50%, -50%) rotate(${anguloEquipo}deg) translateY(-38%) rotate(-${anguloEquipo}deg)`,
+                    }}
+                  >
+                    <span className="block truncate rounded-md bg-slate-950/50 px-2 py-1">
+                      {equipo.nombre_equipo}
+                    </span>
+                  </div>
+                )
+              })}
+              <div className="z-10 flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-slate-950 px-4 text-center text-sm font-bold text-white shadow-md">
                 {girando ? 'Girando...' : `${equipos.length} equipos`}
               </div>
             </div>
