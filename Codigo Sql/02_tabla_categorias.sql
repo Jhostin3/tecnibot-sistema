@@ -1,2 +1,4 @@
--- Tabla de categorías de competencia.
--- Pendiente de definir antes de ejecutar en Supabase.
+create table categorias (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null
+);
