@@ -44,7 +44,7 @@ function obtenerVarianteAccion(estado) {
 }
 
 export function TablaHomologaciones({
-  equipos,
+  equipos = [],
   guardando,
   mensajeVacio = 'No hay equipos que coincidan con los filtros seleccionados.',
   onSeleccionarCambio,

@@ -10,7 +10,7 @@ import {
 } from '../utils/valoresEquipo'
 import { CampoFormularioEquipo } from './CampoFormularioEquipo'
 
-export function FormularioEquipo({ alCancelar, alGuardar, equipo, subcategorias }) {
+export function FormularioEquipo({ alCancelar, alGuardar, equipo, subcategorias = [] }) {
   const [formulario, setFormulario] = useState(() =>
     equipo ? { ...equipoInicial, ...equipo } : equipoInicial,
   )

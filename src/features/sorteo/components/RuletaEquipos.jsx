@@ -30,7 +30,7 @@ export function RuletaEquipos({
   angulo,
   duracion,
   equipoGirado,
-  equipos,
+  equipos = [],
   girando,
   onGirar,
 }) {

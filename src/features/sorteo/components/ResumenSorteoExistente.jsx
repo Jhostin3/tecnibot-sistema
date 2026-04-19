@@ -15,7 +15,7 @@ function formatearFecha(fecha) {
   }).format(new Date(fecha))
 }
 
-function ordenarPorRonda(enfrentamientos, ronda) {
+function ordenarPorRonda(enfrentamientos = [], ronda) {
   return enfrentamientos
     .filter((enfrentamiento) => enfrentamiento.ronda === ronda)
     .sort((a, b) => a.orden - b.orden)
@@ -59,7 +59,7 @@ function completarRonda(enfrentamientos, ronda, total) {
   })
 }
 
-function construirRondas(enfrentamientos) {
+function construirRondas(enfrentamientos = []) {
   const cuartos = completarRonda(ordenarPorRonda(enfrentamientos, 'cuartos'), 'cuartos', 4)
   const semifinalesExistentes = ordenarPorRonda(enfrentamientos, 'semifinal')
   const finalExistente = ordenarPorRonda(enfrentamientos, 'final')
@@ -171,10 +171,10 @@ function ColumnaRonda({ partidos, ronda, titulo }) {
   )
 }
 
-export function ResumenSorteoExistente({ sorteo, subcategoriaId }) {
+export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
   const bracket = useBracketSorteo(subcategoriaId)
 
-  if (!sorteo.length) {
+  if (!sorteo || !sorteo.length) {
     return null
   }
 

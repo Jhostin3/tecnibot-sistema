@@ -4,7 +4,7 @@ import { Etiqueta } from '../../../components/atoms/Etiqueta'
 export function FiltrosHomologacion({
   filtros,
   onCambiarFiltro,
-  subcategorias,
+  subcategorias = [],
 }) {
   return (
     <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">

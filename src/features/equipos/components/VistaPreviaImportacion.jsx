@@ -1,7 +1,12 @@
 import { Boton } from '../../../components/atoms/Boton'
 
-export function VistaPreviaImportacion({ cargando, filas, filasValidas, onConfirmar }) {
-  if (!filas.length) {
+export function VistaPreviaImportacion({
+  cargando,
+  filas = [],
+  filasValidas = [],
+  onConfirmar,
+}) {
+  if (!filas || !filas.length) {
     return null
   }
 

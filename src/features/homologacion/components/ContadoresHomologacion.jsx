@@ -21,11 +21,11 @@ const tarjetas = [
   },
 ]
 
-function contarPorEstado(equipos, estado) {
+function contarPorEstado(equipos = [], estado) {
   return equipos.filter((equipo) => equipo.estado_homologacion === estado).length
 }
 
-export function ContadoresHomologacion({ equipos }) {
+export function ContadoresHomologacion({ equipos = [] }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {tarjetas.map((tarjeta) => (

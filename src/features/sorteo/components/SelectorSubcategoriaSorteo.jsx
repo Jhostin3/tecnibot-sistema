@@ -3,11 +3,11 @@ import { Etiqueta } from '../../../components/atoms/Etiqueta'
 
 export function SelectorSubcategoriaSorteo({
   categoriaId,
-  categorias,
+  categorias = [],
   onSeleccionarCategoria,
   onSeleccionar,
   subcategoriaId,
-  subcategorias,
+  subcategorias = [],
 }) {
   return (
     <div className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2">

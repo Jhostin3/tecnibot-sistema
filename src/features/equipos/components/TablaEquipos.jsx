@@ -4,8 +4,8 @@ function obtenerSubcategoria(equipo) {
   return equipo.subcategorias?.nombre || 'Sin subcategoría'
 }
 
-export function TablaEquipos({ alEditar, alEliminar, equipos }) {
-  if (!equipos.length) {
+export function TablaEquipos({ alEditar, alEliminar, equipos = [] }) {
+  if (!equipos || !equipos.length) {
     return (
       <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
         Todavía no hay equipos registrados.

@@ -25,7 +25,7 @@ function obtenerNombreAsignacion(asignacion) {
 export function OrdenBatalla({
   guardando,
   onConfirmar,
-  ordenSorteo,
+  ordenSorteo = [],
   puedeConfirmar,
 }) {
   const parejas = obtenerParejas(ordenSorteo)

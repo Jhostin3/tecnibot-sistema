@@ -6,8 +6,13 @@ import { RuletaEquipos } from '../components/RuletaEquipos'
 import { SelectorSubcategoriaSorteo } from '../components/SelectorSubcategoriaSorteo'
 import { useSorteo } from '../hooks/usarSorteo'
 
-function obtenerMensajeValidacion({ equipos, sorteoExistente, subcategoriaId, subcategorias }) {
-  if (!subcategorias.length) {
+function obtenerMensajeValidacion({
+  equipos = [],
+  sorteoExistente = [],
+  subcategoriaId,
+  subcategorias = [],
+}) {
+  if (!subcategorias || !subcategorias.length) {
     return 'No hay subcategorías listas para sorteo. Se necesitan al menos 7 equipos aprobados.'
   }
 
