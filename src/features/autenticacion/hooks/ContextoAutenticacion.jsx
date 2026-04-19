@@ -66,7 +66,7 @@ export function ProveedorAutenticacion({ children }) {
 
     return () => {
       componenteActivo = false
-      suscripcion.unsubscribe()
+      suscripcion?.unsubscribe()
     }
   }, [cargarPerfil, limpiarSesion])
 
