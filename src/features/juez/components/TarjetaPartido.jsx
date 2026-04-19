@@ -25,6 +25,12 @@ function formatearTiempo(segundos) {
   return `${String(minutos).padStart(2, '0')}:${String(segundosRestantes).padStart(2, '0')}`
 }
 
+function vibrar(patron) {
+  if ('vibrate' in navigator) {
+    navigator.vibrate(patron)
+  }
+}
+
 export function TarjetaPartido({ alRegistrar, partido }) {
   const [timer, setTimer] = useState({
     estado: estadosTimer.listo,
@@ -50,6 +56,8 @@ export function TarjetaPartido({ alRegistrar, partido }) {
         }
 
         if (actual.estado === estadosTimer.primerTiempo) {
+          vibrar([500])
+
           return {
             estado: estadosTimer.descanso,
             pausado: false,
@@ -64,6 +72,8 @@ export function TarjetaPartido({ alRegistrar, partido }) {
             segundos: DURACION_TIEMPO,
           }
         }
+
+        vibrar([1000, 200, 1000])
 
         return {
           estado: estadosTimer.finalizado,
@@ -87,6 +97,7 @@ export function TarjetaPartido({ alRegistrar, partido }) {
   }
 
   function finalizarPartido() {
+    vibrar([1000, 200, 1000])
     setTimer({
       estado: estadosTimer.finalizado,
       pausado: false,
