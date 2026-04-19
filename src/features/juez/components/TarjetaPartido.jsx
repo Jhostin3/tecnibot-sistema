@@ -36,6 +36,28 @@ function vibrar(patron) {
   }
 }
 
+function obtenerClaveReparacion(partidoId) {
+  return `reparacion_${partidoId}`
+}
+
+function obtenerReparacionesGuardadas(partidoId) {
+  try {
+    const reparaciones = JSON.parse(
+      localStorage.getItem(obtenerClaveReparacion(partidoId)) || '{}',
+    )
+
+    return {
+      equipoA: Boolean(reparaciones.equipoA),
+      equipoB: Boolean(reparaciones.equipoB),
+    }
+  } catch {
+    return {
+      equipoA: false,
+      equipoB: false,
+    }
+  }
+}
+
 export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   const [timer, setTimer] = useState({
     estado: estadosTimer.listo,
@@ -48,10 +70,9 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
     nombreEquipo: '',
     segundos: DURACION_REPARACION,
   })
-  const [reparacionesUsadas, setReparacionesUsadas] = useState({
-    equipoA: false,
-    equipoB: false,
-  })
+  const [reparacionesUsadas, setReparacionesUsadas] = useState(() =>
+    obtenerReparacionesGuardadas(partido?.id),
+  )
   const timerActivo = [
     estadosTimer.primerTiempo,
     estadosTimer.descanso,
@@ -129,6 +150,15 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
     return () => clearInterval(intervalo)
   }, [reparacion.activa])
+
+  useEffect(() => {
+    if (!partido?.id) return
+
+    localStorage.setItem(
+      obtenerClaveReparacion(partido.id),
+      JSON.stringify(reparacionesUsadas),
+    )
+  }, [partido?.id, reparacionesUsadas])
 
   if (!partido) return null
 
