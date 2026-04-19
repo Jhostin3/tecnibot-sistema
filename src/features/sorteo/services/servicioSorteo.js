@@ -33,122 +33,158 @@ const seleccionEnfrentamientos = `
 `
 
 export async function listarCategoriasSorteo() {
-  const { data, error } = await supabase
-    .from('categorias')
-    .select('id, nombre')
-    .order('nombre', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('categorias')
+      .select('id, nombre')
+      .order('nombre', { ascending: true })
+      .limit(500)
 
-  if (error) {
-    throw new Error('No se pudieron cargar las categorias.')
+    if (error) {
+      throw new Error('No se pudieron cargar las categorias.')
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar las categorias.')
   }
-
-  return data
 }
 
 export async function listarSubcategoriasSorteo() {
-  const { data, error } = await supabase
-    .from('subcategorias')
-    .select('id, categoria_id, nombre')
-    .order('nombre', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('subcategorias')
+      .select('id, categoria_id, nombre')
+      .order('nombre', { ascending: true })
+      .limit(500)
 
-  if (error) {
-    throw new Error('No se pudieron cargar las subcategorias.')
+    if (error) {
+      throw new Error('No se pudieron cargar las subcategorias.')
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar las subcategorias.')
   }
-
-  return data
 }
 
 export async function listarSubcategoriasListasParaSorteo() {
-  const subcategorias = await listarSubcategoriasSorteo()
-  const revisiones = await Promise.all(
-    subcategorias.map(async (subcategoria) => {
-      const [equiposAprobados, sorteoActual] = await Promise.all([
-        listarEquiposAprobadosPorSubcategoria(subcategoria.id),
-        obtenerSorteoPorSubcategoria(subcategoria.id),
-      ])
+  try {
+    const subcategorias = await listarSubcategoriasSorteo()
+    const revisiones = await Promise.all(
+      subcategorias.map(async (subcategoria) => {
+        const [equiposAprobados, sorteoActual] = await Promise.all([
+          listarEquiposAprobadosPorSubcategoria(subcategoria.id),
+          obtenerSorteoPorSubcategoria(subcategoria.id),
+        ])
 
-      return {
-        ...subcategoria,
-        equipos_aprobados: equiposAprobados.length,
-        lista:
-          equiposAprobados.length >= 7 &&
-          equiposAprobados.length <= 8 &&
-          !sorteoActual.length,
-      }
-    }),
-  )
+        return {
+          ...subcategoria,
+          equipos_aprobados: equiposAprobados.length,
+          lista:
+            equiposAprobados.length >= 7 &&
+            equiposAprobados.length <= 8 &&
+            !sorteoActual.length,
+        }
+      }),
+    )
 
-  return revisiones.filter((subcategoria) => subcategoria.lista)
+    return revisiones.filter((subcategoria) => subcategoria.lista)
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar las subcategorias listas.')
+  }
 }
 
 export async function listarEquiposAprobadosPorSubcategoria(subcategoriaId) {
-  const { data, error } = await supabase
-    .from('equipos')
-    .select(seleccionEquiposAprobados)
-    .eq('subcategoria_id', subcategoriaId)
-    .eq('estado_homologacion', 'aprobado')
-    .order('nombre_equipo', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('equipos')
+      .select(seleccionEquiposAprobados)
+      .eq('subcategoria_id', subcategoriaId)
+      .eq('estado_homologacion', 'aprobado')
+      .order('nombre_equipo', { ascending: true })
+      .limit(500)
 
-  if (error) {
-    throw new Error('No se pudieron cargar los equipos aprobados.')
+    if (error) {
+      throw new Error('No se pudieron cargar los equipos aprobados.')
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los equipos aprobados.')
   }
-
-  return data
 }
 
 export async function obtenerSorteoPorSubcategoria(subcategoriaId) {
-  const { data, error } = await supabase
-    .from('sorteo')
-    .select(seleccionSorteo)
-    .eq('subcategoria_id', subcategoriaId)
-    .order('numero_bola', { ascending: true })
+  try {
+    const { data, error } = await supabase
+      .from('sorteo')
+      .select(seleccionSorteo)
+      .eq('subcategoria_id', subcategoriaId)
+      .order('numero_bola', { ascending: true })
+      .limit(500)
 
-  if (error) {
-    throw new Error('No se pudo verificar si ya existe un sorteo.')
+    if (error) {
+      throw new Error('No se pudo verificar si ya existe un sorteo.')
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo verificar si ya existe un sorteo.')
   }
-
-  return data
 }
 
 async function listarEquiposPorIds(idsEquipos) {
-  const ids = Array.from(new Set(idsEquipos.filter(Boolean)))
+  try {
+    const ids = Array.from(new Set(idsEquipos.filter(Boolean))).slice(0, 500)
 
-  if (!ids.length) return new Map()
+    if (!ids.length) return new Map()
 
-  const { data, error } = await supabase
-    .from('equipos')
-    .select('id, nombre_equipo')
-    .in('id', ids)
+    const { data, error } = await supabase
+      .from('equipos')
+      .select('id, nombre_equipo')
+      .in('id', ids)
+      .limit(500)
 
-  if (error) {
-    throw new Error('No se pudieron cargar los equipos del bracket.')
+    if (error) {
+      throw new Error('No se pudieron cargar los equipos del bracket.')
+    }
+
+    return new Map((data || []).map((equipo) => [equipo.id, equipo]))
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los equipos del bracket.')
   }
-
-  return new Map(data.map((equipo) => [equipo.id, equipo]))
 }
 
 async function listarResultadosPorEnfrentamientos(idsEnfrentamientos) {
-  if (!idsEnfrentamientos.length) return new Map()
+  try {
+    const ids = idsEnfrentamientos.slice(0, 500)
 
-  const { data, error } = await supabase
-    .from('resultados')
-    .select('id, enfrentamiento_id, goles_a, goles_b, fecha')
-    .in('enfrentamiento_id', idsEnfrentamientos)
-    .order('fecha', { ascending: false })
+    if (!ids.length) return new Map()
 
-  if (error) {
-    throw new Error('No se pudieron cargar los resultados del bracket.')
-  }
+    const { data, error } = await supabase
+      .from('resultados')
+      .select('id, enfrentamiento_id, goles_a, goles_b, fecha')
+      .in('enfrentamiento_id', ids)
+      .order('fecha', { ascending: false })
+      .limit(500)
 
-  const resultados = new Map()
-
-  data.forEach((resultado) => {
-    if (!resultados.has(resultado.enfrentamiento_id)) {
-      resultados.set(resultado.enfrentamiento_id, resultado)
+    if (error) {
+      throw new Error('No se pudieron cargar los resultados del bracket.')
     }
-  })
 
-  return resultados
+    const resultados = new Map()
+
+    ;(data || []).forEach((resultado) => {
+      if (!resultados.has(resultado.enfrentamiento_id)) {
+        resultados.set(resultado.enfrentamiento_id, resultado)
+      }
+    })
+
+    return resultados
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los resultados del bracket.')
+  }
 }
 
 function adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bolasPorEquipo) {
@@ -163,37 +199,42 @@ function adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bo
 }
 
 export async function listarBracketPorSubcategoria(subcategoriaId) {
-  const [respuestaEnfrentamientos, sorteo] = await Promise.all([
-    supabase
-      .from('enfrentamientos')
-      .select(seleccionEnfrentamientos)
-      .eq('subcategoria_id', subcategoriaId)
-      .order('orden', { ascending: true }),
-    obtenerSorteoPorSubcategoria(subcategoriaId),
-  ])
+  try {
+    const [respuestaEnfrentamientos, sorteo] = await Promise.all([
+      supabase
+        .from('enfrentamientos')
+        .select(seleccionEnfrentamientos)
+        .eq('subcategoria_id', subcategoriaId)
+        .order('orden', { ascending: true })
+        .limit(500),
+      obtenerSorteoPorSubcategoria(subcategoriaId),
+    ])
 
-  if (respuestaEnfrentamientos.error) {
-    throw new Error('No se pudo cargar la llave del torneo.')
+    if (respuestaEnfrentamientos.error) {
+      throw new Error('No se pudo cargar la llave del torneo.')
+    }
+
+    const enfrentamientos = respuestaEnfrentamientos.data || []
+    const idsEquipos = enfrentamientos.flatMap((enfrentamiento) => [
+      enfrentamiento.equipo_a_id,
+      enfrentamiento.equipo_b_id,
+      enfrentamiento.ganador_id,
+    ])
+    const bolasPorEquipo = new Map(
+      sorteo
+        .filter((asignacion) => asignacion.equipo_id)
+        .map((asignacion) => [asignacion.equipo_id, asignacion.numero_bola]),
+    )
+
+    const [equiposPorId, resultadosPorId] = await Promise.all([
+      listarEquiposPorIds(idsEquipos),
+      listarResultadosPorEnfrentamientos(enfrentamientos.map((enfrentamiento) => enfrentamiento.id)),
+    ])
+
+    return adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bolasPorEquipo)
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo cargar la llave del torneo.')
   }
-
-  const enfrentamientos = respuestaEnfrentamientos.data
-  const idsEquipos = enfrentamientos.flatMap((enfrentamiento) => [
-    enfrentamiento.equipo_a_id,
-    enfrentamiento.equipo_b_id,
-    enfrentamiento.ganador_id,
-  ])
-  const bolasPorEquipo = new Map(
-    sorteo
-      .filter((asignacion) => asignacion.equipo_id)
-      .map((asignacion) => [asignacion.equipo_id, asignacion.numero_bola]),
-  )
-
-  const [equiposPorId, resultadosPorId] = await Promise.all([
-    listarEquiposPorIds(idsEquipos),
-    listarResultadosPorEnfrentamientos(enfrentamientos.map((enfrentamiento) => enfrentamiento.id)),
-  ])
-
-  return adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bolasPorEquipo)
 }
 
 function validarAsignaciones(asignaciones) {
@@ -243,34 +284,38 @@ export async function guardarSorteoYGenerarCuartos({
   registradoPor,
   subcategoriaId,
 }) {
-  validarAsignaciones(asignaciones)
+  try {
+    validarAsignaciones(asignaciones)
 
-  const sorteoExistente = await obtenerSorteoPorSubcategoria(subcategoriaId)
+    const sorteoExistente = await obtenerSorteoPorSubcategoria(subcategoriaId)
 
-  if (sorteoExistente.length) {
-    throw new Error('Ya existe un sorteo registrado para esta subcategoria.')
-  }
+    if (sorteoExistente.length) {
+      throw new Error('Ya existe un sorteo registrado para esta subcategoria.')
+    }
 
-  const filasSorteo = asignaciones.map((asignacion) => ({
-    equipo_id: asignacion.equipo_id,
-    fecha: new Date().toISOString(),
-    numero_bola: Number(asignacion.numero_bola),
-    registrado_por: registradoPor,
-    subcategoria_id: subcategoriaId,
-  }))
+    const filasSorteo = asignaciones.map((asignacion) => ({
+      equipo_id: asignacion.equipo_id,
+      fecha: new Date().toISOString(),
+      numero_bola: Number(asignacion.numero_bola),
+      registrado_por: registradoPor,
+      subcategoria_id: subcategoriaId,
+    }))
 
-  const { error: errorSorteo } = await supabase.from('sorteo').insert(filasSorteo)
+    const { error: errorSorteo } = await supabase.from('sorteo').insert(filasSorteo)
 
-  if (errorSorteo) {
-    throw new Error('No se pudo guardar el sorteo.')
-  }
+    if (errorSorteo) {
+      throw new Error('No se pudo guardar el sorteo.')
+    }
 
-  const enfrentamientos = crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
-  const { error: errorEnfrentamientos } = await supabase
-    .from('enfrentamientos')
-    .insert(enfrentamientos)
+    const enfrentamientos = crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
+    const { error: errorEnfrentamientos } = await supabase
+      .from('enfrentamientos')
+      .insert(enfrentamientos)
 
-  if (errorEnfrentamientos) {
-    throw new Error('El sorteo se guardo, pero no se pudieron generar los cuartos.')
+    if (errorEnfrentamientos) {
+      throw new Error('El sorteo se guardo, pero no se pudieron generar los cuartos.')
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo guardar el sorteo.')
   }
 }
