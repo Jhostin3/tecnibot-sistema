@@ -11,6 +11,7 @@ const camposPerfil = [
 export function PaginaPanel() {
   const { perfil, usuario } = useAutenticacion()
   const esOrganizador = perfil?.rol === 'organizador'
+  const puedeHomologar = ['organizador', 'homologador'].includes(perfil?.rol)
 
   return (
     <section className="space-y-6">
@@ -25,14 +26,24 @@ export function PaginaPanel() {
           Acceso validado con Supabase Auth y perfil consultado desde la tabla
           perfiles.
         </p>
-        {esOrganizador ? (
-          <Link
-            className="mt-5 inline-flex min-h-11 items-center rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
-            to={rutas.equipos}
-          >
-            Gestionar equipos
-          </Link>
-        ) : null}
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          {esOrganizador ? (
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
+              to={rutas.equipos}
+            >
+              Gestionar equipos
+            </Link>
+          ) : null}
+          {puedeHomologar ? (
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              to={rutas.homologacion}
+            >
+              Homologar equipos
+            </Link>
+          ) : null}
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {camposPerfil.map((campo) => (
