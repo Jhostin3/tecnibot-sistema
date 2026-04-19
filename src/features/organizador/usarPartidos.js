@@ -1,0 +1,150 @@
+import { useCallback, useEffect, useState } from 'react'
+
+import { supabase } from '../../lib/supabaseCliente'
+import {
+  activarEnfrentamiento,
+  desactivarEnfrentamiento,
+  listarEnfrentamientosFinalizados,
+  listarEnfrentamientosPorEstado,
+} from './servicioOrganizador'
+
+export function usePartidos() {
+  const [pendientes, setPendientes] = useState([])
+  const [activos, setActivos] = useState([])
+  const [finalizados, setFinalizados] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
+  const [guardando, setGuardando] = useState(false)
+  const [mensaje, setMensaje] = useState('')
+
+  const cargarPartidos = useCallback(async ({ mostrarCarga = true } = {}) => {
+    if (mostrarCarga) {
+      setCargando(true)
+    }
+
+    setError(null)
+
+    try {
+      const [partidosPendientes, partidosActivos, partidosFinalizados] =
+        await Promise.all([
+          listarEnfrentamientosPorEstado('pendiente'),
+          listarEnfrentamientosPorEstado('activo'),
+          listarEnfrentamientosFinalizados(),
+        ])
+
+      setPendientes(partidosPendientes)
+      setActivos(partidosActivos)
+      setFinalizados(partidosFinalizados)
+    } catch (error) {
+      setError(error.message)
+      setMensaje(error.message)
+    } finally {
+      if (mostrarCarga) {
+        setCargando(false)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    let componenteActivo = true
+
+    async function cargarInicial() {
+      setCargando(true)
+      setError(null)
+
+      try {
+        const [partidosPendientes, partidosActivos, partidosFinalizados] =
+          await Promise.all([
+            listarEnfrentamientosPorEstado('pendiente'),
+            listarEnfrentamientosPorEstado('activo'),
+            listarEnfrentamientosFinalizados(),
+          ])
+
+        if (componenteActivo) {
+          setPendientes(partidosPendientes)
+          setActivos(partidosActivos)
+          setFinalizados(partidosFinalizados)
+        }
+      } catch (error) {
+        if (componenteActivo) {
+          setError(error.message)
+          setMensaje(error.message)
+        }
+      } finally {
+        if (componenteActivo) {
+          setCargando(false)
+        }
+      }
+    }
+
+    cargarInicial()
+
+    const canal = supabase
+      .channel('partidos-organizador')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enfrentamientos' },
+        () => {
+          if (componenteActivo) {
+            cargarPartidos({ mostrarCarga: false })
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      componenteActivo = false
+      supabase.removeChannel(canal)
+    }
+  }, [cargarPartidos])
+
+  async function activarPartido(partidoId, cancha) {
+    setGuardando(true)
+    setError(null)
+    setMensaje('')
+
+    try {
+      await activarEnfrentamiento(partidoId, cancha)
+      await cargarPartidos({ mostrarCarga: false })
+      setMensaje('Partido activado correctamente.')
+    } catch (error) {
+      setError(error.message)
+      setMensaje(error.message)
+      throw error
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  async function desactivarPartido(partidoId) {
+    setGuardando(true)
+    setError(null)
+    setMensaje('')
+
+    try {
+      await desactivarEnfrentamiento(partidoId)
+      await cargarPartidos({ mostrarCarga: false })
+      setMensaje('Partido desactivado correctamente.')
+    } catch (error) {
+      setError(error.message)
+      setMensaje(error.message)
+      throw error
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  return {
+    activarPartido,
+    activos,
+    cargando,
+    desactivarPartido,
+    error,
+    finalizados,
+    guardando,
+    mensaje,
+    pendientes,
+    recargar: cargarPartidos,
+    setMensaje,
+  }
+}
