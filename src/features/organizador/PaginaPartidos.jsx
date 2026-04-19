@@ -238,13 +238,15 @@ export function PaginaPartidos() {
         />
       )}
 
-      <ModalActivarPartido
-        alCerrar={() => setPartidoParaActivar(null)}
-        alConfirmar={activarPartido}
-        canchas={canchas}
-        guardando={guardando}
-        partido={partidoParaActivar}
-      />
+      {partidoParaActivar ? (
+        <ModalActivarPartido
+          alCerrar={() => setPartidoParaActivar(null)}
+          alConfirmar={activarPartido}
+          canchas={canchas}
+          guardando={guardando}
+          partido={partidoParaActivar}
+        />
+      ) : null}
     </section>
   )
 }

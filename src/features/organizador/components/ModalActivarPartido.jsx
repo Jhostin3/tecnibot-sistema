@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 function obtenerTituloPartido(partido) {
   if (!partido) return ''
@@ -16,12 +16,6 @@ export function ModalActivarPartido({
   const [canchaSeleccionada, setCanchaSeleccionada] = useState('')
   const [canchaPersonalizada, setCanchaPersonalizada] = useState('')
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    setCanchaSeleccionada(canchas[0] || '')
-    setCanchaPersonalizada('')
-    setError('')
-  }, [canchas, partido?.id])
 
   if (!partido) return null
 
