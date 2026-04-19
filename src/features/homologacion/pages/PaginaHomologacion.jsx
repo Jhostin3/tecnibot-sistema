@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { EncabezadoSeccion } from '../../../components/molecules/EncabezadoSeccion'
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
+import { ContadoresHomologacion } from '../components/ContadoresHomologacion'
 import { FiltrosHomologacion } from '../components/FiltrosHomologacion'
 import { PanelCambioHomologacion } from '../components/PanelCambioHomologacion'
 import { TablaHomologaciones } from '../components/TablaHomologaciones'
@@ -44,11 +45,11 @@ export function PaginaHomologacion() {
         </p>
       </div>
       <FiltrosHomologacion
-        estados={homologaciones.estados}
         filtros={homologaciones.filtros}
         onCambiarFiltro={homologaciones.actualizarFiltro}
         subcategorias={homologaciones.subcategorias}
       />
+      <ContadoresHomologacion equipos={homologaciones.equipos} />
       <MensajeEstado>{homologaciones.mensaje}</MensajeEstado>
       <PanelCambioHomologacion
         cambio={cambio}
