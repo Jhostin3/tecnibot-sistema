@@ -16,49 +16,70 @@ const seleccionEquipos = `
 `
 
 export async function listarEquipos() {
-  const { data, error } = await supabase
-    .from('equipos')
-    .select(seleccionEquipos)
-    .order('created_at', { ascending: false })
+  try {
+    const { data, error } = await supabase
+      .from('equipos')
+      .select(seleccionEquipos)
+      .order('created_at', { ascending: false })
+      .limit(500)
 
-  if (error) {
-    throw new Error('No se pudieron cargar los equipos.')
+    if (error) {
+      throw new Error('No se pudieron cargar los equipos.')
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los equipos.')
   }
-
-  return data
 }
 
 export async function crearEquipo(datosEquipo) {
-  const { error } = await supabase.from('equipos').insert(datosEquipo)
+  try {
+    const { error } = await supabase.from('equipos').insert(datosEquipo)
 
-  if (error) {
-    throw new Error('No se pudo crear el equipo. Revisa los datos ingresados.')
+    if (error) {
+      throw new Error('No se pudo crear el equipo. Revisa los datos ingresados.')
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo crear el equipo.')
   }
 }
 
 export async function importarEquipos(datosEquipos) {
-  const { error } = await supabase.from('equipos').insert(datosEquipos)
+  try {
+    const { error } = await supabase.from('equipos').insert(datosEquipos)
 
-  if (error) {
-    throw new Error('No se pudieron importar los equipos válidos.')
+    if (error) {
+      throw new Error('No se pudieron importar los equipos validos.')
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron importar los equipos validos.')
   }
 }
 
 export async function actualizarEquipo(idEquipo, datosEquipo) {
-  const { error } = await supabase
-    .from('equipos')
-    .update(datosEquipo)
-    .eq('id', idEquipo)
+  try {
+    const { error } = await supabase
+      .from('equipos')
+      .update(datosEquipo)
+      .eq('id', idEquipo)
 
-  if (error) {
-    throw new Error('No se pudo actualizar el equipo.')
+    if (error) {
+      throw new Error('No se pudo actualizar el equipo.')
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo actualizar el equipo.')
   }
 }
 
 export async function eliminarEquipo(idEquipo) {
-  const { error } = await supabase.from('equipos').delete().eq('id', idEquipo)
+  try {
+    const { error } = await supabase.from('equipos').delete().eq('id', idEquipo)
 
-  if (error) {
-    throw new Error('No se pudo eliminar el equipo.')
+    if (error) {
+      throw new Error('No se pudo eliminar el equipo.')
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo eliminar el equipo.')
   }
 }
