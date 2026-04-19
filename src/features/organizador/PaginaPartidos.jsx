@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { ModalActivarPartido } from './components/ModalActivarPartido'
 import { TarjetaEnfrentamiento } from './components/TarjetaEnfrentamiento'
@@ -11,6 +11,21 @@ const pestanas = [
 ]
 
 const canchasBase = ['Cancha 1', 'Cancha 2', 'Cancha 3']
+const claveCanchas = 'tecnibot_canchas'
+
+function obtenerCanchasGuardadas() {
+  try {
+    const canchasGuardadas = JSON.parse(localStorage.getItem(claveCanchas) || '[]')
+
+    if (Array.isArray(canchasGuardadas) && canchasGuardadas.length) {
+      return canchasGuardadas.filter(Boolean)
+    }
+
+    return canchasBase
+  } catch {
+    return canchasBase
+  }
+}
 
 function crearClaveGrupo(partido) {
   return `${partido.subcategoria?.nombre || 'Subcategoria'} - ${partido.etiqueta_ronda}`
@@ -83,6 +98,8 @@ export function PaginaPartidos() {
   } = usePartidos()
   const [pestanaActiva, setPestanaActiva] = useState('pendientes')
   const [partidoParaActivar, setPartidoParaActivar] = useState(null)
+  const [canchas, setCanchas] = useState(obtenerCanchasGuardadas)
+  const [nuevaCancha, setNuevaCancha] = useState('')
 
   const partidosPorPestana = {
     activos,
@@ -93,6 +110,29 @@ export function PaginaPartidos() {
     activos: 'No hay partidos en juego.',
     finalizados: 'Aun no hay partidos finalizados.',
     pendientes: 'No hay partidos pendientes por activar.',
+  }
+
+  useEffect(() => {
+    localStorage.setItem(claveCanchas, JSON.stringify(canchas))
+  }, [canchas])
+
+  function agregarCancha(evento) {
+    evento.preventDefault()
+
+    const nombreCancha = nuevaCancha.trim()
+
+    if (!nombreCancha) return
+
+    setCanchas((actuales) =>
+      actuales.some((cancha) => cancha.toLowerCase() === nombreCancha.toLowerCase())
+        ? actuales
+        : [...actuales, nombreCancha],
+    )
+    setNuevaCancha('')
+  }
+
+  function eliminarCancha(canchaAEliminar) {
+    setCanchas((actuales) => actuales.filter((cancha) => cancha !== canchaAEliminar))
   }
 
   return (
@@ -120,6 +160,52 @@ export function PaginaPartidos() {
           {error}
         </p>
       ) : null}
+
+      <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
+              Mis canchas
+            </p>
+            <h2 className="mt-1 text-2xl font-bold text-slate-950">
+              Canchas rapidas
+            </h2>
+          </div>
+          <form className="flex flex-col gap-2 sm:flex-row" onSubmit={agregarCancha}>
+            <input
+              className="min-h-10 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-700 focus:ring-2 focus:ring-cyan-100"
+              onChange={(evento) => setNuevaCancha(evento.target.value)}
+              placeholder="Nueva cancha"
+              type="text"
+              value={nuevaCancha}
+            />
+            <button
+              className="min-h-10 rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800"
+              type="submit"
+            >
+              Agregar
+            </button>
+          </form>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {canchas.map((cancha) => (
+            <span
+              className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700"
+              key={cancha}
+            >
+              {cancha}
+              <button
+                className="min-h-10 rounded-md px-2 text-slate-500 transition hover:bg-white hover:text-red-600"
+                onClick={() => eliminarCancha(cancha)}
+                type="button"
+              >
+                Eliminar
+              </button>
+            </span>
+          ))}
+        </div>
+      </section>
 
       <div className="flex flex-wrap gap-2">
         {pestanas.map((pestana) => (
@@ -155,7 +241,7 @@ export function PaginaPartidos() {
       <ModalActivarPartido
         alCerrar={() => setPartidoParaActivar(null)}
         alConfirmar={activarPartido}
-        canchas={canchasBase}
+        canchas={canchas}
         guardando={guardando}
         partido={partidoParaActivar}
       />
