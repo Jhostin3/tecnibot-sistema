@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import {
   guardarSorteoYGenerarCuartos,
+  listarCategoriasSorteo,
   listarEquiposAprobadosPorSubcategoria,
   listarSubcategoriasListasParaSorteo,
   obtenerSorteoPorSubcategoria,
@@ -19,6 +20,8 @@ function elegirEquipoAleatorio(equipos) {
 export function useSorteo() {
   const { perfil } = useAutenticacion()
   const temporizadorGiro = useRef(null)
+  const [categorias, setCategorias] = useState([])
+  const [categoriaId, setCategoriaId] = useState('')
   const [subcategorias, setSubcategorias] = useState([])
   const [subcategoriaId, setSubcategoriaId] = useState('')
   const [equipos, setEquipos] = useState([])
@@ -33,12 +36,16 @@ export function useSorteo() {
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
-  const cargarSubcategorias = useCallback(async () => {
+  const cargarOpciones = useCallback(async () => {
     setCargando(true)
     setMensaje('')
 
     try {
-      const subcategoriasActuales = await listarSubcategoriasListasParaSorteo()
+      const [categoriasActuales, subcategoriasActuales] = await Promise.all([
+        listarCategoriasSorteo(),
+        listarSubcategoriasListasParaSorteo(),
+      ])
+      setCategorias(categoriasActuales)
       setSubcategorias(subcategoriasActuales)
     } catch (error) {
       setMensaje(error.message)
@@ -50,13 +57,17 @@ export function useSorteo() {
   useEffect(() => {
     let componenteActivo = true
 
-    async function prepararSubcategorias() {
+    async function prepararOpciones() {
       setCargando(true)
 
       try {
-        const subcategoriasActuales = await listarSubcategoriasListasParaSorteo()
+        const [categoriasActuales, subcategoriasActuales] = await Promise.all([
+          listarCategoriasSorteo(),
+          listarSubcategoriasListasParaSorteo(),
+        ])
 
         if (componenteActivo) {
+          setCategorias(categoriasActuales)
           setSubcategorias(subcategoriasActuales)
         }
       } catch (error) {
@@ -70,7 +81,7 @@ export function useSorteo() {
       }
     }
 
-    prepararSubcategorias()
+    prepararOpciones()
 
     return () => {
       componenteActivo = false
@@ -114,6 +125,11 @@ export function useSorteo() {
     setGirando(false)
     setSubcategoriaId(idSubcategoria)
     await cargarDatosSubcategoria(idSubcategoria)
+  }
+
+  async function seleccionarCategoria(idCategoria) {
+    setCategoriaId(idCategoria)
+    await seleccionarSubcategoria('')
   }
 
   function girarRuleta() {
@@ -171,7 +187,7 @@ export function useSorteo() {
         subcategoriaId,
       })
       await cargarDatosSubcategoria(subcategoriaId)
-      await cargarSubcategorias()
+      await cargarOpciones()
       setMensaje('Sorteo guardado y bracket de cuartos generado correctamente.')
     } catch (error) {
       setMensaje(error.message)
@@ -185,6 +201,8 @@ export function useSorteo() {
     anguloRuleta,
     cargando,
     cargandoEquipos,
+    categoriaId,
+    categorias,
     duracionGiro,
     equipoGirado,
     equipos,
@@ -196,6 +214,7 @@ export function useSorteo() {
     mensaje,
     ordenSorteo,
     puedeConfirmar: ordenSorteo.length === 8 && !sorteoExistente.length,
+    seleccionarCategoria,
     seleccionarSubcategoria,
     sorteoExistente,
     subcategoriaId,

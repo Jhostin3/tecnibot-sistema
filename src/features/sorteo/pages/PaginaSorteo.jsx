@@ -28,6 +28,11 @@ function obtenerMensajeValidacion({ equipos, sorteoExistente, subcategoriaId, su
 
 export function PaginaSorteo() {
   const sorteo = useSorteo()
+  const subcategoriasFiltradas = sorteo.categoriaId
+    ? sorteo.subcategorias.filter(
+        (subcategoria) => subcategoria.categoria_id === sorteo.categoriaId,
+      )
+    : []
   const mensajeValidacion = obtenerMensajeValidacion({
     equipos: sorteo.equipos,
     sorteoExistente: sorteo.sorteoExistente,
@@ -46,9 +51,12 @@ export function PaginaSorteo() {
       </div>
       {sorteo.subcategorias.length ? (
         <SelectorSubcategoriaSorteo
+          categoriaId={sorteo.categoriaId}
+          categorias={sorteo.categorias}
+          onSeleccionarCategoria={sorteo.seleccionarCategoria}
           onSeleccionar={sorteo.seleccionarSubcategoria}
           subcategoriaId={sorteo.subcategoriaId}
-          subcategorias={sorteo.subcategorias}
+          subcategorias={subcategoriasFiltradas}
         />
       ) : null}
       <MensajeEstado>{sorteo.mensaje}</MensajeEstado>

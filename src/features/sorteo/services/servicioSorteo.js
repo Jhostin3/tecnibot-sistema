@@ -19,10 +19,23 @@ const seleccionSorteo = `
   equipos(nombre_equipo)
 `
 
+export async function listarCategoriasSorteo() {
+  const { data, error } = await supabase
+    .from('categorias')
+    .select('id, nombre')
+    .order('nombre', { ascending: true })
+
+  if (error) {
+    throw new Error('No se pudieron cargar las categorias.')
+  }
+
+  return data
+}
+
 export async function listarSubcategoriasSorteo() {
   const { data, error } = await supabase
     .from('subcategorias')
-    .select('id, nombre')
+    .select('id, categoria_id, nombre')
     .order('nombre', { ascending: true })
 
   if (error) {
