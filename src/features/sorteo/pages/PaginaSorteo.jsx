@@ -73,7 +73,10 @@ export function PaginaSorteo() {
           <div className="rounded-md border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
             {mensajeValidacion}
           </div>
-          <ResumenSorteoExistente sorteo={sorteo.sorteoExistente} />
+          <ResumenSorteoExistente
+            sorteo={sorteo.sorteoExistente}
+            subcategoriaId={sorteo.subcategoriaId}
+          />
           {sorteo.subcategoriaId && !sorteo.sorteoExistente.length ? (
             <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
               <RuletaEquipos
