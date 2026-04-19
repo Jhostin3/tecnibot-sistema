@@ -6,7 +6,7 @@ import { rutas } from '../utils/rutas'
 const rutasPorRol = {
   homologador: rutas.homologacion,
   juez: rutas.juez,
-  organizador: rutas.equipos,
+  organizador: rutas.inicio,
 }
 
 function obtenerRutaPorRol(rol) {
