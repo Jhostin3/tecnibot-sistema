@@ -36,6 +36,13 @@ function obtenerUltimaHomologacion(equipo) {
   return `${obtenerEtiquetaEstadoHomologacion(ultima.estado)} por ${homologador} - ${formatearFecha(ultima.fecha)}`
 }
 
+function obtenerVarianteAccion(estado) {
+  if (estado === 'aprobado') return 'exito'
+  if (estado === 'rechazado') return 'peligro'
+
+  return 'secundario'
+}
+
 export function TablaHomologaciones({ equipos, guardando, onSeleccionarCambio }) {
   if (!equipos.length) {
     return (
@@ -92,7 +99,7 @@ export function TablaHomologaciones({ equipos, guardando, onSeleccionarCambio })
                         disabled={guardando}
                         key={accion.estado}
                         onClick={() => onSeleccionarCambio(equipo, accion.estado)}
-                        variante={accion.estado === 'rechazado' ? 'peligro' : 'secundario'}
+                        variante={obtenerVarianteAccion(accion.estado)}
                       >
                         {accion.etiqueta}
                       </Boton>

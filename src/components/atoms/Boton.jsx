@@ -1,4 +1,5 @@
 const variantes = {
+  exito: 'bg-emerald-700 text-white hover:bg-emerald-800 focus-visible:ring-emerald-700',
   primario: 'bg-cyan-700 text-white hover:bg-cyan-800 focus-visible:ring-cyan-700',
   secundario:
     'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-cyan-700',
