@@ -19,6 +19,19 @@ const seleccionSorteo = `
   equipos(nombre_equipo)
 `
 
+const seleccionEnfrentamientos = `
+  id,
+  subcategoria_id,
+  ronda,
+  equipo_a_id,
+  equipo_b_id,
+  ganador_id,
+  estado,
+  orden,
+  bye,
+  created_at
+`
+
 export async function listarCategoriasSorteo() {
   const { data, error } = await supabase
     .from('categorias')
@@ -95,6 +108,92 @@ export async function obtenerSorteoPorSubcategoria(subcategoriaId) {
   }
 
   return data
+}
+
+async function listarEquiposPorIds(idsEquipos) {
+  const ids = Array.from(new Set(idsEquipos.filter(Boolean)))
+
+  if (!ids.length) return new Map()
+
+  const { data, error } = await supabase
+    .from('equipos')
+    .select('id, nombre_equipo')
+    .in('id', ids)
+
+  if (error) {
+    throw new Error('No se pudieron cargar los equipos del bracket.')
+  }
+
+  return new Map(data.map((equipo) => [equipo.id, equipo]))
+}
+
+async function listarResultadosPorEnfrentamientos(idsEnfrentamientos) {
+  if (!idsEnfrentamientos.length) return new Map()
+
+  const { data, error } = await supabase
+    .from('resultados')
+    .select('id, enfrentamiento_id, goles_a, goles_b, fecha')
+    .in('enfrentamiento_id', idsEnfrentamientos)
+    .order('fecha', { ascending: false })
+
+  if (error) {
+    throw new Error('No se pudieron cargar los resultados del bracket.')
+  }
+
+  const resultados = new Map()
+
+  data.forEach((resultado) => {
+    if (!resultados.has(resultado.enfrentamiento_id)) {
+      resultados.set(resultado.enfrentamiento_id, resultado)
+    }
+  })
+
+  return resultados
+}
+
+function adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bolasPorEquipo) {
+  return enfrentamientos.map((enfrentamiento) => ({
+    ...enfrentamiento,
+    equipo_a: equiposPorId.get(enfrentamiento.equipo_a_id) || null,
+    equipo_b: equiposPorId.get(enfrentamiento.equipo_b_id) || null,
+    resultado: resultadosPorId.get(enfrentamiento.id) || null,
+    bola_a: bolasPorEquipo.get(enfrentamiento.equipo_a_id) || null,
+    bola_b: bolasPorEquipo.get(enfrentamiento.equipo_b_id) || null,
+  }))
+}
+
+export async function listarBracketPorSubcategoria(subcategoriaId) {
+  const [respuestaEnfrentamientos, sorteo] = await Promise.all([
+    supabase
+      .from('enfrentamientos')
+      .select(seleccionEnfrentamientos)
+      .eq('subcategoria_id', subcategoriaId)
+      .order('orden', { ascending: true }),
+    obtenerSorteoPorSubcategoria(subcategoriaId),
+  ])
+
+  if (respuestaEnfrentamientos.error) {
+    throw new Error('No se pudo cargar la llave del torneo.')
+  }
+
+  const enfrentamientos = respuestaEnfrentamientos.data
+  const idsEquipos = enfrentamientos.flatMap((enfrentamiento) => [
+    enfrentamiento.equipo_a_id,
+    enfrentamiento.equipo_b_id,
+    enfrentamiento.ganador_id,
+  ])
+  const bolasPorEquipo = new Map(
+    sorteo
+      .filter((asignacion) => asignacion.equipo_id)
+      .map((asignacion) => [asignacion.equipo_id, asignacion.numero_bola]),
+  )
+
+  const [equiposPorId, resultadosPorId] = await Promise.all([
+    listarEquiposPorIds(idsEquipos),
+    listarResultadosPorEnfrentamientos(enfrentamientos.map((enfrentamiento) => enfrentamiento.id)),
+  ])
+
+  return adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bolasPorEquipo)
 }
 
 function validarAsignaciones(asignaciones) {
