@@ -3,4 +3,5 @@ export const rutas = {
   login: '/login',
   panel: '/panel',
   equipos: '/equipos',
+  homologacion: '/homologacion',
 }

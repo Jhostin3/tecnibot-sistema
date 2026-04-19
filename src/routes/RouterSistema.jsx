@@ -4,6 +4,7 @@ import { ProveedorAutenticacion } from '../features/autenticacion/hooks/Contexto
 import { PaginaLogin } from '../features/autenticacion/pages/PaginaLogin'
 import { PaginaPanel } from '../features/autenticacion/pages/PaginaPanel'
 import { PaginaEquipos } from '../features/equipos/pages/PaginaEquipos'
+import { PaginaHomologacion } from '../features/homologacion/pages/PaginaHomologacion'
 import { LayoutPrivado } from '../layouts/LayoutPrivado'
 import { LayoutPublico } from '../layouts/LayoutPublico'
 import { rutas } from '../utils/rutas'
@@ -23,6 +24,9 @@ export function RouterSistema() {
               <Route path={rutas.panel} element={<PaginaPanel />} />
               <Route element={<RutaPorRol rolesPermitidos={['organizador']} />}>
                 <Route path={rutas.equipos} element={<PaginaEquipos />} />
+              </Route>
+              <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
+                <Route path={rutas.homologacion} element={<PaginaHomologacion />} />
               </Route>
             </Route>
           </Route>
