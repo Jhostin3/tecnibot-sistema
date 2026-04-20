@@ -29,12 +29,20 @@ function agruparPorRonda(enfrentamientos) {
   }, {})
 }
 
-function Conector({ visible }) {
+function ConectoresRonda({ cantidad, visible }) {
   if (!visible) return null
 
+  const cantidadPares = Math.max(1, Math.ceil(cantidad / 2))
+
   return (
-    <div className="hidden w-10 items-center md:flex">
-      <div className="h-16 w-full border-y border-r border-gray-700" />
+    <div className="hidden w-12 flex-col gap-6 pt-9 md:flex">
+      {Array.from({ length: cantidadPares }).map((_, indice) => (
+        <div className="grid h-32 grid-rows-2" key={`conector-${indice}`}>
+          <div className="border-r border-t border-gray-600" />
+          <div className="border-r border-b border-gray-600" />
+          <div className="relative -mt-16 h-0 border-t border-gray-600" />
+        </div>
+      ))}
     </div>
   )
 }
@@ -73,7 +81,7 @@ export function BracketVisual({ enfrentamientos }) {
                   ))}
                 </div>
               </section>
-              <Conector visible={tieneSiguienteRonda} />
+              <ConectoresRonda cantidad={partidos.length} visible={tieneSiguienteRonda} />
             </div>
           )
         })}
