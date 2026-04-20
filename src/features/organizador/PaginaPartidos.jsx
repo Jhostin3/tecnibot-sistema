@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { ChevronLeft } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import { ModalActivarPartido } from './components/ModalActivarPartido'
 import { ModalActivarRonda } from './components/ModalActivarRonda'
@@ -111,6 +113,7 @@ function ListaPartidos({
 }
 
 export function PaginaPartidos() {
+  const navigate = useNavigate()
   const {
     activarPartido,
     activarRonda,
@@ -165,14 +168,22 @@ export function PaginaPartidos() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <button
+          className="mb-5 flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-blue-600"
+          onClick={() => navigate('/')}
+          type="button"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Inicio
+        </button>
+        <p className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600">
           Organizador
         </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-950">
+        <h1 className="mt-2 text-2xl font-bold text-slate-800">
           Gestionar partidos
         </h1>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+        <p className="mt-1 max-w-3xl text-sm text-slate-500">
           Activa enfrentamientos, asigna cancha y revisa el estado del torneo.
         </p>
       </div>

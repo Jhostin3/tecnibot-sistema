@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { Boton } from '../../../components/atoms/Boton'
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
@@ -14,6 +15,7 @@ import { useImportacionEquipos } from '../hooks/useImportacionEquipos'
 const equiposPorPagina = 20
 
 export function PaginaEquipos() {
+  const navigate = useNavigate()
   const equipos = useEquipos()
   const importacion = useImportacionEquipos({
     alFinalizar: equipos.recargarEquipos,
@@ -67,6 +69,7 @@ export function PaginaEquipos() {
       <EncabezadoEquipos
         alCrear={abrirCreacion}
         alImportar={() => setModo('importar')}
+        alVolverInicio={() => navigate('/')}
       />
       <MensajeEstado>{equipos.mensaje}</MensajeEstado>
       {modo === 'importar' ? (

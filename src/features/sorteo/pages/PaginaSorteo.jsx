@@ -1,4 +1,6 @@
-import { EncabezadoSeccion } from '../../../components/molecules/EncabezadoSeccion'
+import { ChevronLeft } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
 import { OrdenBatalla } from '../components/OrdenBatalla'
 import { ResumenSorteoExistente } from '../components/ResumenSorteoExistente'
@@ -35,6 +37,7 @@ function obtenerMensajeValidacion({
 }
 
 export function PaginaSorteo() {
+  const navigate = useNavigate()
   const sorteo = useSorteo()
   const subcategoriasFiltradas = sorteo.categoriaId
     ? sorteo.subcategorias.filter(
@@ -53,12 +56,24 @@ export function PaginaSorteo() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
-        <EncabezadoSeccion
-          descripcion="Selecciona una subcategoria lista, gira la ruleta con los equipos aprobados y genera la primera ronda del bracket."
-          etiqueta="Ruleta de homologacion"
-          titulo="Sorteo Soccer"
-        />
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <button
+          className="mb-5 flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-blue-600"
+          onClick={() => navigate('/')}
+          type="button"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Inicio
+        </button>
+        <p className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600">
+          Ruleta de homologacion
+        </p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-800">
+          Sorteo Soccer
+        </h1>
+        <p className="mt-1 max-w-3xl text-sm text-slate-500">
+          Selecciona una subcategoria lista, gira la ruleta con los equipos aprobados y genera la primera ronda del bracket.
+        </p>
       </div>
       {sorteo.subcategorias.length ? (
         <SelectorSubcategoriaSorteo
