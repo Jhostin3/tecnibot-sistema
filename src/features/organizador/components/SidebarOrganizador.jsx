@@ -1,4 +1,4 @@
-import { ClipboardCheck, Home, Play, Shuffle, Users } from 'lucide-react'
+import { ClipboardCheck, GitBranch, Home, Play, Shuffle, Users } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 import { rutas } from '../../../utils/rutas'
@@ -9,6 +9,7 @@ const enlaces = [
   { Icono: ClipboardCheck, etiqueta: 'Homol.', ruta: rutas.homologacion },
   { Icono: Shuffle, etiqueta: 'Sorteo', ruta: rutas.sorteo },
   { Icono: Play, etiqueta: 'Partid.', ruta: rutas.partidos },
+  { Icono: GitBranch, etiqueta: 'Brackets', ruta: rutas.brackets },
 ]
 
 const claseEnlace = ({ isActive }) =>

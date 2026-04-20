@@ -1,4 +1,4 @@
-import { ClipboardCheck, Home, Shuffle } from 'lucide-react'
+import { ClipboardCheck, GitBranch, Home, Shuffle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { rutas } from '../../../utils/rutas'
@@ -12,6 +12,7 @@ const enlaces = [
     ruta: rutas.homologacion,
   },
   { activo: 'sorteo', Icono: Shuffle, etiqueta: 'Sorteo', ruta: rutas.sorteo },
+  { activo: 'brackets', Icono: GitBranch, etiqueta: 'Brackets', ruta: rutas.brackets },
 ]
 
 export function SidebarHomologador({ activo = 'inicio' }) {
