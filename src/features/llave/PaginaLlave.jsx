@@ -1,4 +1,4 @@
-import { ArrowLeft, Zap } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { BracketVisual } from './components/BracketVisual'
@@ -26,8 +26,12 @@ export function PaginaLlave() {
       <header className="bg-gradient-to-r from-blue-900 to-indigo-900 px-4 py-6 shadow-xl sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-800 text-cyan-400">
-              <Zap className="h-7 w-7" />
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-800">
+              <img
+                alt="TecniBot"
+                className="h-10 w-10 object-contain"
+                src="/assets/icono_cuy.png"
+              />
             </span>
             <div>
               <h1 className="text-2xl font-black text-white sm:text-3xl">
