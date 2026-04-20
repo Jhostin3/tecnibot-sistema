@@ -12,23 +12,25 @@ function nombreEquipo(equipo) {
 }
 
 function claseTarjeta(estado) {
-  if (estado === 'activo') return 'border-2 border-cyan-400 animate-pulse'
-  if (estado === 'finalizado') return 'border border-blue-700'
+  if (estado === 'activo') return 'border-2 border-cyan-500'
+  if (estado === 'finalizado') return 'border border-gray-600'
 
-  return 'border border-blue-700'
+  return 'border border-gray-600'
 }
 
-function FilaEquipo({ color, equipo, ganador, goles }) {
+function FilaEquipo({ color, equipo, ganador, goles, perdedor }) {
   const colorPunto = color === 'azul' ? 'text-blue-400' : 'text-red-400'
 
   return (
     <div
       className={`flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm ${
         ganador
-          ? 'bg-emerald-900 font-bold text-emerald-400'
+          ? 'border-l-4 border-emerald-500 bg-emerald-950 font-bold text-emerald-400'
+          : perdedor
+            ? 'text-gray-600 line-through'
           : equipo
-            ? 'text-blue-400 opacity-60'
-            : 'text-blue-500 italic'
+            ? 'text-gray-300'
+            : 'text-gray-600 italic'
       }`}
     >
       <span className="min-w-0 truncate">
@@ -39,7 +41,7 @@ function FilaEquipo({ color, equipo, ganador, goles }) {
           className={`font-mono ${
             ganador
               ? 'text-lg font-bold text-emerald-400'
-              : 'text-base font-semibold text-blue-400 opacity-60'
+              : 'text-base font-semibold text-gray-600 line-through'
           }`}
         >
           [{goles}]
@@ -51,11 +53,11 @@ function FilaEquipo({ color, equipo, ganador, goles }) {
 
 function FilaBye({ equipo }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-blue-600 bg-blue-900 px-3 py-2 text-sm">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-sm">
       <span className="min-w-0 truncate font-semibold text-white">
         {nombreEquipo(equipo)}
       </span>
-      <span className="rounded bg-blue-700 px-2 py-1 text-xs font-bold text-blue-200">
+      <span className="rounded bg-gray-600 px-2 py-1 text-xs font-bold text-gray-300">
         BYE
       </span>
     </div>
@@ -65,7 +67,7 @@ function FilaBye({ equipo }) {
 export function TarjetaEnfrentamiento({ enfrentamiento }) {
   if (!enfrentamiento) {
     return (
-      <article className="w-56 rounded-xl border border-dashed border-blue-600 bg-blue-900 p-3 text-sm italic text-blue-500">
+      <article className="w-56 rounded-xl border border-dashed border-gray-700 bg-gray-900 p-3 text-sm italic text-gray-600">
         Por definir
       </article>
     )
@@ -74,12 +76,14 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
   const resultadoVisible = enfrentamiento.estado === 'finalizado' && enfrentamiento.resultado
   const ganadorA = enfrentamiento.ganador_id === enfrentamiento.equipo_a_id
   const ganadorB = enfrentamiento.ganador_id === enfrentamiento.equipo_b_id
+  const perdedorA = enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id && !ganadorA
+  const perdedorB = enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id && !ganadorB
   const esBye = enfrentamiento.bye && !enfrentamiento.equipo_b
 
   return (
-    <article className={`w-56 rounded-xl bg-blue-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
+    <article className={`w-56 rounded-xl bg-gray-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
       {enfrentamiento.estado === 'activo' ? (
-        <span className="mb-2 inline-flex rounded-full bg-cyan-500 px-2 py-1 text-xs font-bold text-white">
+        <span className="mb-2 inline-flex animate-pulse rounded-full bg-cyan-500 px-2 py-0.5 text-xs font-bold text-black">
           EN VIVO
         </span>
       ) : null}
@@ -93,17 +97,19 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
               equipo={enfrentamiento.equipo_a}
               ganador={ganadorA}
               goles={resultadoVisible ? enfrentamiento.resultado.goles_a : null}
+              perdedor={perdedorA}
             />
             <FilaEquipo
               color="rojo"
               equipo={enfrentamiento.equipo_b}
               ganador={ganadorB}
               goles={resultadoVisible ? enfrentamiento.resultado.goles_b : null}
+              perdedor={perdedorB}
             />
           </>
         )}
       </div>
-      <p className="mt-3 text-xs font-semibold uppercase tracking-normal text-blue-300">
+      <p className="mt-3 text-xs font-semibold uppercase tracking-normal text-gray-500">
         {enfrentamiento.cancha ? `${enfrentamiento.cancha} - ` : ''}
         {etiquetasRonda[enfrentamiento.ronda] || enfrentamiento.ronda}
       </p>
