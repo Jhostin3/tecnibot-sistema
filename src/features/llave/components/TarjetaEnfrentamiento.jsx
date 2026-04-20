@@ -12,10 +12,10 @@ function nombreEquipo(equipo) {
 }
 
 function claseTarjeta(estado) {
-  if (estado === 'activo') return 'border-cyan-500 animate-pulse'
-  if (estado === 'finalizado') return 'border-gray-600'
+  if (estado === 'activo') return 'border-2 border-cyan-500 animate-pulse'
+  if (estado === 'finalizado') return 'border border-gray-600'
 
-  return 'border-gray-700'
+  return 'border border-gray-600'
 }
 
 function FilaEquipo({ color, equipo, ganador, goles, mostrarBye }) {
@@ -42,7 +42,15 @@ function FilaEquipo({ color, equipo, ganador, goles, mostrarBye }) {
         {nombreEquipo(equipo)}
       </span>
       {goles !== null && goles !== undefined ? (
-        <span className="font-mono text-base font-bold">[{goles}]</span>
+        <span
+          className={`font-mono ${
+            ganador
+              ? 'text-lg font-bold text-green-400'
+              : 'text-base font-semibold text-gray-500'
+          }`}
+        >
+          [{goles}]
+        </span>
       ) : null}
     </div>
   )
@@ -51,7 +59,7 @@ function FilaEquipo({ color, equipo, ganador, goles, mostrarBye }) {
 export function TarjetaEnfrentamiento({ enfrentamiento }) {
   if (!enfrentamiento) {
     return (
-      <article className="w-64 rounded-lg border border-dashed border-gray-700 bg-gray-800 p-3 text-gray-500">
+      <article className="w-56 rounded-lg border border-dashed border-gray-600 bg-gray-800 p-3 text-sm italic text-gray-500">
         Por definir
       </article>
     )
@@ -62,7 +70,7 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
   const ganadorB = enfrentamiento.ganador_id === enfrentamiento.equipo_b_id
 
   return (
-    <article className={`w-64 rounded-lg border bg-gray-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
+    <article className={`w-56 rounded-lg bg-gray-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
       <div className="space-y-2">
         <FilaEquipo
           color="text-blue-400"

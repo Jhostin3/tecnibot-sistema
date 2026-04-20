@@ -69,9 +69,11 @@ export function BracketVisual({ enfrentamientos }) {
           return (
             <div className="flex gap-4" key={ronda}>
               <section className="space-y-4">
-                <h2 className="text-center text-sm font-black uppercase tracking-normal text-gray-400">
-                  {etiquetasRonda[ronda] || ronda}
-                </h2>
+                <div className="border-b border-gray-700 pb-2">
+                  <h2 className="text-center text-xs font-black uppercase tracking-widest text-gray-400">
+                    {etiquetasRonda[ronda] || ronda}
+                  </h2>
+                </div>
                 <div className="flex flex-col gap-6">
                   {partidos.map((enfrentamiento) => (
                     <TarjetaEnfrentamiento
