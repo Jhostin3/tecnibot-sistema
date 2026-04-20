@@ -6,10 +6,12 @@ import {
   Shuffle,
   Users,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
 import { rutas } from '../../utils/rutas'
 import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
+import { listarEquipos } from '../equipos/services/servicioEquipos'
 
 const accesosRapidos = [
   {
@@ -63,8 +65,33 @@ const claseEnlaceSidebar = ({ isActive }) =>
 
 export function PaginaDashboard() {
   const { perfil } = useAutenticacion()
+  const [conteoEquipos, setConteoEquipos] = useState(null)
   const nombreOrganizador = perfil?.nombre || 'organizador'
   const inicialOrganizador = nombreOrganizador.trim().charAt(0).toUpperCase() || 'O'
+
+  useEffect(() => {
+    let activo = true
+
+    async function cargarConteoEquipos() {
+      try {
+        const equipos = await listarEquipos()
+
+        if (activo) {
+          setConteoEquipos(equipos.length)
+        }
+      } catch {
+        if (activo) {
+          setConteoEquipos(0)
+        }
+      }
+    }
+
+    cargarConteoEquipos()
+
+    return () => {
+      activo = false
+    }
+  }, [])
 
   return (
     <section className="min-h-[calc(100vh-96px)] bg-slate-100">
@@ -130,7 +157,9 @@ export function PaginaDashboard() {
                     <ChevronRight className="ml-auto h-4 w-4 text-slate-300 transition group-hover:text-slate-500" />
                   </div>
                   <p className="mt-5 text-sm font-semibold text-slate-400">
-                    {acceso.estado}
+                    {acceso.titulo === 'Equipos'
+                      ? `${conteoEquipos ?? '...'} equipos registrados`
+                      : acceso.estado}
                   </p>
                   <h2 className="mt-4 text-lg font-semibold text-slate-800">
                     {acceso.titulo}
