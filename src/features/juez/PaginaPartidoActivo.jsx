@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
@@ -104,14 +105,15 @@ export function PaginaPartidoActivo() {
   }
 
   return (
-    <section className="-m-6 min-h-screen bg-gray-900 px-4 py-6 sm:-m-8 sm:px-6">
-      <div className="mx-auto max-w-3xl space-y-5">
+    <section className="min-h-screen bg-gray-950 px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl space-y-5">
         <button
-          className="min-h-12 rounded-2xl bg-gray-700 px-5 py-3 text-base font-bold text-white transition hover:bg-gray-600"
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm font-semibold text-gray-400 transition hover:text-white"
           onClick={() => navigate('/juez')}
           type="button"
         >
-          Volver
+          <ArrowLeft className="h-4 w-4" />
+          Volver a partidos
         </button>
 
         {mensaje ? (
@@ -121,7 +123,7 @@ export function PaginaPartidoActivo() {
         ) : null}
 
         {error ? (
-          <p className="rounded-2xl border border-red-500 bg-red-900 p-4 text-base font-semibold text-red-300">
+          <p className="rounded-2xl border border-red-800 bg-red-950 p-4 text-base font-semibold text-red-400">
             {error}
           </p>
         ) : null}
@@ -150,11 +152,11 @@ export function PaginaPartidoActivo() {
         {!cargando && !partido && !partidoFinalizado ? (
           <div className="rounded-2xl border border-gray-700 bg-gray-800 p-6 text-center shadow-lg">
             <h1 className="text-2xl font-bold text-white">Partido no disponible</h1>
-            <p className="mt-3 text-base leading-7 text-gray-400">
+            <p className="mt-3 text-base leading-7 text-gray-500">
               Este enfrentamiento no esta activo o ya fue finalizado.
             </p>
             <button
-              className="mt-6 min-h-14 rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+              className="mt-6 h-12 rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
               onClick={cargarPartido}
               type="button"
             >
