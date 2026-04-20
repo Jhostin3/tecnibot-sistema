@@ -71,7 +71,7 @@ export function PaginaLogin() {
           🏆
         </span>
         <div className="relative z-10">
-          <h1 className="text-5xl font-black tracking-widest text-cyan-400">
+          <h1 className="text-5xl font-black tracking-normal text-cyan-400">
             ⚡ TECNIBOT
           </h1>
           <p className="mt-3 text-xl text-blue-200">Cuenca 2026</p>
@@ -86,7 +86,7 @@ export function PaginaLogin() {
         </div>
       </section>
 
-      <section className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-8 py-10">
+      <section className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-900 to-indigo-900 px-6 py-10 md:bg-gradient-to-br md:from-slate-50 md:to-blue-50 md:px-8">
         <div
           className={`w-full max-w-sm transition-all duration-500 ${
             formularioVisible
@@ -94,6 +94,12 @@ export function PaginaLogin() {
               : 'translate-y-4 opacity-0'
           }`}
         >
+          <div className="mb-6 text-center md:hidden">
+            <p className="text-3xl font-black tracking-normal text-white">⚡ TECNIBOT</p>
+            <p className="mt-2 text-sm font-semibold text-blue-200">Cuenca 2026</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-2xl shadow-blue-950/30 md:rounded-none md:bg-transparent md:p-0 md:shadow-none">
           <div className="mb-8">
             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
               ACCESO AL SISTEMA
@@ -125,8 +131,9 @@ export function PaginaLogin() {
           </button>
 
           <p className="mt-6 text-center text-xs text-slate-300">
-            Acceso seguro con Supabase Auth
+            🔒 Acceso seguro con Supabase Auth
           </p>
+          </div>
         </div>
       </section>
     </main>
