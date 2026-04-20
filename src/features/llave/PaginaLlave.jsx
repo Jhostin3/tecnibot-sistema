@@ -23,7 +23,7 @@ export function PaginaLlave() {
 
   return (
     <section className="min-h-screen bg-gray-950 text-white">
-      <header className="border-b border-gray-800 bg-gray-900 px-4 py-6 shadow-xl sm:px-8">
+      <header className="sticky top-0 z-50 w-full border-b border-gray-800 bg-gray-900 px-4 py-6 shadow-xl sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-800">

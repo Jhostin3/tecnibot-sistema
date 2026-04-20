@@ -14,7 +14,7 @@ export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
   const esHomologador = perfil?.rol === 'homologador'
 
   return (
-    <header className="bg-gradient-to-r from-blue-900 to-blue-800 shadow-lg shadow-blue-900/20">
+    <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-blue-900 to-blue-800 shadow-lg shadow-blue-900/20">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <img
