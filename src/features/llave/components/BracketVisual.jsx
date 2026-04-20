@@ -48,22 +48,18 @@ function ConectoresRonda({ cantidad, visible }) {
 }
 
 export function BracketVisual({ enfrentamientos }) {
-  if (!enfrentamientos?.length) {
-    return (
-      <div className="rounded-lg border border-gray-700 bg-gray-800 p-6 text-center text-gray-400">
-        Aun no hay enfrentamientos generados para esta subcategoria.
-      </div>
-    )
-  }
-
-  const grupos = agruparPorRonda(enfrentamientos)
-  const rondas = ORDEN_RONDAS.filter((ronda) => grupos[ronda]?.length)
+  const grupos = agruparPorRonda(enfrentamientos || [])
+  const rondasConDatos = ORDEN_RONDAS.filter((ronda) => grupos[ronda]?.length)
+  const rondas = Array.from(new Set([...rondasConDatos, 'semifinal', 'final'])).sort(
+    (a, b) => ORDEN_RONDAS.indexOf(a) - ORDEN_RONDAS.indexOf(b),
+  )
 
   return (
     <div className="overflow-x-auto pb-4">
       <div className="flex min-w-max gap-4">
         {rondas.map((ronda, indiceRonda) => {
-          const partidos = [...grupos[ronda]].sort((a, b) => a.orden - b.orden)
+          const partidos = [...(grupos[ronda] || [])].sort((a, b) => a.orden - b.orden)
+          const tarjetas = partidos.length ? partidos : [null]
           const tieneSiguienteRonda = indiceRonda < rondas.length - 1
 
           return (
@@ -75,15 +71,15 @@ export function BracketVisual({ enfrentamientos }) {
                   </h2>
                 </div>
                 <div className="flex flex-col gap-6">
-                  {partidos.map((enfrentamiento) => (
+                  {tarjetas.map((enfrentamiento, indice) => (
                     <TarjetaEnfrentamiento
                       enfrentamiento={enfrentamiento}
-                      key={enfrentamiento.id}
+                      key={enfrentamiento?.id || `${ronda}-pendiente-${indice}`}
                     />
                   ))}
                 </div>
               </section>
-              <ConectoresRonda cantidad={partidos.length} visible={tieneSiguienteRonda} />
+              <ConectoresRonda cantidad={tarjetas.length} visible={tieneSiguienteRonda} />
             </div>
           )
         })}
