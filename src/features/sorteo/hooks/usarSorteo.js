@@ -181,6 +181,23 @@ export function useSorteo() {
     }, duracionGiro)
   }
 
+  function asignarUltimoEquipo() {
+    if (girando || equiposDisponibles.length !== 1) return
+
+    const [equipoElegido] = equiposDisponibles
+
+    setMensaje('¡Sorteo completo! Último equipo asignado automáticamente')
+    setEquipoGirado(equipoElegido)
+    setEquiposDisponibles([])
+    setOrdenSorteo((actual) => [
+      ...actual,
+      {
+        equipo: equipoElegido,
+        numero_bola: actual.length + 1,
+      },
+    ])
+  }
+
   async function guardarSorteo() {
     if (!perfil?.id) {
       setMensaje('No se pudo identificar al homologador actual.')
@@ -224,6 +241,7 @@ export function useSorteo() {
 
   return {
     anguloRuleta,
+    asignarUltimoEquipo,
     cargando,
     cargandoEquipos,
     cantidadByes,

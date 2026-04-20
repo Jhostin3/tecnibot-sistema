@@ -109,7 +109,9 @@ export function PaginaSorteo() {
                 duracion={sorteo.duracionGiro}
                 equipoGirado={sorteo.equipoGirado}
                 equipos={sorteo.equiposDisponibles}
+                esUltimo={sorteo.equiposDisponibles.length === 1}
                 girando={sorteo.girando}
+                onAsignarUltimo={sorteo.asignarUltimoEquipo}
                 onGirar={sorteo.girarRuleta}
               />
               <OrdenBatalla
