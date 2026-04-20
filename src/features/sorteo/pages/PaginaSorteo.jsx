@@ -130,12 +130,73 @@ export function PaginaSorteo() {
     </section>
   )
 
+  const controlesSorteo = (
+    <>
+      {sorteo.subcategorias.length ? (
+        <SelectorSubcategoriaSorteo
+          categoriaId={sorteo.categoriaId}
+          categorias={sorteo.categorias}
+          onSeleccionarCategoria={sorteo.seleccionarCategoria}
+          onSeleccionar={sorteo.seleccionarSubcategoria}
+          subcategoriaId={sorteo.subcategoriaId}
+          subcategorias={subcategoriasFiltradas}
+        />
+      ) : null}
+      <MensajeEstado>{sorteo.mensaje}</MensajeEstado>
+      <div className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
+        {mensajeValidacion}
+      </div>
+    </>
+  )
+
+  const tableroSorteo = sorteo.subcategoriaId && !sorteo.sorteoExistente.length ? (
+    <div className="flex flex-1 gap-6 overflow-hidden p-6">
+      <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-6">
+        <RuletaEquipos
+          angulo={sorteo.anguloRuleta}
+          compacto
+          duracion={sorteo.duracionGiro}
+          equipoGirado={sorteo.equipoGirado}
+          equipos={sorteo.equiposDisponibles}
+          esUltimo={sorteo.equiposDisponibles.length === 1}
+          girando={sorteo.girando}
+          onAsignarUltimo={sorteo.asignarUltimoEquipo}
+          onGirar={sorteo.girarRuleta}
+        />
+      </div>
+      <OrdenBatalla
+        cantidadByes={sorteo.cantidadByes}
+        compacto
+        guardando={sorteo.guardando}
+        onConfirmar={sorteo.guardarSorteo}
+        ordenSorteo={sorteo.ordenSorteo}
+        partidosPrimeraRonda={sorteo.partidosPrimeraRonda}
+        puedeConfirmar={sorteo.puedeConfirmar}
+        tamanoBracket={sorteo.tamanoBracket}
+      />
+    </div>
+  ) : null
+
   if (perfil?.rol === 'homologador') {
     return (
       <div className="flex h-screen overflow-hidden bg-slate-100">
         <SidebarHomologador activo="sorteo" />
-        <main className="flex-1 overflow-y-auto">
-          <div className="w-full p-8">{contenido}</div>
+        <main className="flex flex-1 flex-col overflow-hidden">
+          <div className="space-y-4 p-6 pb-0">
+            {controlesSorteo}
+            {sorteo.cargando || sorteo.cargandoEquipos ? (
+              <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+                Cargando datos del sorteo...
+              </div>
+            ) : null}
+            {!sorteo.cargando && !sorteo.cargandoEquipos && sorteo.sorteoExistente.length ? (
+              <ResumenSorteoExistente
+                sorteo={sorteo.sorteoExistente}
+                subcategoriaId={sorteo.subcategoriaId}
+              />
+            ) : null}
+          </div>
+          {!sorteo.cargando && !sorteo.cargandoEquipos ? tableroSorteo : null}
         </main>
       </div>
     )

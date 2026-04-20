@@ -28,6 +28,7 @@ function crearFondoRuleta(cantidad) {
 
 export function RuletaEquipos({
   angulo,
+  compacto = false,
   duracion,
   equipoGirado,
   equipos = [],
@@ -40,8 +41,14 @@ export function RuletaEquipos({
   const ultimoEquipo = equipos[0]
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center">
+    <div
+      className={
+        compacto
+          ? 'flex h-full w-full flex-col items-center justify-center'
+          : 'rounded-md border border-slate-200 bg-white p-5 shadow-sm'
+      }
+    >
+      <div className={compacto ? 'w-full' : 'grid gap-6 lg:grid-cols-[1fr_280px] lg:items-center'}>
         <div className="flex flex-col items-center gap-5">
           {esUltimo ? (
             <div className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
@@ -110,7 +117,7 @@ export function RuletaEquipos({
             </div>
           ) : null}
         </div>
-        <div className="space-y-3">
+        <div className={compacto ? 'hidden' : 'space-y-3'}>
           <h2 className="text-lg font-bold text-slate-950">En la ruleta</h2>
           {sinEquipos ? (
             <p className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">

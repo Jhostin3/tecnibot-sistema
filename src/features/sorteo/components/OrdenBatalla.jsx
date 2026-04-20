@@ -43,6 +43,7 @@ function obtenerParejasPrimeraRonda(ordenSorteo, tamanoBracket, cantidadByes) {
 
 export function OrdenBatalla({
   cantidadByes = 0,
+  compacto = false,
   guardando,
   onConfirmar,
   ordenSorteo = [],
@@ -56,8 +57,14 @@ export function OrdenBatalla({
     : []
 
   return (
-    <aside className="space-y-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-      <div>
+    <aside
+      className={
+        compacto
+          ? 'flex h-full w-72 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm'
+          : 'space-y-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm'
+      }
+    >
+      <div className={compacto ? 'border-b border-slate-100 p-4' : ''}>
         <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
           Orden de batalla
         </p>
@@ -68,7 +75,7 @@ export function OrdenBatalla({
           Bracket de {tamanoBracket} con {cantidadByes} BYEs inferidos.
         </p>
       </div>
-      <div className="space-y-2">
+      <div className={compacto ? 'flex-1 space-y-2 overflow-y-auto p-4' : 'space-y-2'}>
         {ordenSorteo.length ? (
           ordenSorteo.map((asignacion) => (
             <div
@@ -90,7 +97,7 @@ export function OrdenBatalla({
         )}
       </div>
       {puedeConfirmar ? (
-        <div className="space-y-3 border-t border-slate-200 pt-4">
+        <div className={compacto ? 'space-y-3 border-t border-slate-200 p-4' : 'space-y-3 border-t border-slate-200 pt-4'}>
           <h3 className="font-bold text-slate-950">Primera ronda generada</h3>
           <p className="text-sm text-slate-600">
             {partidosPrimeraRonda} partidos con BYEs aplicados al final del bracket.
