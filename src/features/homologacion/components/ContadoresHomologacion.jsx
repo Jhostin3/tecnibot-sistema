@@ -1,23 +1,27 @@
 const tarjetas = [
   {
-    clases: 'border-slate-200 bg-white text-slate-700',
+    clases: 'border-slate-200 bg-slate-50',
     etiqueta: 'Pendientes',
     estado: 'pendiente',
+    numero: 'text-slate-700',
   },
   {
-    clases: 'border-amber-200 bg-amber-50 text-amber-800',
+    clases: 'border-amber-200 bg-amber-50',
     etiqueta: 'En revision',
     estado: 'en_revision',
+    numero: 'text-amber-700',
   },
   {
-    clases: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+    clases: 'border-emerald-200 bg-emerald-50',
     etiqueta: 'Aprobados',
     estado: 'aprobado',
+    numero: 'text-emerald-700',
   },
   {
-    clases: 'border-rose-200 bg-rose-50 text-rose-800',
+    clases: 'border-red-200 bg-red-50',
     etiqueta: 'Rechazados',
     estado: 'rechazado',
+    numero: 'text-red-700',
   },
 ]
 
@@ -30,11 +34,11 @@ export function ContadoresHomologacion({ equipos = [] }) {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {tarjetas.map((tarjeta) => (
         <article
-          className={`rounded-md border p-4 shadow-sm ${tarjeta.clases}`}
+          className={`rounded-2xl border-2 p-6 shadow-sm ${tarjeta.clases}`}
           key={tarjeta.estado}
         >
-          <p className="text-sm font-semibold">{tarjeta.etiqueta}</p>
-          <p className="mt-2 text-3xl font-bold">
+          <p className="text-sm font-semibold text-slate-500">{tarjeta.etiqueta}</p>
+          <p className={`mt-2 text-3xl font-bold ${tarjeta.numero}`}>
             {contarPorEstado(equipos, tarjeta.estado)}
           </p>
         </article>
