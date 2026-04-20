@@ -33,6 +33,11 @@ export function PaginaLogin() {
           titulo="Iniciar sesión"
         />
         <FormularioInicioSesion alEnviar={manejarInicioSesion} />
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-gray-200" />
+          <span className="text-sm font-semibold text-gray-400">o si prefieres</span>
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
       </div>
     </PlantillaAutenticacion>
   )
