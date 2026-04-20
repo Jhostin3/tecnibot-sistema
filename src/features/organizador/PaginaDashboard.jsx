@@ -67,7 +67,6 @@ export function PaginaDashboard() {
   const { perfil } = useAutenticacion()
   const [conteoEquipos, setConteoEquipos] = useState(null)
   const nombreOrganizador = perfil?.nombre || 'organizador'
-  const inicialOrganizador = nombreOrganizador.trim().charAt(0).toUpperCase() || 'O'
 
   useEffect(() => {
     let activo = true
@@ -97,18 +96,6 @@ export function PaginaDashboard() {
     <section className="min-h-[calc(100vh-96px)] bg-slate-100">
       <div className="flex w-full">
         <aside className="hidden min-h-[calc(100vh-96px)] w-56 flex-col border-r border-slate-200 bg-white p-4 md:flex">
-          <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-xl font-bold text-indigo-600">
-              {inicialOrganizador}
-            </div>
-            <p className="mt-3 truncate text-sm font-semibold text-slate-800">
-              {nombreOrganizador}
-            </p>
-            <p className="text-xs capitalize text-slate-400">
-              {perfil?.rol || 'organizador'}
-            </p>
-          </div>
-
           <nav className="space-y-2">
             {enlacesSidebar.map((enlace) => {
               const IconoEnlace = enlace.Icono
