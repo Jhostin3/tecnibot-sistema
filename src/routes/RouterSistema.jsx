@@ -6,6 +6,7 @@ import { PaginaEquipos } from '../features/equipos/pages/PaginaEquipos'
 import { PaginaHomologacion } from '../features/homologacion/pages/PaginaHomologacion'
 import { PaginaPartidoActivo } from '../features/juez/PaginaPartidoActivo'
 import { PaginaJuez } from '../features/juez/pages/PaginaJuez'
+import { PaginaLlave } from '../features/llave/PaginaLlave'
 import { PaginaDashboard } from '../features/organizador/PaginaDashboard'
 import { PaginaPartidos } from '../features/organizador/PaginaPartidos'
 import { PaginaLlavePublica } from '../features/sorteo/pages/PaginaLlavePublica'
@@ -24,7 +25,8 @@ export function RouterSistema() {
         <Routes>
           <Route element={<LayoutPublico />}>
             <Route path={rutas.login} element={<PaginaLogin />} />
-            <Route path={rutas.llave} element={<PaginaLlavePublica />} />
+            <Route path={rutas.llave} element={<PaginaLlave />} />
+            <Route path={rutas.llaveSubcategoria} element={<PaginaLlavePublica />} />
           </Route>
           <Route element={<RutaProtegida />}>
             <Route element={<LayoutPrivado />}>

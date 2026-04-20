@@ -7,6 +7,7 @@ export const rutas = {
   homologacion: '/homologacion',
   juez: '/juez',
   juezPartido: '/juez/:id',
-  llave: '/llave/:subcategoriaId',
+  llave: '/llave',
+  llaveSubcategoria: '/llave/:subcategoriaId',
   sorteo: '/sorteo',
 }
