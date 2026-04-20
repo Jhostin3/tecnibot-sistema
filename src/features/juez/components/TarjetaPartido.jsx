@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { MapPin } from 'lucide-react'
 
 import { FormularioResultado } from './FormularioResultado'
 
@@ -260,45 +261,46 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
   return (
     <article className="rounded-2xl border border-gray-700 bg-gray-800 p-6 shadow-lg">
-      <div className="space-y-2">
-        <p className="text-base font-semibold uppercase tracking-normal text-gray-400">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="rounded-full bg-gray-700 px-3 py-1 text-xs font-semibold text-gray-300">
           {partido.subcategoria?.nombre || 'Subcategoria'} - {partido.etiqueta_ronda}
         </p>
-        <h2 className="text-2xl font-bold text-white">Partido #{partido.orden}</h2>
+        {partido.cancha ? (
+          <p className="inline-flex items-center gap-1 text-sm font-semibold text-cyan-400">
+            <MapPin className="h-4 w-4" />
+            {partido.cancha}
+          </p>
+        ) : null}
       </div>
 
-      {partido.cancha ? (
-        <p className="mt-5 rounded-2xl border border-cyan-400 bg-gray-900 p-4 text-lg font-bold text-cyan-200">
-          Cancha: {partido.cancha}
-        </p>
-      ) : null}
+      <h2 className="mt-4 text-2xl font-bold text-white">Partido #{partido.orden}</h2>
 
       <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-start gap-3">
-        <div className="min-w-0 rounded-2xl border border-blue-400 bg-gray-900 p-4 text-center">
+        <div className="min-w-0 rounded-2xl border border-blue-800 bg-blue-950 p-4 text-center">
           <p className="break-words text-lg font-bold text-blue-400">
             {nombreEquipoA}
           </p>
-          <p className="mt-2 break-words text-base text-gray-300">
+          <p className="mt-2 break-words text-sm text-gray-400">
             {obtenerNombreRobot(partido.equipo_a)}
           </p>
         </div>
 
-        <span className="pt-5 text-lg font-black text-gray-400">VS</span>
+        <span className="pt-5 text-xl font-black text-gray-600">VS</span>
 
-        <div className="min-w-0 rounded-2xl border border-red-400 bg-gray-900 p-4 text-center">
+        <div className="min-w-0 rounded-2xl border border-red-800 bg-red-950 p-4 text-center">
           <p className="break-words text-lg font-bold text-red-400">
             {nombreEquipoB}
           </p>
-          <p className="mt-2 break-words text-base text-gray-300">
+          <p className="mt-2 break-words text-sm text-gray-400">
             {obtenerNombreRobot(partido.equipo_b)}
           </p>
         </div>
       </div>
 
-      <div className="mt-6 rounded-2xl bg-gray-900 p-6 text-center">
+      <div className="mt-6 rounded-2xl border border-gray-700 bg-gray-800 p-6 text-center">
         <p
           className={`text-lg font-black uppercase tracking-normal ${
-            timer.estado === estadosTimer.descanso ? 'text-orange-400' : 'text-white'
+            timer.estado === estadosTimer.descanso ? 'text-amber-400' : 'text-white'
           }`}
         >
           {tituloTimer}
@@ -306,7 +308,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
         {timer.estado === estadosTimer.listo ? (
           <button
-            className="mt-5 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+            className="mt-5 h-12 w-full rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
             onClick={iniciarPrimerTiempo}
             type="button"
           >
@@ -317,10 +319,10 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         {timerActivo ? (
           <>
             <p
-              className={`mt-4 font-mono text-6xl font-bold ${
+              className={`mt-4 font-mono font-bold ${
                 timer.estado === estadosTimer.descanso
-                  ? 'text-orange-400'
-                  : 'animate-pulse text-green-400'
+                  ? 'text-amber-400 text-4xl'
+                  : 'text-6xl text-cyan-400'
               }`}
             >
               {formatearTiempo(timer.segundos)}
@@ -339,7 +341,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
               Primer tiempo terminado - cambio de cancha
             </p>
             <button
-              className="min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+              className="h-12 w-full rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
               onClick={iniciarMedioTiempo}
               type="button"
             >
@@ -350,7 +352,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
         {timer.estado === estadosTimer.descansoFinalizado ? (
           <button
-            className="mt-5 min-h-14 w-full rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+            className="mt-5 h-12 w-full rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
             onClick={iniciarSegundoTiempo}
             type="button"
           >
@@ -367,14 +369,14 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         {esTiempoJuego ? (
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
-              className="min-h-14 rounded-2xl bg-gray-700 px-5 py-3 text-lg font-bold text-white transition hover:bg-gray-600"
+              className="h-12 rounded-xl bg-gray-700 px-5 py-3 font-bold text-white transition hover:bg-gray-600"
               onClick={alternarPausa}
               type="button"
             >
               {timer.pausado ? 'Reanudar' : 'Pausar'}
             </button>
             <button
-              className="min-h-14 rounded-2xl bg-cyan-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-cyan-400"
+              className="h-12 rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
               onClick={
                 timer.estado === estadosTimer.primerTiempo
                   ? terminarPrimerTiempo
@@ -390,15 +392,15 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         ) : null}
 
         {reparacion.activa ? (
-          <div className="mt-5 rounded-2xl border border-yellow-500 bg-yellow-950/40 p-4">
-            <p className="text-base font-black uppercase tracking-normal text-yellow-300">
+          <div className="mt-5 rounded-2xl border border-amber-700 bg-amber-950 p-4">
+            <p className="text-base font-black uppercase tracking-normal text-amber-400">
               Reparacion - {reparacion.nombreEquipo}
             </p>
-            <p className="mt-3 font-mono text-4xl font-bold text-yellow-400">
+            <p className="mt-3 font-mono text-4xl font-bold text-amber-400">
               {formatearTiempo(reparacion.segundos)}
             </p>
             <button
-              className="mt-4 min-h-14 w-full rounded-2xl bg-yellow-600 px-5 py-3 text-lg font-bold text-black transition hover:bg-yellow-500"
+              className="mt-4 h-12 w-full rounded-xl bg-amber-500 px-5 py-3 font-bold text-black transition hover:bg-amber-400"
               onClick={terminarReparacion}
               type="button"
             >
@@ -410,7 +412,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button
-          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-left text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:line-through"
+          className="min-h-14 rounded-xl border border-amber-700 bg-amber-950 px-5 py-3 text-left text-base font-bold text-amber-400 transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:line-through"
           disabled={!esTiempoJuego || reparacion.activa || reparacionesUsadas.equipoA}
           onClick={() => iniciarReparacion('equipoA', nombreEquipoA)}
           type="button"
@@ -420,7 +422,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
             : `Reparacion ${nombreEquipoA}`}
         </button>
         <button
-          className="min-h-14 rounded-2xl bg-yellow-600 px-5 py-3 text-right text-base font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500 disabled:line-through"
+          className="min-h-14 rounded-xl border border-amber-700 bg-amber-950 px-5 py-3 text-right text-base font-bold text-amber-400 transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:line-through"
           disabled={!esTiempoJuego || reparacion.activa || reparacionesUsadas.equipoB}
           onClick={() => iniciarReparacion('equipoB', nombreEquipoB)}
           type="button"
