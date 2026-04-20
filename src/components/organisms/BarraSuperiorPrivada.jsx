@@ -19,7 +19,7 @@ export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
         <div className="flex items-center gap-3">
           <img
             alt="TecniBot"
-            className="h-8 w-8 object-contain"
+            className="h-12 w-12 object-contain"
             src="/assets/icono_cuy.png"
           />
           <div>
