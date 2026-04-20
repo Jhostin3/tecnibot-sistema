@@ -5,6 +5,7 @@ import { Boton } from '../atoms/Boton'
 
 export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
   const esOrganizador = perfil?.rol === 'organizador'
+  const esHomologador = perfil?.rol === 'homologador'
 
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -37,6 +38,22 @@ export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
                 to={rutas.partidos}
               >
                 Partidos
+              </Link>
+            </nav>
+          ) : null}
+          {esHomologador ? (
+            <nav className="flex flex-wrap gap-2">
+              <Link
+                className="inline-flex min-h-10 items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                to={rutas.homologacion}
+              >
+                Homologacion
+              </Link>
+              <Link
+                className="inline-flex min-h-10 items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                to={rutas.sorteo}
+              >
+                Sorteo
               </Link>
             </nav>
           ) : null}
