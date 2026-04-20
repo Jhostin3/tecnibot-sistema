@@ -64,6 +64,11 @@ export function PaginaLogin() {
         <Zap className="absolute bottom-16 left-14 h-10 w-10 animate-pulse text-blue-600 opacity-20" />
         <Trophy className="absolute bottom-10 right-16 h-10 w-10 animate-pulse text-blue-600 opacity-20" />
         <div className="relative z-10">
+          <img
+            alt="TecniBot mascota"
+            className="mx-auto h-56 w-56 object-contain mix-blend-screen drop-shadow-2xl md:h-72 md:w-72"
+            src="/assets/cuy.png"
+          />
           <h1 className="inline-flex items-center justify-center gap-3 text-5xl font-black tracking-normal text-cyan-400">
             <Zap className="inline h-8 w-8 text-cyan-400" />
             TECNIBOT
