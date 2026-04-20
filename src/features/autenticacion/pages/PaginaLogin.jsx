@@ -28,10 +28,44 @@ export function PaginaLogin() {
 
   return (
     <main className="grid min-h-screen bg-slate-50 md:grid-cols-2">
-      <section className="hidden items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 px-10 text-center md:flex">
-        <div>
+      <section className="relative hidden items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 px-10 text-center md:flex">
+        <svg
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full opacity-10"
+          viewBox="0 0 600 600"
+        >
+          <g fill="none" stroke="#38bdf8" strokeWidth="2">
+            <path d="M60 120h160v80h120" />
+            <path d="M120 420h130v-90h180" />
+            <path d="M360 90v130h120" />
+            <path d="M70 280h180v-70" />
+            <path d="M330 500v-120h190" />
+            <path d="M220 520h-90V360" />
+          </g>
+          <g fill="#22d3ee">
+            <circle cx="60" cy="120" r="6" />
+            <circle cx="340" cy="200" r="6" />
+            <circle cx="480" cy="220" r="6" />
+            <circle cx="430" cy="330" r="6" />
+            <circle cx="520" cy="380" r="6" />
+            <circle cx="130" cy="360" r="6" />
+          </g>
+        </svg>
+        <span className="absolute left-10 top-10 text-6xl text-blue-700 opacity-30 animate-pulse">
+          ⚙
+        </span>
+        <span className="absolute right-12 top-20 text-6xl text-blue-700 opacity-30 animate-pulse">
+          🤖
+        </span>
+        <span className="absolute bottom-16 left-14 text-6xl text-blue-700 opacity-30 animate-pulse">
+          ⚡
+        </span>
+        <span className="absolute bottom-10 right-16 text-6xl text-blue-700 opacity-30 animate-pulse">
+          🏆
+        </span>
+        <div className="relative z-10">
           <h1 className="text-5xl font-black tracking-widest text-cyan-400">
-            TECNIBOT
+            ⚡ TECNIBOT
           </h1>
           <p className="mt-3 text-xl text-blue-200">Cuenca 2026</p>
           <div className="mx-auto my-4 h-1 w-16 rounded-full bg-cyan-400" />
