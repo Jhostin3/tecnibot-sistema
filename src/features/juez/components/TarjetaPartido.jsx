@@ -328,7 +328,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
               {formatearTiempo(timer.segundos)}
             </p>
             {timer.estado === estadosTimer.descanso ? (
-              <p className="mt-3 text-base font-semibold text-gray-400">
+              <p className="mt-3 text-base font-semibold text-amber-400">
                 Cambio de cancha
               </p>
             ) : null}
@@ -337,7 +337,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
         {timer.estado === estadosTimer.primerTiempoFinalizado ? (
           <div className="mt-5 space-y-4">
-            <p className="text-base font-semibold text-gray-400">
+            <p className="text-base font-semibold text-amber-400">
               Primer tiempo terminado - cambio de cancha
             </p>
             <button
@@ -361,7 +361,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         ) : null}
 
         {timer.estado === estadosTimer.finalizado ? (
-          <p className="mt-5 text-base font-semibold text-gray-400">
+          <p className="mt-5 text-base font-semibold text-emerald-400">
             Tiempo finalizado
           </p>
         ) : null}

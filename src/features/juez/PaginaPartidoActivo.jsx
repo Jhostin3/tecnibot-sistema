@@ -117,7 +117,7 @@ export function PaginaPartidoActivo() {
         </button>
 
         {mensaje ? (
-          <p className="rounded-2xl border border-cyan-500 bg-cyan-950 p-4 text-base font-semibold text-cyan-100">
+          <p className="rounded-2xl border border-emerald-500 bg-emerald-900 p-4 text-base font-semibold text-emerald-400">
             {mensaje}
           </p>
         ) : null}
