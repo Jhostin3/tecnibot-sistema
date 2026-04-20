@@ -24,6 +24,10 @@ export function PaginaLogin() {
     navigate(rutaDestino, { replace: true })
   }
 
+  function abrirLlavePublica() {
+    navigate(rutas.llave)
+  }
+
   return (
     <PlantillaAutenticacion>
       <div className="space-y-8 rounded-md border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -38,6 +42,13 @@ export function PaginaLogin() {
           <span className="text-sm font-semibold text-gray-400">o si prefieres</span>
           <span className="h-px flex-1 bg-gray-200" />
         </div>
+        <button
+          className="min-h-12 w-full rounded-xl border border-yellow-500 bg-transparent px-4 py-2 text-sm font-semibold text-yellow-500 transition hover:bg-yellow-900 hover:text-yellow-200"
+          onClick={abrirLlavePublica}
+          type="button"
+        >
+          Trofeo Ver llave del torneo
+        </button>
       </div>
     </PlantillaAutenticacion>
   )
