@@ -38,9 +38,9 @@ function ConectoresRonda({ cantidad, visible }) {
     <div className="hidden w-12 flex-col gap-6 pt-9 md:flex">
       {Array.from({ length: cantidadPares }).map((_, indice) => (
         <div className="grid h-32 grid-rows-2" key={`conector-${indice}`}>
-          <div className="border-r border-t border-blue-600" />
-          <div className="border-r border-b border-blue-600" />
-          <div className="relative -mt-16 h-0 border-t border-blue-600" />
+          <div className="border-r border-t border-gray-700" />
+          <div className="border-r border-b border-gray-700" />
+          <div className="relative -mt-16 h-0 border-t border-gray-700" />
         </div>
       ))}
     </div>
@@ -65,8 +65,8 @@ export function BracketVisual({ enfrentamientos }) {
           return (
             <div className="flex gap-4" key={ronda}>
               <section className="space-y-4">
-                <div className="mb-4 border-b border-blue-700 pb-2">
-                  <h2 className="text-center text-xs font-bold uppercase tracking-widest text-cyan-400">
+                <div className="mb-4 border-b border-gray-700 pb-2">
+                  <h2 className="text-center text-xs font-bold uppercase tracking-widest text-gray-400">
                     {etiquetasRonda[ronda] || ronda}
                   </h2>
                 </div>

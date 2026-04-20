@@ -22,8 +22,8 @@ export function PaginaLlave() {
   )
 
   return (
-    <section className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 px-4 py-6 shadow-xl sm:px-8">
+    <section className="min-h-screen bg-gray-950 text-white">
+      <header className="border-b border-gray-800 bg-gray-900 px-4 py-6 shadow-xl sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-800">
@@ -34,16 +34,16 @@ export function PaginaLlave() {
               />
             </span>
             <div>
-              <h1 className="text-2xl font-black text-white sm:text-3xl">
+              <h1 className="text-2xl font-bold text-white sm:text-3xl">
                 Llave del Torneo
               </h1>
               <p className="text-sm font-semibold text-cyan-400">
-                En vivo - TecniBot Cuenca 2026
+                En vivo · TecniBot Cuenca 2026
               </p>
             </div>
           </div>
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-200 transition hover:bg-blue-800 hover:text-white"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-semibold text-gray-300 transition hover:bg-gray-700 hover:text-white"
             onClick={() => navigate('/login')}
             type="button"
           >
@@ -52,7 +52,7 @@ export function PaginaLlave() {
           </button>
         </div>
       </header>
-      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-8">
+      <div className="mx-auto max-w-7xl space-y-8 bg-gray-900 px-4 py-8 sm:px-8">
         <SelectorSubcategoria
           alSeleccionar={seleccionarSubcategoria}
           subcategoriaSeleccionada={subcategoriaSeleccionada}
