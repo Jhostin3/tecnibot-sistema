@@ -38,7 +38,7 @@ function FilaEquipo({ color, equipo, ganador, goles, mostrarBye }) {
       }`}
     >
       <span className="min-w-0 truncate">
-        <span className={color}>{color === 'text-blue-400' ? 'Azul' : 'Rojo'}</span>{' '}
+        <span className={color}>●</span>{' '}
         {nombreEquipo(equipo)}
       </span>
       {goles !== null && goles !== undefined ? (
