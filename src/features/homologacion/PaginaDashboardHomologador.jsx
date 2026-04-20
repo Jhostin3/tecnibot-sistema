@@ -1,8 +1,11 @@
 import { ChevronRight, ClipboardCheck, Shuffle } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { rutas } from '../../utils/rutas'
 import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
+import { GridBrackets } from '../sorteo/components/GridBrackets'
+import { listarSubcategoriasConSorteo } from '../sorteo/services/servicioSorteo'
 import { SidebarHomologador } from './components/SidebarHomologador'
 
 const accesos = [
@@ -26,7 +29,32 @@ const accesos = [
 
 export function PaginaDashboardHomologador() {
   const { perfil } = useAutenticacion()
+  const [brackets, setBrackets] = useState([])
   const nombre = perfil?.nombre || 'homologador'
+
+  useEffect(() => {
+    let activo = true
+
+    async function cargarBrackets() {
+      try {
+        const subcategorias = await listarSubcategoriasConSorteo()
+
+        if (activo) {
+          setBrackets(subcategorias)
+        }
+      } catch {
+        if (activo) {
+          setBrackets([])
+        }
+      }
+    }
+
+    cargarBrackets()
+
+    return () => {
+      activo = false
+    }
+  }, [])
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
@@ -70,6 +98,22 @@ export function PaginaDashboardHomologador() {
               )
             })}
           </div>
+
+          <section className="mt-8">
+            <div className="mb-4">
+              <span className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+                LLAVES
+              </span>
+              <h2 className="mt-3 text-2xl font-bold text-slate-800">
+                Brackets del torneo
+              </h2>
+              <p className="mt-1 text-sm text-slate-400">
+                Toca una subcategoria para ver su llave completa.
+              </p>
+            </div>
+
+            <GridBrackets brackets={brackets} />
+          </section>
         </div>
       </main>
     </div>
