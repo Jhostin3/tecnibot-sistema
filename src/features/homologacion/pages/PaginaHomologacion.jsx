@@ -3,9 +3,11 @@ import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
+import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import { ContadoresHomologacion } from '../components/ContadoresHomologacion'
 import { FiltrosHomologacion } from '../components/FiltrosHomologacion'
 import { PanelCambioHomologacion } from '../components/PanelCambioHomologacion'
+import { SidebarHomologador } from '../components/SidebarHomologador'
 import { TablaHomologaciones } from '../components/TablaHomologaciones'
 import { TabsHomologacion } from '../components/TabsHomologacion'
 import { useHomologaciones } from '../hooks/usarHomologaciones'
@@ -15,6 +17,7 @@ const estadosHomologados = ['aprobado', 'rechazado']
 
 export function PaginaHomologacion() {
   const navigate = useNavigate()
+  const { perfil } = useAutenticacion()
   const homologaciones = useHomologaciones()
   const [cambio, setCambio] = useState(null)
   const [tabActivo, setTabActivo] = useState('por_revisar')
@@ -51,7 +54,7 @@ export function PaginaHomologacion() {
     setCambio(null)
   }
 
-  return (
+  const contenido = (
     <section className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <button
@@ -105,4 +108,15 @@ export function PaginaHomologacion() {
       )}
     </section>
   )
+
+  if (perfil?.rol === 'homologador') {
+    return (
+      <div className="flex h-screen bg-slate-100">
+        <SidebarHomologador activo="homologacion" />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">{contenido}</main>
+      </div>
+    )
+  }
+
+  return contenido
 }

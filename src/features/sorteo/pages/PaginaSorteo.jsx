@@ -2,6 +2,8 @@ import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
+import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
+import { SidebarHomologador } from '../../homologacion/components/SidebarHomologador'
 import { OrdenBatalla } from '../components/OrdenBatalla'
 import { ResumenSorteoExistente } from '../components/ResumenSorteoExistente'
 import { RuletaEquipos } from '../components/RuletaEquipos'
@@ -38,6 +40,7 @@ function obtenerMensajeValidacion({
 
 export function PaginaSorteo() {
   const navigate = useNavigate()
+  const { perfil } = useAutenticacion()
   const sorteo = useSorteo()
   const subcategoriasFiltradas = sorteo.categoriaId
     ? sorteo.subcategorias.filter(
@@ -54,7 +57,7 @@ export function PaginaSorteo() {
     tamanoBracket: sorteo.tamanoBracket,
   })
 
-  return (
+  const contenido = (
     <section className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <button
@@ -124,4 +127,15 @@ export function PaginaSorteo() {
       )}
     </section>
   )
+
+  if (perfil?.rol === 'homologador') {
+    return (
+      <div className="flex h-screen bg-slate-100">
+        <SidebarHomologador activo="sorteo" />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">{contenido}</main>
+      </div>
+    )
+  }
+
+  return contenido
 }
