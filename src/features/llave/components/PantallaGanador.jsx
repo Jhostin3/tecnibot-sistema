@@ -1,9 +1,11 @@
+import { Trophy } from 'lucide-react'
+
 export function PantallaGanador({ ganador, subcategoria }) {
   if (!ganador) return null
 
   return (
     <section className="rounded-2xl border border-yellow-700 bg-gradient-to-br from-yellow-900 to-gray-900 p-8 text-center shadow-xl">
-      <p className="animate-bounce text-5xl">TROFEO</p>
+      <Trophy className="mx-auto h-14 w-14 animate-bounce text-yellow-400" />
       <p className="mt-4 text-4xl font-bold uppercase tracking-normal text-yellow-400">
         Campeon
       </p>

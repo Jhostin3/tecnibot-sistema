@@ -12,10 +12,10 @@ function nombreEquipo(equipo) {
 }
 
 function claseTarjeta(estado) {
-  if (estado === 'activo') return 'border-2 border-cyan-500 animate-pulse'
-  if (estado === 'finalizado') return 'border border-gray-600'
+  if (estado === 'activo') return 'border-2 border-cyan-400 animate-pulse'
+  if (estado === 'finalizado') return 'border border-blue-700'
 
-  return 'border border-gray-600'
+  return 'border border-blue-700'
 }
 
 function FilaEquipo({ color, equipo, ganador, goles }) {
@@ -25,10 +25,10 @@ function FilaEquipo({ color, equipo, ganador, goles }) {
     <div
       className={`flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm ${
         ganador
-          ? 'border border-green-500 bg-green-900 font-bold text-green-400'
+          ? 'bg-emerald-900 font-bold text-emerald-400'
           : equipo
-            ? 'text-gray-300'
-            : 'text-gray-500'
+            ? 'text-blue-400 opacity-60'
+            : 'text-blue-500 italic'
       }`}
     >
       <span className="min-w-0 truncate">
@@ -38,8 +38,8 @@ function FilaEquipo({ color, equipo, ganador, goles }) {
         <span
           className={`font-mono ${
             ganador
-              ? 'text-lg font-bold text-green-400'
-              : 'text-base font-semibold text-gray-500'
+              ? 'text-lg font-bold text-emerald-400'
+              : 'text-base font-semibold text-blue-400 opacity-60'
           }`}
         >
           [{goles}]
@@ -51,11 +51,11 @@ function FilaEquipo({ color, equipo, ganador, goles }) {
 
 function FilaBye({ equipo }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-gray-500 bg-gray-700 px-3 py-2 text-sm">
+    <div className="flex items-center justify-between gap-3 rounded-md border border-blue-600 bg-blue-900 px-3 py-2 text-sm">
       <span className="min-w-0 truncate font-semibold text-white">
         {nombreEquipo(equipo)}
       </span>
-      <span className="rounded bg-gray-600 px-2 py-1 text-xs font-bold text-gray-300">
+      <span className="rounded bg-blue-700 px-2 py-1 text-xs font-bold text-blue-200">
         BYE
       </span>
     </div>
@@ -65,7 +65,7 @@ function FilaBye({ equipo }) {
 export function TarjetaEnfrentamiento({ enfrentamiento }) {
   if (!enfrentamiento) {
     return (
-      <article className="w-56 rounded-lg border border-dashed border-gray-600 bg-gray-800 p-3 text-sm italic text-gray-500">
+      <article className="w-56 rounded-xl border border-dashed border-blue-600 bg-blue-900 p-3 text-sm italic text-blue-500">
         Por definir
       </article>
     )
@@ -77,7 +77,12 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
   const esBye = enfrentamiento.bye && !enfrentamiento.equipo_b
 
   return (
-    <article className={`w-56 rounded-lg bg-gray-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
+    <article className={`w-56 rounded-xl bg-blue-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
+      {enfrentamiento.estado === 'activo' ? (
+        <span className="mb-2 inline-flex rounded-full bg-cyan-500 px-2 py-1 text-xs font-bold text-white">
+          EN VIVO
+        </span>
+      ) : null}
       <div className="space-y-2">
         {esBye ? (
           <FilaBye equipo={enfrentamiento.equipo_a} />
@@ -98,7 +103,7 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
           </>
         )}
       </div>
-      <p className="mt-3 text-xs font-semibold uppercase tracking-normal text-gray-500">
+      <p className="mt-3 text-xs font-semibold uppercase tracking-normal text-blue-300">
         {enfrentamiento.cancha ? `${enfrentamiento.cancha} - ` : ''}
         {etiquetasRonda[enfrentamiento.ronda] || enfrentamiento.ronda}
       </p>

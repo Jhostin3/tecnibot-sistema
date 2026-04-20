@@ -1,9 +1,13 @@
+import { ArrowLeft, Zap } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+
 import { BracketVisual } from './components/BracketVisual'
 import { PantallaGanador } from './components/PantallaGanador'
 import { SelectorSubcategoria } from './components/SelectorSubcategoria'
 import { useLlave } from './usarLlave'
 
 export function PaginaLlave() {
+  const navigate = useNavigate()
   const {
     cargando,
     enfrentamientos,
@@ -18,20 +22,33 @@ export function PaginaLlave() {
   )
 
   return (
-    <section className="min-h-screen bg-gray-900 px-4 py-6 text-white sm:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <header className="space-y-3">
-          <p className="text-base font-semibold uppercase tracking-normal text-cyan-300">
-            TecniBot
-          </p>
-          <h1 className="text-4xl font-black tracking-normal">
-            TecniBot - Llave del torneo
-          </h1>
-          <p className="max-w-3xl text-base leading-7 text-gray-400">
-            Sigue los enfrentamientos en vivo y mira como avanza cada ronda.
-          </p>
-        </header>
-
+    <section className="min-h-screen bg-gray-900 text-white">
+      <header className="bg-gradient-to-r from-blue-900 to-indigo-900 px-4 py-6 shadow-xl sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-800 text-cyan-400">
+              <Zap className="h-7 w-7" />
+            </span>
+            <div>
+              <h1 className="text-2xl font-black text-white sm:text-3xl">
+                Llave del Torneo
+              </h1>
+              <p className="text-sm font-semibold text-cyan-400">
+                En vivo - TecniBot Cuenca 2026
+              </p>
+            </div>
+          </div>
+          <button
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-blue-500 px-4 py-2 text-sm font-semibold text-blue-200 transition hover:bg-blue-800 hover:text-white"
+            onClick={() => navigate('/login')}
+            type="button"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Ir al login
+          </button>
+        </div>
+      </header>
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-8">
         <SelectorSubcategoria
           alSeleccionar={seleccionarSubcategoria}
           subcategoriaSeleccionada={subcategoriaSeleccionada}
