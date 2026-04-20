@@ -91,7 +91,7 @@ export function PaginaLogin() {
             </p>
           </div>
 
-          <div className="[&_form>p]:rounded-xl [&_form>p]:border-red-200 [&_form>p]:bg-red-50 [&_form>p]:p-3 [&_form>p]:text-sm [&_form>p]:font-semibold [&_form>p]:text-red-600 [&_form>p:last-child]:hidden [&_input]:h-12 [&_input]:rounded-xl [&_input]:border-slate-200 [&_input]:px-4 [&_input]:text-slate-700 [&_input]:shadow-sm [&_input]:placeholder:text-slate-300 [&_input]:focus:border-transparent [&_input]:focus:ring-2 [&_input]:focus:ring-blue-400 [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-slate-600">
+          <div className="[&_button[type='submit']]:h-12 [&_button[type='submit']]:rounded-xl [&_button[type='submit']]:bg-gradient-to-r [&_button[type='submit']]:from-blue-600 [&_button[type='submit']]:to-indigo-600 [&_button[type='submit']]:font-semibold [&_button[type='submit']]:text-white [&_button[type='submit']]:shadow-lg [&_button[type='submit']]:shadow-blue-200 [&_button[type='submit']]:duration-200 [&_button[type='submit']]:hover:from-blue-700 [&_button[type='submit']]:hover:to-indigo-700 [&_form>p]:rounded-xl [&_form>p]:border-red-200 [&_form>p]:bg-red-50 [&_form>p]:p-3 [&_form>p]:text-sm [&_form>p]:font-semibold [&_form>p]:text-red-600 [&_form>p:last-child]:hidden [&_input]:h-12 [&_input]:rounded-xl [&_input]:border-slate-200 [&_input]:px-4 [&_input]:text-slate-700 [&_input]:shadow-sm [&_input]:placeholder:text-slate-300 [&_input]:focus:border-transparent [&_input]:focus:ring-2 [&_input]:focus:ring-blue-400 [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-slate-600">
             <FormularioInicioSesion alEnviar={manejarInicioSesion} />
           </div>
 
@@ -108,7 +108,7 @@ export function PaginaLogin() {
             onClick={abrirLlavePublica}
             type="button"
           >
-            Ver llave del torneo - Sin login
+            🏆 Ver llave del torneo · Sin login
           </button>
 
           <p className="mt-6 text-center text-xs text-slate-300">
