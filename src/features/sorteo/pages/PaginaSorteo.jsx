@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Trophy } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
@@ -35,6 +35,19 @@ function obtenerMensajeValidacion({
   }
 
   return `Hay ${equipos.length} equipos aprobados. Bracket de ${tamanoBracket}, ${cantidadByes} BYEs y ${partidosPrimeraRonda} partidos en primera ronda.`
+}
+
+function BotonVerBracket({ onClick }) {
+  return (
+    <button
+      className="inline-flex h-14 items-center justify-center rounded-xl bg-indigo-600 px-8 text-lg font-bold text-white shadow-lg transition hover:bg-indigo-700"
+      onClick={onClick}
+      type="button"
+    >
+      <Trophy className="mr-2 h-5 w-5" />
+      Ver bracket completo →
+    </button>
+  )
 }
 
 export function PaginaSorteo() {
@@ -97,6 +110,13 @@ export function PaginaSorteo() {
           <div className="rounded-md border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
             {mensajeValidacion}
           </div>
+          {sorteo.subcategoriaId && sorteo.sorteoExistente.length ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <BotonVerBracket
+                onClick={() => navigate(`/bracket/${sorteo.subcategoriaId}`)}
+              />
+            </div>
+          ) : null}
           {sorteo.subcategoriaId && !sorteo.sorteoExistente.length ? (
             <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
               <RuletaEquipos
@@ -182,6 +202,13 @@ export function PaginaSorteo() {
             {sorteo.cargando || sorteo.cargandoEquipos ? (
               <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
                 Cargando datos del sorteo...
+              </div>
+            ) : null}
+            {!sorteo.cargando && !sorteo.cargandoEquipos && sorteo.subcategoriaId && sorteo.sorteoExistente.length ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <BotonVerBracket
+                  onClick={() => navigate(`/bracket/${sorteo.subcategoriaId}`)}
+                />
               </div>
             ) : null}
           </div>
