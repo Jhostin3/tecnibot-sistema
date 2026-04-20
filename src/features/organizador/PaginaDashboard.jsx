@@ -57,8 +57,8 @@ const enlacesSidebar = [
 const claseEnlaceSidebar = ({ isActive }) =>
   `flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
     isActive
-      ? 'bg-blue-50 font-semibold text-blue-600'
-      : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'
+      ? 'bg-indigo-50 font-semibold text-indigo-600'
+      : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
   }`
 
 export function PaginaDashboard() {
@@ -71,7 +71,7 @@ export function PaginaDashboard() {
       <div className="mx-auto flex max-w-7xl">
         <aside className="hidden min-h-[calc(100vh-96px)] w-56 flex-col border-r border-slate-200 bg-white p-4 md:flex">
           <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-600">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-xl font-bold text-indigo-600">
               {inicialOrganizador}
             </div>
             <p className="mt-3 truncate text-sm font-semibold text-slate-800">
@@ -105,7 +105,7 @@ export function PaginaDashboard() {
         </aside>
 
         <main className="flex-1 p-4 md:p-8">
-          <header className="mb-6 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 p-6 text-white shadow-sm">
+          <header className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-500 p-6 text-white shadow-sm">
             <p className="text-sm text-white/70">Bienvenido,</p>
             <h1 className="mt-1 text-2xl font-bold">{nombreOrganizador}</h1>
             <span className="mt-4 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
