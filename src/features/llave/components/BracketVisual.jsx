@@ -177,9 +177,9 @@ export function BracketVisual({ enfrentamientos }) {
   }, [medirConectores])
 
   return (
-    <div className="overflow-x-auto pb-4">
+    <div className="w-full overflow-x-auto pb-4">
       <div
-        className="relative flex min-w-max items-start gap-24 p-8"
+        className="relative flex min-w-max items-start gap-24 overflow-visible p-8"
         ref={contenedorRef}
       >
         <svg
