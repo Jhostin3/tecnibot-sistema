@@ -4,6 +4,7 @@ export const rutas = {
   panel: '/panel',
   equipos: '/equipos',
   partidos: '/partidos',
+  bracketCompleto: '/bracket/:subcategoriaId',
   homologacion: '/homologacion',
   juez: '/juez',
   juezPartido: '/juez/:id',
