@@ -71,7 +71,7 @@ export function RuletaEquipos({
             </div>
           ) : (
             <>
-              <div className="relative flex aspect-square w-full max-w-md items-center justify-center">
+              <div className="relative flex aspect-square max-h-[280px] w-full max-w-[280px] items-center justify-center">
                 <div className="absolute right-2 top-1/2 z-10 h-0 w-0 -translate-y-1/2 border-y-[14px] border-r-[24px] border-y-transparent border-r-slate-950" />
                 <div
                   className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border-8 border-white shadow-lg transition-transform ease-out"
@@ -98,7 +98,7 @@ export function RuletaEquipos({
                       </div>
                     )
                   })}
-                  <div className="z-10 flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-slate-950 px-4 text-center text-sm font-bold text-white shadow-md">
+                  <div className="z-10 flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-slate-950 px-3 text-center text-xs font-bold text-white shadow-md">
                     {girando ? 'Girando...' : `${equipos.length} equipos`}
                   </div>
                 </div>
