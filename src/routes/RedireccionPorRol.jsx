@@ -4,7 +4,7 @@ import { useAutenticacion } from '../features/autenticacion/hooks/useAutenticaci
 import { rutas } from '../utils/rutas'
 
 const rutasPorRol = {
-  homologador: rutas.homologacion,
+  homologador: rutas.inicio,
   juez: rutas.juez,
   organizador: rutas.inicio,
 }

@@ -1,8 +1,10 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { ProveedorAutenticacion } from '../features/autenticacion/hooks/ContextoAutenticacion'
+import { useAutenticacion } from '../features/autenticacion/hooks/useAutenticacion'
 import { PaginaLogin } from '../features/autenticacion/pages/PaginaLogin'
 import { PaginaEquipos } from '../features/equipos/pages/PaginaEquipos'
+import { PaginaDashboardHomologador } from '../features/homologacion/PaginaDashboardHomologador'
 import { PaginaHomologacion } from '../features/homologacion/pages/PaginaHomologacion'
 import { PaginaPartidoActivo } from '../features/juez/PaginaPartidoActivo'
 import { PaginaJuez } from '../features/juez/pages/PaginaJuez'
@@ -18,6 +20,16 @@ import { RedireccionPorRol } from './RedireccionPorRol'
 import { RutaPorRol } from './RutaPorRol'
 import { RutaProtegida } from './RutaProtegida'
 
+function PaginaInicioPorRol() {
+  const { perfil } = useAutenticacion()
+
+  if (perfil?.rol === 'homologador') {
+    return <PaginaDashboardHomologador />
+  }
+
+  return <PaginaDashboard />
+}
+
 export function RouterSistema() {
   return (
     <ProveedorAutenticacion>
@@ -31,8 +43,10 @@ export function RouterSistema() {
           <Route element={<RutaProtegida />}>
             <Route element={<LayoutPrivado />}>
               <Route path={rutas.panel} element={<RedireccionPorRol />} />
+              <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
+                <Route path={rutas.inicio} element={<PaginaInicioPorRol />} />
+              </Route>
               <Route element={<RutaPorRol rolesPermitidos={['organizador']} />}>
-                <Route path={rutas.inicio} element={<PaginaDashboard />} />
                 <Route path={rutas.equipos} element={<PaginaEquipos />} />
                 <Route path={rutas.partidos} element={<PaginaPartidos />} />
               </Route>
