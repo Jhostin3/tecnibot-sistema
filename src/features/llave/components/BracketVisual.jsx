@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
 import { TarjetaEnfrentamiento } from './TarjetaEnfrentamiento'
 
 const ORDEN_RONDAS = [
@@ -29,60 +31,180 @@ function agruparPorRonda(enfrentamientos) {
   }, {})
 }
 
-function ConectoresRonda({ cantidad, visible }) {
-  if (!visible) return null
+function crearTarjetaPendiente(ronda, indice) {
+  return {
+    enfrentamiento: null,
+    id: `${ronda}-pendiente-${indice}`,
+  }
+}
 
-  const cantidadPares = Math.max(1, Math.ceil(cantidad / 2))
+function crearRondasBracket(grupos) {
+  const primeraRonda = ORDEN_RONDAS.findIndex((ronda) => grupos[ronda]?.length)
+  const indiceInicial = primeraRonda === -1 ? ORDEN_RONDAS.indexOf('semifinal') : primeraRonda
+  let cantidadEsperada = 0
 
-  return (
-    <div className="hidden w-12 flex-col gap-6 pt-9 md:flex">
-      {Array.from({ length: cantidadPares }).map((_, indice) => (
-        <div className="grid h-32 grid-rows-2" key={`conector-${indice}`}>
-          <div className="border-r border-t border-gray-700" />
-          <div className="border-r border-b border-gray-700" />
-          <div className="relative -mt-16 h-0 border-t border-gray-700" />
-        </div>
-      ))}
-    </div>
-  )
+  return ORDEN_RONDAS.slice(indiceInicial).map((ronda) => {
+    const partidos = [...(grupos[ronda] || [])].sort((a, b) => a.orden - b.orden)
+    const cantidad = partidos.length || Math.max(1, Math.ceil(cantidadEsperada / 2))
+    cantidadEsperada = cantidad
+
+    return {
+      partidos: partidos.length
+        ? partidos.map((enfrentamiento) => ({
+            enfrentamiento,
+            id: enfrentamiento.id,
+          }))
+        : Array.from({ length: cantidad }).map((_, indice) =>
+            crearTarjetaPendiente(ronda, indice),
+          ),
+      ronda,
+    }
+  })
+}
+
+function crearRutaConector(origenA, origenB, destino) {
+  const xInicioA = origenA.x + origenA.width
+  const yA = origenA.y + origenA.height / 2
+  const xInicioB = origenB.x + origenB.width
+  const yB = origenB.y + origenB.height / 2
+  const xMedio = (xInicioA + destino.x) / 2
+  const yMedio = (yA + yB) / 2
+  const xFin = destino.x
+  const yFin = destino.y + destino.height / 2
+
+  return `
+    M ${xInicioA} ${yA} H ${xMedio} V ${yMedio}
+    M ${xInicioB} ${yB} H ${xMedio} V ${yMedio}
+    M ${xMedio} ${yMedio} H ${xFin} V ${yFin}
+  `
 }
 
 export function BracketVisual({ enfrentamientos }) {
-  const grupos = agruparPorRonda(enfrentamientos || [])
-  const rondasConDatos = ORDEN_RONDAS.filter((ronda) => grupos[ronda]?.length)
-  const rondas = Array.from(new Set([...rondasConDatos, 'semifinal', 'final'])).sort(
-    (a, b) => ORDEN_RONDAS.indexOf(a) - ORDEN_RONDAS.indexOf(b),
+  const grupos = useMemo(
+    () => agruparPorRonda(enfrentamientos || []),
+    [enfrentamientos],
   )
+  const contenedorRef = useRef(null)
+  const tarjetasRef = useRef(new Map())
+  const [conectores, setConectores] = useState([])
+  const [tamanoSvg, setTamanoSvg] = useState({ alto: 0, ancho: 0 })
+  const rondas = useMemo(() => crearRondasBracket(grupos), [grupos])
+
+  const registrarTarjeta = useCallback((clave, nodo) => {
+    if (nodo) {
+      tarjetasRef.current.set(clave, nodo)
+      return
+    }
+
+    tarjetasRef.current.delete(clave)
+  }, [])
+
+  const medirConectores = useCallback(() => {
+    const contenedor = contenedorRef.current
+
+    if (!contenedor) return
+
+    const rectContenedor = contenedor.getBoundingClientRect()
+    const posiciones = new Map()
+
+    tarjetasRef.current.forEach((nodo, clave) => {
+      const rect = nodo.getBoundingClientRect()
+
+      posiciones.set(clave, {
+        height: rect.height,
+        width: rect.width,
+        x: rect.left - rectContenedor.left,
+        y: rect.top - rectContenedor.top,
+      })
+    })
+
+    const rutas = []
+
+    rondas.slice(0, -1).forEach((ronda, indiceRonda) => {
+      const rondaDestino = rondas[indiceRonda + 1]
+
+      rondaDestino.partidos.forEach((destino, indiceDestino) => {
+        const origenA = ronda.partidos[indiceDestino * 2]
+        const origenB = ronda.partidos[indiceDestino * 2 + 1]
+
+        if (!origenA || !origenB) return
+
+        const rectA = posiciones.get(origenA.id)
+        const rectB = posiciones.get(origenB.id)
+        const rectDestino = posiciones.get(destino.id)
+
+        if (!rectA || !rectB || !rectDestino) return
+
+        rutas.push(crearRutaConector(rectA, rectB, rectDestino))
+      })
+    })
+
+    setTamanoSvg({
+      alto: contenedor.scrollHeight,
+      ancho: contenedor.scrollWidth,
+    })
+    setConectores(rutas)
+  }, [rondas])
+
+  useEffect(() => {
+    medirConectores()
+
+    const contenedor = contenedorRef.current
+    const observador = new ResizeObserver(medirConectores)
+
+    if (contenedor) {
+      observador.observe(contenedor)
+    }
+
+    window.addEventListener('resize', medirConectores)
+
+    return () => {
+      observador.disconnect()
+      window.removeEventListener('resize', medirConectores)
+    }
+  }, [medirConectores])
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex min-w-max gap-4">
-        {rondas.map((ronda, indiceRonda) => {
-          const partidos = [...(grupos[ronda] || [])].sort((a, b) => a.orden - b.orden)
-          const tarjetas = partidos.length ? partidos : [null]
-          const tieneSiguienteRonda = indiceRonda < rondas.length - 1
+      <div
+        className="relative flex min-w-max items-start gap-24 p-8"
+        ref={contenedorRef}
+      >
+        <svg
+          className="pointer-events-none absolute left-0 top-0 z-10"
+          height={tamanoSvg.alto}
+          width={tamanoSvg.ancho}
+        >
+          {conectores.map((ruta, indice) => (
+            <path
+              d={ruta}
+              fill="none"
+              key={`conector-${indice}`}
+              stroke="#4b5563"
+              strokeWidth="2"
+            />
+          ))}
+        </svg>
 
-          return (
-            <div className="flex gap-4" key={ronda}>
-              <section className="space-y-4">
-                <div className="mb-4 border-b border-gray-700 pb-2">
-                  <h2 className="text-center text-xs font-bold uppercase tracking-widest text-gray-400">
-                    {etiquetasRonda[ronda] || ronda}
-                  </h2>
-                </div>
-                <div className="flex flex-col gap-6">
-                  {tarjetas.map((enfrentamiento, indice) => (
-                    <TarjetaEnfrentamiento
-                      enfrentamiento={enfrentamiento}
-                      key={enfrentamiento?.id || `${ronda}-pendiente-${indice}`}
-                    />
-                  ))}
-                </div>
-              </section>
-              <ConectoresRonda cantidad={tarjetas.length} visible={tieneSiguienteRonda} />
+        {rondas.map((ronda) => (
+          <section className="relative z-20 space-y-4" key={ronda.ronda}>
+            <div className="mb-4 border-b border-gray-700 pb-2">
+              <h2 className="text-center text-xs font-bold uppercase tracking-widest text-gray-400">
+                {etiquetasRonda[ronda.ronda] || ronda.ronda}
+              </h2>
             </div>
-          )
-        })}
+            <div className="flex flex-col gap-8">
+              {ronda.partidos.map((partido) => (
+                <div
+                  key={partido.id}
+                  ref={(nodo) => registrarTarjeta(partido.id, nodo)}
+                >
+                  <TarjetaEnfrentamiento enfrentamiento={partido.enfrentamiento} />
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   )
