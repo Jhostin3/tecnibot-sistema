@@ -39,6 +39,12 @@ export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
               >
                 Partidos
               </Link>
+              <Link
+                className="inline-flex min-h-10 items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                to={rutas.sorteo}
+              >
+                Sorteo
+              </Link>
             </nav>
           ) : null}
           {esHomologador ? (
