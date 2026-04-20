@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
@@ -15,16 +15,32 @@ import { useHomologaciones } from '../hooks/usarHomologaciones'
 const estadosPorRevisar = ['pendiente', 'en_revision']
 const estadosHomologados = ['aprobado', 'rechazado']
 
+function normalizarTexto(valor = '') {
+  return valor.toLowerCase()
+}
+
 export function PaginaHomologacion() {
   const navigate = useNavigate()
   const { perfil } = useAutenticacion()
   const homologaciones = useHomologaciones()
+  const [busqueda, setBusqueda] = useState('')
   const [cambio, setCambio] = useState(null)
   const [tabActivo, setTabActivo] = useState('por_revisar')
-  const equiposPorRevisar = homologaciones.equipos.filter((equipo) =>
+  const terminoBusqueda = normalizarTexto(busqueda.trim())
+  const equiposFiltrados = homologaciones.equipos.filter((equipo) => {
+    if (!terminoBusqueda) return true
+
+    return (
+      normalizarTexto(equipo.nombre_equipo).includes(terminoBusqueda) ||
+      normalizarTexto(equipo.nombre_robot).includes(terminoBusqueda) ||
+      normalizarTexto(equipo.institucion).includes(terminoBusqueda) ||
+      normalizarTexto(equipo.representante).includes(terminoBusqueda)
+    )
+  })
+  const equiposPorRevisar = equiposFiltrados.filter((equipo) =>
     estadosPorRevisar.includes(equipo.estado_homologacion),
   )
-  const equiposHomologados = homologaciones.equipos.filter((equipo) =>
+  const equiposHomologados = equiposFiltrados.filter((equipo) =>
     estadosHomologados.includes(equipo.estado_homologacion),
   )
   const equiposTab =
@@ -83,7 +99,17 @@ export function PaginaHomologacion() {
         onCambiarFiltro={homologaciones.actualizarFiltro}
         subcategorias={homologaciones.subcategorias}
       />
-      <ContadoresHomologacion equipos={homologaciones.equipos} />
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        <input
+          className="mb-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pl-12 text-sm text-slate-700 outline-none transition focus:border-transparent focus:ring-2 focus:ring-teal-400"
+          onChange={(evento) => setBusqueda(evento.target.value)}
+          placeholder="Buscar por equipo, robot o institución..."
+          type="search"
+          value={busqueda}
+        />
+      </div>
+      <ContadoresHomologacion equipos={equiposFiltrados} />
       <MensajeEstado>{homologaciones.mensaje}</MensajeEstado>
       <PanelCambioHomologacion
         cambio={cambio}
@@ -98,12 +124,18 @@ export function PaginaHomologacion() {
       ) : (
         <div className="space-y-4">
           <TabsHomologacion onCambiar={setTabActivo} tabActivo={tabActivo} />
-          <TablaHomologaciones
-            equipos={equiposTab}
-            guardando={homologaciones.guardando}
-            mensajeVacio={mensajeVacio}
-            onSeleccionarCambio={seleccionarCambio}
-          />
+          {terminoBusqueda && equiposFiltrados.length === 0 ? (
+            <p className="rounded-md border border-slate-200 bg-white py-8 text-center text-slate-400 shadow-sm">
+              No se encontraron equipos con ese criterio
+            </p>
+          ) : (
+            <TablaHomologaciones
+              equipos={equiposTab}
+              guardando={homologaciones.guardando}
+              mensajeVacio={mensajeVacio}
+              onSeleccionarCambio={seleccionarCambio}
+            />
+          )}
         </div>
       )}
     </section>
