@@ -131,6 +131,63 @@ export async function obtenerSorteoPorSubcategoria(subcategoriaId) {
   }
 }
 
+export async function listarSubcategoriasConSorteo() {
+  try {
+    const { data: sorteos, error: errorSorteos } = await supabase
+      .from('sorteo')
+      .select('subcategoria_id')
+      .limit(500)
+
+    if (errorSorteos) {
+      throw new Error('No se pudieron cargar los sorteos registrados.')
+    }
+
+    const idsSubcategorias = Array.from(
+      new Set((sorteos || []).map((sorteo) => sorteo.subcategoria_id).filter(Boolean)),
+    )
+
+    if (!idsSubcategorias.length) {
+      return []
+    }
+
+    const [respuestaSubcategorias, respuestaFinales] = await Promise.all([
+      supabase
+        .from('subcategorias')
+        .select('id, categoria_id, nombre')
+        .in('id', idsSubcategorias)
+        .order('nombre', { ascending: true })
+        .limit(500),
+      supabase
+        .from('enfrentamientos')
+        .select('subcategoria_id, ganador_id')
+        .in('subcategoria_id', idsSubcategorias)
+        .eq('ronda', 'final')
+        .eq('estado', 'finalizado')
+        .not('ganador_id', 'is', null)
+        .limit(500),
+    ])
+
+    if (respuestaSubcategorias.error) {
+      throw new Error('No se pudieron cargar las subcategorias con sorteo.')
+    }
+
+    if (respuestaFinales.error) {
+      throw new Error('No se pudo verificar el estado de los brackets.')
+    }
+
+    const subcategoriasFinalizadas = new Set(
+      (respuestaFinales.data || []).map((final) => final.subcategoria_id),
+    )
+
+    return (respuestaSubcategorias.data || []).map((subcategoria) => ({
+      ...subcategoria,
+      finalizada: subcategoriasFinalizadas.has(subcategoria.id),
+    }))
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los brackets del torneo.')
+  }
+}
+
 async function listarEquiposPorIds(idsEquipos) {
   try {
     const ids = Array.from(new Set(idsEquipos.filter(Boolean))).slice(0, 500)
