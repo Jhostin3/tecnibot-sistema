@@ -95,7 +95,7 @@ export function PaginaDashboard() {
 
   return (
     <section className="min-h-[calc(100vh-96px)] bg-slate-100">
-      <div className="mx-auto flex max-w-7xl">
+      <div className="flex w-full">
         <aside className="hidden min-h-[calc(100vh-96px)] w-56 flex-col border-r border-slate-200 bg-white p-4 md:flex">
           <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-xl font-bold text-indigo-600">

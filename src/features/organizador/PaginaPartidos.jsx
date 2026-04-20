@@ -167,7 +167,7 @@ export function PaginaPartidos() {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 p-6 py-8">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <button
           className="mb-5 flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-blue-600"

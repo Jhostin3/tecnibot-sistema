@@ -74,7 +74,7 @@ export function PaginaSorteo() {
         <h1 className="mt-2 text-2xl font-bold text-slate-800">
           Sorteo Soccer
         </h1>
-        <p className="mt-1 max-w-3xl text-sm text-slate-500">
+        <p className="mt-1 w-full text-sm text-slate-500">
           Selecciona una subcategoria lista, gira la ruleta con los equipos aprobados y genera la primera ronda del bracket.
         </p>
       </div>
@@ -130,12 +130,14 @@ export function PaginaSorteo() {
 
   if (perfil?.rol === 'homologador') {
     return (
-      <div className="flex h-screen bg-slate-100">
+      <div className="flex h-screen overflow-hidden bg-slate-100">
         <SidebarHomologador activo="sorteo" />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">{contenido}</main>
+        <main className="flex-1 overflow-y-auto">
+          <div className="w-full p-8">{contenido}</div>
+        </main>
       </div>
     )
   }
 
-  return contenido
+  return <div className="p-6 py-8">{contenido}</div>
 }

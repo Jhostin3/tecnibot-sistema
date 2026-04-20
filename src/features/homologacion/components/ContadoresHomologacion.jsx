@@ -31,7 +31,7 @@ function contarPorEstado(equipos = [], estado) {
 
 export function ContadoresHomologacion({ equipos = [] }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid w-full grid-cols-4 gap-4">
       {tarjetas.map((tarjeta) => (
         <article
           className={`rounded-2xl border-2 p-6 shadow-sm ${tarjeta.clases}`}

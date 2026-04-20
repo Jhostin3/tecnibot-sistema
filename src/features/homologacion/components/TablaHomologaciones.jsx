@@ -51,14 +51,14 @@ export function TablaHomologaciones({
 }) {
   if (!equipos.length) {
     return (
-      <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+      <div className="w-full rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
         {mensajeVacio}
       </div>
     )
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+    <div className="w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-normal text-slate-500">

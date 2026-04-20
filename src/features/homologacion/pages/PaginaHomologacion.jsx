@@ -87,7 +87,7 @@ export function PaginaHomologacion() {
         <h1 className="mt-2 text-2xl font-bold text-slate-800">
           Homologacion de equipos
         </h1>
-        <p className="mt-1 max-w-3xl text-sm text-slate-500">
+        <p className="mt-1 w-full text-sm text-slate-500">
           Revisa equipos por subcategoria, aprueba revisiones tecnicas y registra motivos cuando un equipo sea rechazado.
         </p>
         <p className="mt-4 text-sm text-slate-500">
@@ -99,7 +99,7 @@ export function PaginaHomologacion() {
         onCambiarFiltro={homologaciones.actualizarFiltro}
         subcategorias={homologaciones.subcategorias}
       />
-      <div className="relative">
+      <div className="relative w-full">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
         <input
           className="mb-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 pl-12 text-sm text-slate-700 outline-none transition focus:border-transparent focus:ring-2 focus:ring-teal-400"
@@ -143,12 +143,14 @@ export function PaginaHomologacion() {
 
   if (perfil?.rol === 'homologador') {
     return (
-      <div className="flex h-screen bg-slate-100">
+      <div className="flex h-screen overflow-hidden bg-slate-100">
         <SidebarHomologador activo="homologacion" />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">{contenido}</main>
+        <main className="flex-1 overflow-y-auto">
+          <div className="w-full p-8">{contenido}</div>
+        </main>
       </div>
     )
   }
 
-  return contenido
+  return <div className="p-6 py-8">{contenido}</div>
 }

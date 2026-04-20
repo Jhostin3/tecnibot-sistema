@@ -10,7 +10,7 @@ export function SelectorSubcategoriaSorteo({
   subcategorias = [],
 }) {
   return (
-    <div className="grid gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2">
+    <div className="grid w-full gap-4 rounded-md border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-2">
       <div className="space-y-2">
         <Etiqueta htmlFor="categoriaSorteo">Categoria</Etiqueta>
         <CampoSeleccion

@@ -8,7 +8,7 @@ export function PlantillaPanel({ alCerrarSesion, children, perfil, usuario }) {
         perfil={perfil}
         usuario={usuario}
       />
-      <main className="mx-auto w-full max-w-6xl px-6 py-8">{children}</main>
+      <main className="w-full">{children}</main>
     </div>
   )
 }

@@ -65,7 +65,7 @@ export function PaginaEquipos() {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 p-6 py-8">
       <EncabezadoEquipos
         alCrear={abrirCreacion}
         alImportar={() => setModo('importar')}

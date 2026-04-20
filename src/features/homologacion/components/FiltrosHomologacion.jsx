@@ -7,7 +7,7 @@ export function FiltrosHomologacion({
   subcategorias = [],
 }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="w-full rounded-md border border-slate-200 bg-white p-5 shadow-sm">
       <div className="space-y-2">
         <Etiqueta htmlFor="subcategoriaId">Subcategoria</Etiqueta>
         <CampoSeleccion
