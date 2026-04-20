@@ -62,6 +62,18 @@ function crearRondasBracket(grupos) {
   })
 }
 
+function agruparPartidosPorPares(partidos) {
+  return partidos.reduce((pares, partido, indice) => {
+    if (indice % 2 === 0) {
+      pares.push([partido])
+      return pares
+    }
+
+    pares[pares.length - 1].push(partido)
+    return pares
+  }, [])
+}
+
 function crearRutaConector(origenA, origenB, destino) {
   const xInicioA = origenA.x + origenA.width
   const yA = origenA.y + origenA.height / 2
@@ -186,7 +198,10 @@ export function BracketVisual({ enfrentamientos }) {
           ))}
         </svg>
 
-        {rondas.map((ronda) => (
+        {rondas.map((ronda) => {
+          const gruposDePartidos = agruparPartidosPorPares(ronda.partidos)
+
+          return (
           <section className="relative z-20 space-y-4" key={ronda.ronda}>
             <div className="mb-4 border-b border-gray-700 pb-2">
               <h2 className="text-center text-xs font-bold uppercase tracking-widest text-gray-400">
@@ -194,17 +209,25 @@ export function BracketVisual({ enfrentamientos }) {
               </h2>
             </div>
             <div className="flex flex-col gap-8">
-              {ronda.partidos.map((partido) => (
+              {gruposDePartidos.map((grupo, indiceGrupo) => (
                 <div
-                  key={partido.id}
-                  ref={(nodo) => registrarTarjeta(partido.id, nodo)}
+                  className="flex flex-col gap-8"
+                  key={`${ronda.ronda}-grupo-${indiceGrupo}`}
                 >
-                  <TarjetaEnfrentamiento enfrentamiento={partido.enfrentamiento} />
+                  {grupo.map((partido) => (
+                    <div
+                      key={partido.id}
+                      ref={(nodo) => registrarTarjeta(partido.id, nodo)}
+                    >
+                      <TarjetaEnfrentamiento enfrentamiento={partido.enfrentamiento} />
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
           </section>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
