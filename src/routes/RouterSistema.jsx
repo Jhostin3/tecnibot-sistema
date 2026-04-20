@@ -12,6 +12,7 @@ import { PaginaLlave } from '../features/llave/PaginaLlave'
 import { PaginaDashboard } from '../features/organizador/PaginaDashboard'
 import { PaginaPartidos } from '../features/organizador/PaginaPartidos'
 import { PaginaBracketCompleto } from '../features/sorteo/PaginaBracketCompleto'
+import { PaginaListaBrackets } from '../features/sorteo/PaginaListaBrackets'
 import { PaginaLlavePublica } from '../features/sorteo/pages/PaginaLlavePublica'
 import { PaginaSorteo } from '../features/sorteo/pages/PaginaSorteo'
 import { LayoutPrivado } from '../layouts/LayoutPrivado'
@@ -52,6 +53,7 @@ export function RouterSistema() {
                 <Route path={rutas.partidos} element={<PaginaPartidos />} />
               </Route>
               <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
+                <Route path={rutas.brackets} element={<PaginaListaBrackets />} />
                 <Route path={rutas.bracketCompleto} element={<PaginaBracketCompleto />} />
                 <Route path={rutas.sorteo} element={<PaginaSorteo />} />
               </Route>
