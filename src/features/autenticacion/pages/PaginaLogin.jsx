@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { rutas } from '../../../utils/rutas'
@@ -9,7 +9,14 @@ export function PaginaLogin() {
   const location = useLocation()
   const navigate = useNavigate()
   const { cargandoSesion, iniciarSesion, usuarioAutenticado } = useAutenticacion()
+  const [formularioVisible, setFormularioVisible] = useState(false)
   const rutaDestino = location.state?.desde?.pathname || rutas.panel
+
+  useEffect(() => {
+    const temporizador = setTimeout(() => setFormularioVisible(true), 50)
+
+    return () => clearTimeout(temporizador)
+  }, [])
 
   useEffect(() => {
     if (!cargandoSesion && usuarioAutenticado) {
@@ -80,7 +87,13 @@ export function PaginaLogin() {
       </section>
 
       <section className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 px-8 py-10">
-        <div className="w-full max-w-sm">
+        <div
+          className={`w-full max-w-sm transition-all duration-500 ${
+            formularioVisible
+              ? 'translate-y-0 opacity-100'
+              : 'translate-y-4 opacity-0'
+          }`}
+        >
           <div className="mb-8">
             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
               ACCESO AL SISTEMA
