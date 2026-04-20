@@ -1,17 +1,19 @@
 import {
   ChevronRight,
   ClipboardCheck,
-  Home,
   Play,
   Shuffle,
   Users,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import { rutas } from '../../utils/rutas'
 import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
 import { listarEquipos } from '../equipos/services/servicioEquipos'
+import { GridBrackets } from '../sorteo/components/GridBrackets'
+import { listarSubcategoriasConSorteo } from '../sorteo/services/servicioSorteo'
+import { SidebarOrganizador } from './components/SidebarOrganizador'
 
 const accesosRapidos = [
   {
@@ -48,23 +50,9 @@ const accesosRapidos = [
   },
 ]
 
-const enlacesSidebar = [
-  { Icono: Home, etiqueta: 'Inicio', ruta: rutas.inicio },
-  { Icono: Users, etiqueta: 'Equipos', ruta: rutas.equipos },
-  { Icono: ClipboardCheck, etiqueta: 'Homol.', ruta: rutas.homologacion },
-  { Icono: Shuffle, etiqueta: 'Sorteo', ruta: rutas.sorteo },
-  { Icono: Play, etiqueta: 'Partid.', ruta: rutas.partidos },
-]
-
-const claseEnlaceSidebar = ({ isActive }) =>
-  `flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
-    isActive
-      ? 'bg-indigo-50 font-semibold text-indigo-600'
-      : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
-  }`
-
 export function PaginaDashboard() {
   const { perfil } = useAutenticacion()
+  const [brackets, setBrackets] = useState([])
   const [conteoEquipos, setConteoEquipos] = useState(null)
   const nombreOrganizador = perfil?.nombre || 'organizador'
 
@@ -92,31 +80,34 @@ export function PaginaDashboard() {
     }
   }, [])
 
+  useEffect(() => {
+    let activo = true
+
+    async function cargarBrackets() {
+      try {
+        const subcategorias = await listarSubcategoriasConSorteo()
+
+        if (activo) {
+          setBrackets(subcategorias)
+        }
+      } catch {
+        if (activo) {
+          setBrackets([])
+        }
+      }
+    }
+
+    cargarBrackets()
+
+    return () => {
+      activo = false
+    }
+  }, [])
+
   return (
     <section className="min-h-[calc(100vh-96px)] bg-slate-100">
       <div className="flex w-full">
-        <aside className="hidden min-h-[calc(100vh-96px)] w-56 flex-col border-r border-slate-200 bg-white p-4 md:flex">
-          <nav className="space-y-2">
-            {enlacesSidebar.map((enlace) => {
-              const IconoEnlace = enlace.Icono
-
-              return (
-                <NavLink
-                  className={claseEnlaceSidebar}
-                  key={enlace.ruta}
-                  to={enlace.ruta}
-                >
-                  <IconoEnlace className="h-5 w-5" />
-                  {enlace.etiqueta}
-                </NavLink>
-              )
-            })}
-          </nav>
-
-          <p className="mt-auto pb-4 text-center text-xs text-slate-300">
-            TecniBot Cuenca 2026
-          </p>
-        </aside>
+        <SidebarOrganizador />
 
         <main className="flex-1 p-4 md:p-8">
           <header className="mb-6 rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-500 p-6 text-white shadow-sm">
@@ -158,6 +149,24 @@ export function PaginaDashboard() {
               )
             })}
           </div>
+
+          <section className="mt-8">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <span className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+                  LLAVES
+                </span>
+                <h2 className="mt-3 text-2xl font-bold text-slate-800">
+                  Brackets del torneo
+                </h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Toca una subcategoria para ver su llave completa.
+                </p>
+              </div>
+            </div>
+
+            <GridBrackets brackets={brackets} />
+          </section>
         </main>
       </div>
     </section>
