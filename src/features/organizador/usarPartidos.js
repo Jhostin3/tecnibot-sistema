@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { supabase } from '../../lib/supabaseCliente'
+import { listarSubcategorias } from '../equipos/services/servicioSubcategorias'
 import {
   activarEnfrentamiento,
   activarRondaCompleta,
@@ -13,6 +14,7 @@ export function usePartidos() {
   const [pendientes, setPendientes] = useState([])
   const [activos, setActivos] = useState([])
   const [finalizados, setFinalizados] = useState([])
+  const [subcategorias, setSubcategorias] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
   const [guardando, setGuardando] = useState(false)
@@ -26,16 +28,18 @@ export function usePartidos() {
     setError(null)
 
     try {
-      const [partidosPendientes, partidosActivos, partidosFinalizados] =
+      const [partidosPendientes, partidosActivos, partidosFinalizados, subcategoriasActuales] =
         await Promise.all([
           listarEnfrentamientosPorEstado('pendiente'),
           listarEnfrentamientosPorEstado('activo'),
           listarEnfrentamientosFinalizados(),
+          listarSubcategorias(),
         ])
 
       setPendientes(partidosPendientes)
       setActivos(partidosActivos)
       setFinalizados(partidosFinalizados)
+      setSubcategorias(subcategoriasActuales)
     } catch (error) {
       setError(error.message)
       setMensaje(error.message)
@@ -54,17 +58,19 @@ export function usePartidos() {
       setError(null)
 
       try {
-        const [partidosPendientes, partidosActivos, partidosFinalizados] =
+        const [partidosPendientes, partidosActivos, partidosFinalizados, subcategoriasActuales] =
           await Promise.all([
             listarEnfrentamientosPorEstado('pendiente'),
             listarEnfrentamientosPorEstado('activo'),
             listarEnfrentamientosFinalizados(),
+            listarSubcategorias(),
           ])
 
         if (componenteActivo) {
           setPendientes(partidosPendientes)
           setActivos(partidosActivos)
           setFinalizados(partidosFinalizados)
+          setSubcategorias(subcategoriasActuales)
         }
       } catch (error) {
         if (componenteActivo) {
@@ -166,5 +172,6 @@ export function usePartidos() {
     pendientes,
     recargar: cargarPartidos,
     setMensaje,
+    subcategorias,
   }
 }

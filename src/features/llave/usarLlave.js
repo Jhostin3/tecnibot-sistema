@@ -3,15 +3,38 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseCliente'
 import {
   listarEnfrentamientosPorSubcategoria,
+  listarEstadosSubcategorias,
   listarSubcategorias,
-  obtenerGanadorFinal,
 } from './servicioLlave'
+
+function detectarCampeonAutomatico(enfrentamientos = []) {
+  return (
+    enfrentamientos.length === 1 &&
+    enfrentamientos[0].ronda === 'final' &&
+    enfrentamientos[0].bye === true &&
+    enfrentamientos[0].ganador_id !== null
+  )
+}
+
+function obtenerGanadorFinalDesdeEnfrentamientos(enfrentamientos = []) {
+  return (
+    enfrentamientos.find(
+      (enfrentamiento) =>
+        enfrentamiento.ronda === 'final' &&
+        enfrentamiento.estado === 'finalizado' &&
+        enfrentamiento.ganador_id !== null,
+    )?.ganador || null
+  )
+}
 
 export function useLlave() {
   const [subcategorias, setSubcategorias] = useState([])
+  const [estadosSubcategorias, setEstadosSubcategorias] = useState({})
   const [subcategoriaSeleccionada, setSubcategoriaSeleccionada] = useState('')
   const [enfrentamientos, setEnfrentamientos] = useState([])
   const [ganadorFinal, setGanadorFinal] = useState(null)
+  const [esCampeonAutomatico, setEsCampeonAutomatico] = useState(false)
+  const [tieneSorteo, setTieneSorteo] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
 
@@ -19,6 +42,8 @@ export function useLlave() {
     if (!subcategoriaId) {
       setEnfrentamientos([])
       setGanadorFinal(null)
+      setEsCampeonAutomatico(false)
+      setTieneSorteo(false)
       setCargando(false)
       return
     }
@@ -30,13 +55,12 @@ export function useLlave() {
     setError(null)
 
     try {
-      const [enfrentamientosActuales, ganadorActual] = await Promise.all([
-        listarEnfrentamientosPorSubcategoria(subcategoriaId),
-        obtenerGanadorFinal(subcategoriaId),
-      ])
+      const enfrentamientosActuales = await listarEnfrentamientosPorSubcategoria(subcategoriaId)
 
       setEnfrentamientos(enfrentamientosActuales)
-      setGanadorFinal(ganadorActual)
+      setTieneSorteo(enfrentamientosActuales.length > 0)
+      setEsCampeonAutomatico(detectarCampeonAutomatico(enfrentamientosActuales))
+      setGanadorFinal(obtenerGanadorFinalDesdeEnfrentamientos(enfrentamientosActuales))
     } catch (error) {
       setError(error.message)
     } finally {
@@ -55,10 +79,14 @@ export function useLlave() {
 
       try {
         const subcategoriasActuales = await listarSubcategorias()
+        const estadosActuales = await listarEstadosSubcategorias(
+          subcategoriasActuales.map((subcategoria) => subcategoria.id),
+        )
 
         if (!componenteActivo) return
 
         setSubcategorias(subcategoriasActuales)
+        setEstadosSubcategorias(estadosActuales)
 
         if (subcategoriasActuales.length) {
           setSubcategoriaSeleccionada(subcategoriasActuales[0].id)
@@ -87,6 +115,8 @@ export function useLlave() {
       if (!subcategoriaSeleccionada) {
         setEnfrentamientos([])
         setGanadorFinal(null)
+        setEsCampeonAutomatico(false)
+        setTieneSorteo(false)
         setCargando(false)
         return
       }
@@ -95,14 +125,14 @@ export function useLlave() {
       setError(null)
 
       try {
-        const [enfrentamientosActuales, ganadorActual] = await Promise.all([
-          listarEnfrentamientosPorSubcategoria(subcategoriaSeleccionada),
-          obtenerGanadorFinal(subcategoriaSeleccionada),
-        ])
+        const enfrentamientosActuales =
+          await listarEnfrentamientosPorSubcategoria(subcategoriaSeleccionada)
 
         if (componenteActivo) {
           setEnfrentamientos(enfrentamientosActuales)
-          setGanadorFinal(ganadorActual)
+          setTieneSorteo(enfrentamientosActuales.length > 0)
+          setEsCampeonAutomatico(detectarCampeonAutomatico(enfrentamientosActuales))
+          setGanadorFinal(obtenerGanadorFinalDesdeEnfrentamientos(enfrentamientosActuales))
         }
       } catch (error) {
         if (componenteActivo) {
@@ -131,6 +161,13 @@ export function useLlave() {
             () => {
               if (componenteActivo) {
                 cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
+                listarEstadosSubcategorias(subcategorias.map((subcategoria) => subcategoria.id))
+                  .then((estadosActuales) => {
+                    if (componenteActivo) {
+                      setEstadosSubcategorias(estadosActuales)
+                    }
+                  })
+                  .catch(() => undefined)
               }
             },
           )
@@ -144,15 +181,18 @@ export function useLlave() {
         supabase.removeChannel(canal)
       }
     }
-  }, [cargarLlave, subcategoriaSeleccionada])
+  }, [cargarLlave, subcategoriaSeleccionada, subcategorias])
 
   return {
     cargando,
     enfrentamientos,
     error,
+    esCampeonAutomatico,
+    estadosSubcategorias,
     ganadorFinal,
     seleccionarSubcategoria: setSubcategoriaSeleccionada,
     subcategoriaSeleccionada,
     subcategorias,
+    tieneSorteo,
   }
 }

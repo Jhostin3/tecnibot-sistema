@@ -1,4 +1,8 @@
 import { supabase } from '../../../lib/supabaseCliente'
+import {
+  validarNumeroBolaPresencial,
+  registrarNumeroBolaPresencial,
+} from '../../sorteo/services/servicioSorteo'
 
 const seleccionEquipos = `
   id,
@@ -88,19 +92,78 @@ export async function listarSubcategoriasHomologacion() {
   }
 }
 
+export async function validarNumeroBola(subcategoriaId, numeroBola, equipoId) {
+  try {
+    const { data, error } = await supabase
+      .from('sorteo')
+      .select('id, equipo_id, equipos(nombre_equipo)')
+      .eq('subcategoria_id', subcategoriaId)
+      .eq('numero_bola', numeroBola)
+      .neq('equipo_id', equipoId)
+
+    if (error) {
+      throw error
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo validar el numero de bola.')
+  }
+}
+
+export async function verificarDisponibilidadNumeroBola({ equipo, numeroBola }) {
+  const numero = Number(numeroBola)
+
+  if (!Number.isInteger(numero) || numero < 1) {
+    throw new Error('Ingresa un numero entero positivo.')
+  }
+
+  const duplicados = await validarNumeroBola(equipo.subcategoria_id, numero, equipo.id)
+  const duplicado = duplicados[0]
+
+  if (duplicado) {
+    const nombreEquipo = duplicado.equipos?.nombre_equipo || 'otro equipo'
+
+    return {
+      disponible: false,
+      mensaje: `El numero ${numero} ya fue asignado a ${nombreEquipo} en esta subcategoria. Ingresa un numero diferente.`,
+      nombreEquipo,
+    }
+  }
+
+  return {
+    disponible: true,
+    mensaje: 'Numero disponible',
+    nombreEquipo: '',
+  }
+}
+
 export async function registrarCambioHomologacion({
+  equipo,
   equipoId,
   estado,
   homologadorId,
+  numeroBola,
   observacion,
 }) {
   try {
     const observacionLimpia = observacion?.trim() || null
+    const idEquipo = equipo?.id || equipoId
+
+    if (estado === 'aprobado' && equipo && numeroBola) {
+      const validacion = await verificarDisponibilidadNumeroBola({ equipo, numeroBola })
+
+      if (!validacion.disponible) {
+        throw new Error(validacion.mensaje)
+      }
+
+      await validarNumeroBolaPresencial({ equipo, numeroBola })
+    }
 
     const { error: errorHomologacion } = await supabase
       .from('homologaciones')
       .insert({
-        equipo_id: equipoId,
+        equipo_id: idEquipo,
         estado,
         homologador_id: homologadorId,
         observacion: observacionLimpia,
@@ -116,10 +179,18 @@ export async function registrarCambioHomologacion({
         estado_homologacion: estado,
         observaciones: observacionLimpia,
       })
-      .eq('id', equipoId)
+      .eq('id', idEquipo)
 
     if (errorEquipo) {
       throw new Error('No se pudo actualizar el estado del equipo.')
+    }
+
+    if (estado === 'aprobado' && equipo && numeroBola) {
+      await registrarNumeroBolaPresencial({
+        equipo,
+        numeroBola,
+        registradoPor: homologadorId,
+      })
     }
   } catch (error) {
     throw new Error(error.message || 'No se pudo registrar el cambio de homologacion.')

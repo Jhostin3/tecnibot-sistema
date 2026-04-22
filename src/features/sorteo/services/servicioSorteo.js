@@ -50,6 +50,41 @@ export async function listarCategoriasSorteo() {
   }
 }
 
+export async function crearCategoriaSorteo(nombre) {
+  try {
+    const nombreLimpio = nombre?.trim()
+
+    if (!nombreLimpio) {
+      throw new Error('Ingresa un nombre para la categoria.')
+    }
+
+    const { data: existente, error: errorExistente } = await supabase
+      .from('categorias')
+      .select('id')
+      .ilike('nombre', nombreLimpio)
+      .limit(1)
+      .maybeSingle()
+
+    if (errorExistente) {
+      throw new Error('No se pudo validar la categoria.')
+    }
+
+    if (existente) {
+      throw new Error('Ya existe una categoria con ese nombre.')
+    }
+
+    const { error } = await supabase.from('categorias').insert({
+      nombre: nombreLimpio,
+    })
+
+    if (error) {
+      throw new Error('No se pudo crear la categoria.')
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo crear la categoria.')
+  }
+}
+
 export async function listarSubcategoriasSorteo() {
   try {
     const { data, error } = await supabase
@@ -80,8 +115,9 @@ export async function listarSubcategoriasListasParaSorteo() {
 
         return {
           ...subcategoria,
+          campeonAutomatico: equiposAprobados.length === 1,
           equipos_aprobados: equiposAprobados.length,
-          lista: equiposAprobados.length >= 2 && !sorteoActual.length,
+          lista: equiposAprobados.length >= 1 && !sorteoActual.length,
         }
       }),
     )
@@ -188,6 +224,46 @@ export async function listarSubcategoriasConSorteo() {
   }
 }
 
+async function buscarNumeroBolaDuplicado(subcategoriaId, numeroBola, equipoId) {
+  const { data, error } = await supabase
+    .from('sorteo')
+    .select('id, equipo_id, equipos(nombre_equipo)')
+    .eq('subcategoria_id', subcategoriaId)
+    .eq('numero_bola', numeroBola)
+    .neq('equipo_id', equipoId)
+    .limit(1)
+
+  if (error) {
+    throw new Error('No se pudo validar el numero de bola.')
+  }
+
+  return data || []
+}
+
+function crearErrorNumeroBolaDuplicado(numero, nombreEquipo = 'otro equipo') {
+  return new Error(
+    `El numero ${numero} ya fue asignado a ${nombreEquipo} en esta subcategoria. Ingresa un numero diferente.`,
+  )
+}
+
+function manejarErrorUnicidadSorteo(error) {
+  if (error?.code !== '23505') return null
+
+  if (error.message?.includes('numero_bola')) {
+    return new Error(
+      'Ese numero de bola ya esta asignado a otro equipo en esta subcategoria.',
+    )
+  }
+
+  if (error.message?.includes('equipo_id')) {
+    return new Error(
+      'Este equipo ya tiene un numero de bola asignado en esta subcategoria.',
+    )
+  }
+
+  return null
+}
+
 async function listarEquiposPorIds(idsEquipos) {
   try {
     const ids = Array.from(new Set(idsEquipos.filter(Boolean))).slice(0, 500)
@@ -196,7 +272,7 @@ async function listarEquiposPorIds(idsEquipos) {
 
     const { data, error } = await supabase
       .from('equipos')
-      .select('id, nombre_equipo')
+      .select('id, nombre_equipo, nombre_robot')
       .in('id', ids)
       .limit(500)
 
@@ -292,8 +368,8 @@ export async function listarBracketPorSubcategoria(subcategoriaId) {
 }
 
 function validarAsignaciones(asignaciones) {
-  if (asignaciones.length < 2) {
-    throw new Error('Se necesitan al menos 2 equipos aprobados para sortear.')
+  if (asignaciones.length < 1) {
+    throw new Error('Se necesita al menos 1 equipo aprobado.')
   }
 
   const numeros = asignaciones.map((asignacion) => Number(asignacion.numero_bola))
@@ -304,6 +380,19 @@ function validarAsignaciones(asignaciones) {
 
   if (numerosUnicos.size !== asignaciones.length || !tieneRangoValido) {
     throw new Error('Asigna una bola unica para cada equipo.')
+  }
+}
+
+function crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignacion) {
+  return {
+    bye: true,
+    equipo_a_id: asignacion.equipo_id,
+    equipo_b_id: null,
+    estado: 'finalizado',
+    ganador_id: asignacion.equipo_id,
+    orden: 1,
+    ronda: 'final',
+    subcategoria_id: subcategoriaId,
   }
 }
 
@@ -412,18 +501,172 @@ export async function guardarSorteoYGenerarCuartos({
     const { error: errorSorteo } = await supabase.from('sorteo').insert(filasSorteo)
 
     if (errorSorteo) {
-      throw new Error('No se pudo guardar el sorteo.')
+      throw (
+        manejarErrorUnicidadSorteo(errorSorteo) ||
+        new Error('No se pudo guardar el sorteo.')
+      )
     }
 
-    const enfrentamientos = crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
+    const enfrentamientos = asignaciones.length === 1
+      ? [crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignaciones[0])]
+      : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
     const { error: errorEnfrentamientos } = await supabase
       .from('enfrentamientos')
       .insert(enfrentamientos)
 
     if (errorEnfrentamientos) {
-      throw new Error('El sorteo se guardo, pero no se pudieron generar los cuartos.')
+      throw new Error('El sorteo se guardo, pero no se pudieron generar los enfrentamientos.')
     }
   } catch (error) {
     throw new Error(error.message || 'No se pudo guardar el sorteo.')
+  }
+}
+
+async function listarEquiposPorSubcategoria(subcategoriaId) {
+  try {
+    const { data, error } = await supabase
+      .from('equipos')
+      .select(seleccionEquiposAprobados + ', estado_homologacion')
+      .eq('subcategoria_id', subcategoriaId)
+      .limit(500)
+
+    if (error) {
+      throw new Error('No se pudieron cargar los equipos de la subcategoria.')
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los equipos de la subcategoria.')
+  }
+}
+
+async function obtenerEnfrentamientosPorSubcategoria(subcategoriaId) {
+  try {
+    const { data, error } = await supabase
+      .from('enfrentamientos')
+      .select('id')
+      .eq('subcategoria_id', subcategoriaId)
+      .limit(1)
+
+    if (error) {
+      throw new Error('No se pudo verificar si ya existe un bracket.')
+    }
+
+    return data || []
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo verificar si ya existe un bracket.')
+  }
+}
+
+async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
+  const [equiposSubcategoria, sorteoActual, enfrentamientosActuales] = await Promise.all([
+    listarEquiposPorSubcategoria(subcategoriaId),
+    obtenerSorteoPorSubcategoria(subcategoriaId),
+    obtenerEnfrentamientosPorSubcategoria(subcategoriaId),
+  ])
+
+  if (enfrentamientosActuales.length) return
+
+  const todosAprobados =
+    equiposSubcategoria.length > 0 &&
+    equiposSubcategoria.every((equipo) => equipo.estado_homologacion === 'aprobado')
+
+  if (!todosAprobados) return
+
+  const bolasPorEquipo = new Map(
+    sorteoActual.map((asignacion) => [asignacion.equipo_id, asignacion]),
+  )
+  const todosConBola = equiposSubcategoria.every((equipo) => bolasPorEquipo.has(equipo.id))
+
+  if (!todosConBola) return
+
+  const asignaciones = equiposSubcategoria
+    .map((equipo) => bolasPorEquipo.get(equipo.id))
+    .sort((a, b) => Number(a.numero_bola) - Number(b.numero_bola))
+    .map((asignacion) => ({
+      equipo_id: asignacion.equipo_id,
+      numero_bola: Number(asignacion.numero_bola),
+    }))
+  const enfrentamientos = asignaciones.length === 1
+    ? [crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignaciones[0])]
+    : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
+  const { error } = await supabase.from('enfrentamientos').insert(enfrentamientos)
+
+  if (error) {
+    throw new Error('No se pudo generar el bracket del sorteo presencial.')
+  }
+}
+
+export async function validarNumeroBolaPresencial({
+  equipo,
+  numeroBola,
+}) {
+  try {
+    const numero = Number(numeroBola)
+
+    if (!Number.isInteger(numero) || numero < 1) {
+      throw new Error('Ingresa un numero de bola valido.')
+    }
+
+    const duplicados = await buscarNumeroBolaDuplicado(
+      equipo.subcategoria_id,
+      numero,
+      equipo.id,
+    )
+    const bolaDuplicada = duplicados[0]
+
+    if (bolaDuplicada) {
+      const nombreEquipo = bolaDuplicada.equipos?.nombre_equipo || 'otro equipo'
+      throw crearErrorNumeroBolaDuplicado(numero, nombreEquipo)
+    }
+
+    const { data: bolaExistente, error: errorExistente } = await supabase
+      .from('sorteo')
+      .select('id')
+      .eq('subcategoria_id', equipo.subcategoria_id)
+      .eq('equipo_id', equipo.id)
+      .limit(1)
+      .maybeSingle()
+
+    if (errorExistente) {
+      throw new Error('No se pudo verificar el numero de bola del equipo.')
+    }
+
+    if (bolaExistente) {
+      throw new Error('Este equipo ya tiene un numero de bola asignado.')
+    }
+
+    return numero
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo validar el numero de bola.')
+  }
+}
+
+export async function registrarNumeroBolaPresencial({
+  equipo,
+  numeroBola,
+  registradoPor,
+}) {
+  try {
+    const numero = await validarNumeroBolaPresencial({ equipo, numeroBola })
+
+    const { error: errorSorteo } = await supabase.from('sorteo').insert({
+      equipo_id: equipo.id,
+      fecha: new Date().toISOString(),
+      numero_bola: numero,
+      registrado_por: registradoPor,
+      subcategoria_id: equipo.subcategoria_id,
+    })
+
+    if (errorSorteo) {
+      throw (
+        manejarErrorUnicidadSorteo(errorSorteo) ||
+        new Error('No se pudo registrar el numero de bola.')
+      )
+    }
+
+    await generarEnfrentamientosPresencialesSiCompleto(equipo.subcategoria_id)
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo registrar el sorteo presencial.')
   }
 }

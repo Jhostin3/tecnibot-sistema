@@ -52,6 +52,12 @@ export function useSorteo() {
   )
   const cantidadByes = Math.max(0, tamanoBracket - equipos.length)
   const partidosPrimeraRonda = tamanoBracket / 2
+  const subcategoriaSeleccionada = subcategorias.find(
+    (subcategoria) => subcategoria.id === subcategoriaId,
+  )
+  const esCampeonAutomatico =
+    Boolean(subcategoriaSeleccionada?.campeonAutomatico) || equipos.length === 1
+  const equipoCampeon = esCampeonAutomatico ? equipos[0] || null : null
 
   const cargarOpciones = useCallback(async () => {
     setCargando(true)
@@ -131,8 +137,10 @@ export function useSorteo() {
         obtenerSorteoPorSubcategoria(idSubcategoria),
       ])
 
+      const tieneCampeonAutomatico = equiposAprobados.length === 1
+
       setEquipos(equiposAprobados)
-      setEquiposDisponibles(equiposAprobados)
+      setEquiposDisponibles(tieneCampeonAutomatico ? [] : equiposAprobados)
       setOrdenSorteo([])
       setSorteoExistente(sorteoActual)
     } catch (error) {
@@ -156,7 +164,7 @@ export function useSorteo() {
   }
 
   function girarRuleta() {
-    if (girando || !equiposDisponibles.length) return
+    if (esCampeonAutomatico || girando || !equiposDisponibles.length) return
 
     setMensaje('')
     setEquipoGirado(null)
@@ -182,7 +190,7 @@ export function useSorteo() {
   }
 
   function asignarUltimoEquipo() {
-    if (girando || equiposDisponibles.length !== 1) return
+    if (esCampeonAutomatico || girando || equiposDisponibles.length !== 1) return
 
     const [equipoElegido] = equiposDisponibles
 
@@ -239,22 +247,70 @@ export function useSorteo() {
     }
   }
 
+  async function confirmarCampeonAutomatico() {
+    if (!perfil?.id) {
+      setMensaje('No se pudo identificar al homologador actual.')
+      return
+    }
+
+    if (sorteoExistente.length) {
+      setMensaje('Ya existe un sorteo registrado para esta subcategoria.')
+      return
+    }
+
+    if (!equipoCampeon || equipos.length !== 1) {
+      setMensaje('El campeon automatico requiere exactamente 1 equipo aprobado.')
+      return
+    }
+
+    setGuardando(true)
+    setError(null)
+    setMensaje('')
+
+    try {
+      await guardarSorteoYGenerarCuartos({
+        asignaciones: [
+          {
+            equipo_id: equipoCampeon.id,
+            numero_bola: 1,
+          },
+        ],
+        registradoPor: perfil.id,
+        subcategoriaId,
+      })
+      await cargarDatosSubcategoria(subcategoriaId)
+      await cargarOpciones()
+      setMensaje('Campeon automatico registrado correctamente.')
+    } catch (error) {
+      setError(error.message)
+      setMensaje(error.message)
+      throw error
+    } finally {
+      setGuardando(false)
+    }
+  }
+
   return {
     anguloRuleta,
     asignarUltimoEquipo,
     cargando,
     cargandoEquipos,
     cantidadByes,
+    campeonAutomatico: esCampeonAutomatico,
     categoriaId,
     categorias,
     duracionGiro,
     equipoGirado,
+    equipoCampeon,
     error,
     equipos,
     equiposDisponibles,
+    esCampeonAutomatico,
     girando,
     girarRuleta,
     guardarSorteo,
+    confirmarCampeonAutomatico,
+    guardarCampeonAutomatico: confirmarCampeonAutomatico,
     guardando,
     mensaje,
     ordenSorteo,
@@ -267,6 +323,7 @@ export function useSorteo() {
     seleccionarSubcategoria,
     sorteoExistente,
     subcategoriaId,
+    subcategoriaSeleccionada,
     subcategorias,
     tamanoBracket,
   }

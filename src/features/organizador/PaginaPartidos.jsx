@@ -2,8 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import { CampoSeleccion } from '../../components/atoms/CampoSeleccion'
+import { Etiqueta } from '../../components/atoms/Etiqueta'
+import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
+import { SidebarHomologador } from '../homologacion/components/SidebarHomologador'
 import { ModalActivarPartido } from './components/ModalActivarPartido'
 import { ModalActivarRonda } from './components/ModalActivarRonda'
+import { SidebarOrganizador } from './components/SidebarOrganizador'
 import { TarjetaEnfrentamiento } from './components/TarjetaEnfrentamiento'
 import { usePartidos } from './usarPartidos'
 
@@ -114,6 +119,7 @@ function ListaPartidos({
 
 export function PaginaPartidos() {
   const navigate = useNavigate()
+  const { perfil } = useAutenticacion()
   const {
     activarPartido,
     activarRonda,
@@ -125,17 +131,70 @@ export function PaginaPartidos() {
     guardando,
     mensaje,
     pendientes,
+    subcategorias,
   } = usePartidos()
   const [pestanaActiva, setPestanaActiva] = useState('pendientes')
   const [partidoParaActivar, setPartidoParaActivar] = useState(null)
   const [grupoParaActivar, setGrupoParaActivar] = useState([])
   const [canchas, setCanchas] = useState(obtenerCanchasGuardadas)
   const [nuevaCancha, setNuevaCancha] = useState('')
+  const [categoriaId, setCategoriaId] = useState('')
+  const [subcategoriaId, setSubcategoriaId] = useState('')
+  const esHomologador = perfil?.rol === 'homologador'
+  const etiquetaModulo = esHomologador ? 'Homologador' : 'Organizador'
+  const Sidebar = esHomologador ? SidebarHomologador : SidebarOrganizador
+
+  const categorias = useMemo(() => {
+    const categoriasUnicas = new Map()
+
+    subcategorias.forEach((subcategoria) => {
+      const categoria = subcategoria.categorias
+
+      if (categoria?.id && !categoriasUnicas.has(categoria.id)) {
+        categoriasUnicas.set(categoria.id, categoria)
+      }
+    })
+
+    return Array.from(categoriasUnicas.values()).sort((a, b) =>
+      a.nombre.localeCompare(b.nombre),
+    )
+  }, [subcategorias])
+
+  const subcategoriasFiltradas = useMemo(() => {
+    if (!categoriaId) return subcategorias
+
+    return subcategorias.filter((subcategoria) => subcategoria.categoria_id === categoriaId)
+  }, [categoriaId, subcategorias])
+
+  const subcategoriaIdSeleccionada = subcategoriasFiltradas.some(
+    (subcategoria) => subcategoria.id === subcategoriaId,
+  )
+    ? subcategoriaId
+    : ''
+
+  const filtrarPartidos = useMemo(
+    () => (partidos = []) =>
+      partidos.filter((partido) => {
+        const coincideCategoria = categoriaId
+          ? subcategorias.some(
+              (subcategoria) =>
+                subcategoria.id === partido.subcategoria_id &&
+                subcategoria.categoria_id === categoriaId,
+            )
+          : true
+        const coincideSubcategoria = subcategoriaIdSeleccionada
+          ? partido.subcategoria_id === subcategoriaIdSeleccionada
+          : true
+
+        return coincideCategoria && coincideSubcategoria
+      }),
+    [categoriaId, subcategoriaIdSeleccionada, subcategorias],
+  )
 
   const partidosPorPestana = {
-    activos,
-    finalizados,
-    pendientes,
+    activos: filtrarPartidos(activos),
+    finalizados: filtrarPartidos(finalizados),
+    pendientes: filtrarPartidos(pendientes),
   }
   const mensajesVacios = {
     activos: 'No hay partidos en juego.',
@@ -166,7 +225,7 @@ export function PaginaPartidos() {
     setCanchas((actuales) => actuales.filter((cancha) => cancha !== canchaAEliminar))
   }
 
-  return (
+  const contenido = (
     <section className="space-y-6 p-6 py-8">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <button
@@ -178,7 +237,7 @@ export function PaginaPartidos() {
           Inicio
         </button>
         <p className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600">
-          Organizador
+          {etiquetaModulo}
         </p>
         <h1 className="mt-2 text-2xl font-bold text-slate-800">
           Gestionar partidos
@@ -246,6 +305,46 @@ export function PaginaPartidos() {
         </div>
       </section>
 
+      <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Etiqueta htmlFor="categoriaPartidos">Categoria</Etiqueta>
+            <CampoSeleccion
+              id="categoriaPartidos"
+              name="categoriaPartidos"
+              onChange={(evento) => {
+                setCategoriaId(evento.target.value)
+                setSubcategoriaId('')
+              }}
+              value={categoriaId}
+            >
+              <option value="">Todas las categorias</option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id} value={categoria.id}>
+                  {categoria.nombre}
+                </option>
+              ))}
+            </CampoSeleccion>
+          </div>
+          <div className="space-y-2">
+            <Etiqueta htmlFor="subcategoriaPartidos">Especialidad</Etiqueta>
+            <CampoSeleccion
+              id="subcategoriaPartidos"
+              name="subcategoriaPartidos"
+              onChange={(evento) => setSubcategoriaId(evento.target.value)}
+              value={subcategoriaIdSeleccionada}
+            >
+              <option value="">Todas las especialidades</option>
+              {subcategoriasFiltradas.map((subcategoria) => (
+                <option key={subcategoria.id} value={subcategoria.id}>
+                  {subcategoria.nombre}
+                </option>
+              ))}
+            </CampoSeleccion>
+          </div>
+        </div>
+      </section>
+
       <div className="flex flex-wrap gap-2">
         {pestanas.map((pestana) => (
           <button
@@ -299,5 +398,21 @@ export function PaginaPartidos() {
         />
       ) : null}
     </section>
+  )
+
+  if (esHomologador) {
+    return (
+      <div className="flex h-screen overflow-hidden bg-slate-100">
+        <Sidebar activo="partidos" />
+        <main className="flex-1 overflow-y-auto">{contenido}</main>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-slate-100">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto">{contenido}</main>
+    </div>
   )
 }

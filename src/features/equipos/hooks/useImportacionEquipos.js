@@ -12,7 +12,7 @@ export function useImportacionEquipos({ alFinalizar, subcategorias }) {
   const [resumen, setResumen] = useState(null)
 
   const filasValidas = useMemo(
-    () => filas.filter((fila) => fila.estado === 'valida'),
+    () => filas.filter((fila) => fila.datos),
     [filas],
   )
 

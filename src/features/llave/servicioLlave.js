@@ -94,6 +94,55 @@ export async function listarSubcategorias() {
   }
 }
 
+export async function listarEstadosSubcategorias(idsSubcategorias = []) {
+  try {
+    const ids = Array.from(new Set(idsSubcategorias.filter(Boolean))).slice(0, 500)
+
+    if (!ids.length) return {}
+
+    const { data, error } = await supabase
+      .from('enfrentamientos')
+      .select('subcategoria_id, ronda, ganador_id, estado, bye')
+      .in('subcategoria_id', ids)
+      .limit(500)
+
+    if (error) {
+      throw new Error('No se pudieron cargar los estados de las subcategorias.')
+    }
+
+    return ids.reduce((estados, subcategoriaId) => {
+      const enfrentamientos = (data || []).filter(
+        (enfrentamiento) => enfrentamiento.subcategoria_id === subcategoriaId,
+      )
+      const esCampeonAutomatico =
+        enfrentamientos.length === 1 &&
+        enfrentamientos[0].ronda === 'final' &&
+        enfrentamientos[0].bye === true &&
+        enfrentamientos[0].ganador_id !== null
+      const finalFinalizada = enfrentamientos.some(
+        (enfrentamiento) =>
+          enfrentamiento.ronda === 'final' &&
+          enfrentamiento.estado === 'finalizado' &&
+          enfrentamiento.ganador_id !== null,
+      )
+
+      if (!enfrentamientos.length) {
+        estados[subcategoriaId] = 'sin_sorteo'
+      } else if (esCampeonAutomatico) {
+        estados[subcategoriaId] = 'walkover'
+      } else if (finalFinalizada) {
+        estados[subcategoriaId] = 'finalizado'
+      } else {
+        estados[subcategoriaId] = 'en_curso'
+      }
+
+      return estados
+    }, {})
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los estados de las subcategorias.')
+  }
+}
+
 export async function listarEnfrentamientosPorSubcategoria(subcategoriaId) {
   try {
     if (!subcategoriaId) return []

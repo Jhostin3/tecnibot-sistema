@@ -87,6 +87,21 @@ function construirRondas(enfrentamientos = []) {
   }
 }
 
+function obtenerCampeonAutomatico(enfrentamientos = []) {
+  if (
+    enfrentamientos.length !== 1 ||
+    enfrentamientos[0].ronda !== 'final' ||
+    !enfrentamientos[0].bye ||
+    !enfrentamientos[0].ganador_id
+  ) {
+    return null
+  }
+
+  return enfrentamientos[0].equipo_a?.id === enfrentamientos[0].ganador_id
+    ? enfrentamientos[0].equipo_a
+    : enfrentamientos[0].equipo_b
+}
+
 function obtenerMarcador(enfrentamiento, lado) {
   if (!enfrentamiento.resultado) return null
 
@@ -179,6 +194,7 @@ export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
   }
 
   const rondasConstruidas = construirRondas(bracket.enfrentamientos)
+  const campeonAutomatico = obtenerCampeonAutomatico(bracket.enfrentamientos)
 
   return (
     <div className="space-y-5 rounded-md border border-emerald-200 bg-emerald-50 p-5">
@@ -200,6 +216,21 @@ export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
       ) : bracket.mensaje ? (
         <div className="rounded-md border border-rose-200 bg-white p-5 text-sm text-rose-700">
           {bracket.mensaje}
+        </div>
+      ) : campeonAutomatico ? (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-6 text-center">
+          <p className="text-sm font-bold uppercase tracking-normal text-amber-700">
+            Campeon automatico
+          </p>
+          <h3 className="mt-3 text-2xl font-black text-slate-950">
+            {campeonAutomatico.nombre_equipo}
+          </h3>
+          <p className="mt-2 text-sm font-semibold text-slate-700">
+            Robot: {campeonAutomatico.nombre_robot || 'Sin nombre registrado'}
+          </p>
+          <p className="mt-3 text-sm text-amber-700">
+            Campeon por walkover - unico equipo inscrito
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-5">

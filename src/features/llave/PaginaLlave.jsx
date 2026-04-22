@@ -12,10 +12,13 @@ export function PaginaLlave() {
     cargando,
     enfrentamientos,
     error,
+    esCampeonAutomatico,
+    estadosSubcategorias,
     ganadorFinal,
     seleccionarSubcategoria,
     subcategoriaSeleccionada,
     subcategorias,
+    tieneSorteo,
   } = useLlave()
   const subcategoriaActual = subcategorias.find(
     (subcategoria) => subcategoria.id === subcategoriaSeleccionada,
@@ -55,6 +58,7 @@ export function PaginaLlave() {
       <div className="mx-auto max-w-7xl space-y-8 bg-gray-900 px-4 py-8 sm:px-8">
         <SelectorSubcategoria
           alSeleccionar={seleccionarSubcategoria}
+          estadosSubcategorias={estadosSubcategorias}
           subcategoriaSeleccionada={subcategoriaSeleccionada}
           subcategorias={subcategorias}
         />
@@ -71,11 +75,23 @@ export function PaginaLlave() {
           </p>
         ) : null}
 
-        {!cargando && ganadorFinal ? (
-          <PantallaGanador ganador={ganadorFinal} subcategoria={subcategoriaActual} />
+        {!cargando && !tieneSorteo ? (
+          <p className="py-12 text-center text-gray-400">
+            El sorteo aún no ha sido realizado
+          </p>
         ) : null}
 
-        {!cargando ? <BracketVisual enfrentamientos={enfrentamientos} /> : null}
+        {!cargando && ganadorFinal ? (
+          <PantallaGanador
+            esWalkover={esCampeonAutomatico}
+            ganador={ganadorFinal}
+            subcategoria={subcategoriaActual}
+          />
+        ) : null}
+
+        {!cargando && tieneSorteo && !esCampeonAutomatico ? (
+          <BracketVisual enfrentamientos={enfrentamientos} />
+        ) : null}
       </div>
     </section>
   )

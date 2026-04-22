@@ -1,17 +1,18 @@
-import { NavLink } from 'react-router-dom'
-
-import { rutas } from '../../utils/rutas'
-
-const claseLink = ({ isActive }) =>
-  `inline-flex min-h-10 items-center rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-    isActive
-      ? 'bg-blue-700 text-white'
-      : 'text-blue-200 hover:bg-blue-700 hover:text-white'
-  }`
+import { useModoSorteo } from '../../features/sorteo/hooks/useModoSorteo'
+import { modosSorteo } from '../../features/sorteo/utils/modoSorteo'
 
 export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
-  const esOrganizador = perfil?.rol === 'organizador'
-  const esHomologador = perfil?.rol === 'homologador'
+  const modoSorteo = useModoSorteo()
+  const badgeModo =
+    modoSorteo === modosSorteo.presencial
+      ? {
+          clase: 'bg-teal-100 text-teal-600',
+          texto: 'Sorteo Presencial',
+        }
+      : {
+          clase: 'bg-indigo-100 text-indigo-600',
+          texto: 'Sorteo Virtual',
+        }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-blue-900 to-blue-800 shadow-lg shadow-blue-900/20">
@@ -29,36 +30,13 @@ export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
         </div>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          {esOrganizador ? (
-            <nav className="flex flex-wrap gap-2">
-              <NavLink className={claseLink} to={rutas.inicio}>
-                Inicio
-              </NavLink>
-              <NavLink className={claseLink} to={rutas.equipos}>
-                Equipos
-              </NavLink>
-              <NavLink className={claseLink} to={rutas.partidos}>
-                Partidos
-              </NavLink>
-              <NavLink className={claseLink} to={rutas.sorteo}>
-                Sorteo
-              </NavLink>
-            </nav>
-          ) : null}
-
-          {esHomologador ? (
-            <nav className="flex flex-wrap gap-2">
-              <NavLink className={claseLink} to={rutas.homologacion}>
-                Homologacion
-              </NavLink>
-              <NavLink className={claseLink} to={rutas.sorteo}>
-                Sorteo
-              </NavLink>
-            </nav>
-          ) : null}
-
-          <div className="flex flex-col gap-2 border-t border-blue-700 pt-3 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
-            <p className="text-sm font-semibold text-blue-300">{perfil?.nombre}</p>
+          <div className="flex flex-col gap-2 border-t border-blue-700 pt-3 lg:pt-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold text-blue-300">{perfil?.nombre}</p>
+              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badgeModo.clase}`}>
+                {badgeModo.texto}
+              </span>
+            </div>
             <p className="text-xs text-blue-300/80">{usuario?.email}</p>
           </div>
 

@@ -110,7 +110,13 @@ export function useHomologaciones() {
     }))
   }
 
-  async function cambiarEstadoHomologacion({ equipoId, estado, observacion }) {
+  async function cambiarEstadoHomologacion({
+    equipo,
+    equipoId,
+    estado,
+    numeroBola,
+    observacion,
+  }) {
     if (!perfil?.id) {
       setMensaje('No se pudo identificar al homologador actual.')
       return
@@ -122,9 +128,11 @@ export function useHomologaciones() {
 
     try {
       await registrarCambioHomologacion({
+        equipo,
         equipoId,
         estado,
         homologadorId: perfil.id,
+        numeroBola,
         observacion,
       })
       await cargarDatos()

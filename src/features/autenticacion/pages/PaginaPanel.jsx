@@ -13,6 +13,7 @@ export function PaginaPanel() {
   const esOrganizador = perfil?.rol === 'organizador'
   const esHomologador = perfil?.rol === 'homologador'
   const puedeHomologar = ['organizador', 'homologador'].includes(perfil?.rol)
+  const puedeGestionarPartidos = ['organizador', 'homologador'].includes(perfil?.rol)
 
   return (
     <section className="space-y-6">
@@ -42,6 +43,14 @@ export function PaginaPanel() {
               to={rutas.homologacion}
             >
               Homologar equipos
+            </Link>
+          ) : null}
+          {puedeGestionarPartidos ? (
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              to={rutas.partidos}
+            >
+              Gestionar partidos
             </Link>
           ) : null}
           {esHomologador ? (

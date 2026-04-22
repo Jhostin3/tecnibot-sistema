@@ -1,4 +1,4 @@
-import { ClipboardCheck, GitBranch, Home, Shuffle } from 'lucide-react'
+import { ClipboardCheck, GitBranch, Home, Play, Shuffle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { rutas } from '../../../utils/rutas'
@@ -11,6 +11,7 @@ const enlaces = [
     etiqueta: 'Homologacion',
     ruta: rutas.homologacion,
   },
+  { activo: 'partidos', Icono: Play, etiqueta: 'Partidos', ruta: rutas.partidos },
   { activo: 'sorteo', Icono: Shuffle, etiqueta: 'Sorteo', ruta: rutas.sorteo },
   { activo: 'brackets', Icono: GitBranch, etiqueta: 'Brackets', ruta: rutas.brackets },
 ]

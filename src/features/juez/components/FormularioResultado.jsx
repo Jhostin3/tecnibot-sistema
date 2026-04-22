@@ -1,11 +1,52 @@
 import { useMemo, useState } from 'react'
-
-function limpiarNumero(valor) {
-  return valor.replace(/\D/g, '')
-}
+import { Minus, Plus } from 'lucide-react'
 
 function obtenerNombreEquipo(equipo, respaldo) {
   return equipo?.nombre_equipo || respaldo
+}
+
+function obtenerClaseMarcador({ golesA, golesB, lado }) {
+  if (golesA === golesB) return 'text-gray-400'
+  if (lado === 'a' && golesA > golesB) return 'text-blue-400'
+  if (lado === 'b' && golesB > golesA) return 'text-red-400'
+
+  return 'text-white'
+}
+
+function ControlGoles({
+  claseNumero,
+  color,
+  goles,
+  onDecrementar,
+  onIncrementar,
+}) {
+  const claseIncrementar =
+    color === 'azul'
+      ? 'bg-blue-600 hover:bg-blue-500'
+      : 'bg-red-600 hover:bg-red-500'
+
+  return (
+    <div className="flex items-center justify-center gap-4">
+      <button
+        className="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-700 text-xl font-bold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+        disabled={goles === 0}
+        onClick={onDecrementar}
+        type="button"
+      >
+        <Minus className="h-6 w-6" />
+      </button>
+      <span className={`min-w-20 text-center font-mono text-6xl font-bold ${claseNumero}`}>
+        {goles}
+      </span>
+      <button
+        className={`flex h-14 w-14 items-center justify-center rounded-xl text-xl font-bold text-white transition ${claseIncrementar}`}
+        onClick={onIncrementar}
+        type="button"
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+    </div>
+  )
 }
 
 export function FormularioResultado({
@@ -15,13 +56,13 @@ export function FormularioResultado({
   mostrarEncabezado = true,
   partido,
 }) {
-  const [golesA, setGolesA] = useState('0')
-  const [golesB, setGolesB] = useState('0')
+  const [golesA, setGolesA] = useState(0)
+  const [golesB, setGolesB] = useState(0)
   const [observacion, setObservacion] = useState('')
   const [errorLocal, setErrorLocal] = useState('')
 
   const hayEmpate = useMemo(
-    () => Number(golesA || 0) === Number(golesB || 0),
+    () => golesA === golesB,
     [golesA, golesB],
   )
   const formularioBloqueado = guardando || hayEmpate
@@ -40,8 +81,8 @@ export function FormularioResultado({
     try {
       await alGuardar({
         enfrentamiento: partido,
-        golesA: Number(golesA || 0),
-        golesB: Number(golesB || 0),
+        golesA,
+        golesB,
         observacion,
       })
     } catch (error) {
@@ -78,32 +119,44 @@ export function FormularioResultado({
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-[1fr_1fr] gap-5">
-        <label className="flex flex-col items-center gap-3 text-base font-semibold text-blue-400">
-          Goles A
-          <input
-            className="h-24 w-24 rounded-xl border-2 border-blue-400 bg-gray-900 text-center text-5xl font-bold text-white outline-none focus:ring-4 focus:ring-blue-400/30"
-            inputMode="numeric"
-            min="0"
-            onChange={(evento) => setGolesA(limpiarNumero(evento.target.value) || '0')}
-            pattern="[0-9]*"
-            type="text"
-            value={golesA}
+      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <div className="space-y-4">
+          <p className="text-center text-base font-semibold text-blue-400">
+            {obtenerNombreEquipo(partido.equipo_a, 'Equipo A')}
+          </p>
+          <ControlGoles
+            claseNumero={obtenerClaseMarcador({
+              golesA,
+              golesB,
+              lado: 'a',
+            })}
+            color="azul"
+            goles={golesA}
+            onDecrementar={() => setGolesA((actual) => Math.max(0, actual - 1))}
+            onIncrementar={() => setGolesA((actual) => actual + 1)}
           />
-        </label>
+        </div>
 
-        <label className="flex flex-col items-center gap-3 text-base font-semibold text-red-400">
-          Goles B
-          <input
-            className="h-24 w-24 rounded-xl border-2 border-red-400 bg-gray-900 text-center text-5xl font-bold text-white outline-none focus:ring-4 focus:ring-red-400/30"
-            inputMode="numeric"
-            min="0"
-            onChange={(evento) => setGolesB(limpiarNumero(evento.target.value) || '0')}
-            pattern="[0-9]*"
-            type="text"
-            value={golesB}
+        <span className="hidden text-center text-xl font-black text-gray-500 md:block">
+          VS
+        </span>
+
+        <div className="space-y-4">
+          <p className="text-center text-base font-semibold text-red-400">
+            {obtenerNombreEquipo(partido.equipo_b, 'Equipo B')}
+          </p>
+          <ControlGoles
+            claseNumero={obtenerClaseMarcador({
+              golesA,
+              golesB,
+              lado: 'b',
+            })}
+            color="rojo"
+            goles={golesB}
+            onDecrementar={() => setGolesB((actual) => Math.max(0, actual - 1))}
+            onIncrementar={() => setGolesB((actual) => actual + 1)}
           />
-        </label>
+        </div>
       </div>
 
       <label className="mt-8 block text-base font-semibold text-gray-200">

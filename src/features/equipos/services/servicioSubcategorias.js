@@ -4,7 +4,7 @@ export async function listarSubcategorias() {
   try {
     const { data, error } = await supabase
       .from('subcategorias')
-      .select('id, nombre')
+      .select('id, categoria_id, nombre, categorias(id, nombre)')
       .order('nombre', { ascending: true })
       .limit(500)
 

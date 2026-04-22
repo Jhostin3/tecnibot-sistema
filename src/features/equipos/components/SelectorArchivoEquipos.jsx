@@ -13,8 +13,10 @@ export function SelectorArchivoEquipos({
       <div>
         <h2 className="text-xl font-bold text-slate-950">Importar archivo CSV</h2>
         <p className="mt-1 text-sm leading-6 text-slate-600">
-          Usa columnas: nombre_equipo, nombre_robot, representante, institucion,
-          correo y subcategoria.
+          Acepta el CSV oficial exportado desde el formulario de Google Forms
+          de TecniBot 2026. Columnas requeridas: Nombre del Robot, Nombre de
+          usuario, Nombre de la Institución, Nombre del Responsable/Coordinador,
+          Categoría, Nivel del Robot.
         </p>
       </div>
       <input

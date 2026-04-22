@@ -48,7 +48,7 @@ export function RouterSistema() {
               <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
                 <Route path={rutas.inicio} element={<PaginaInicioPorRol />} />
               </Route>
-              <Route element={<RutaPorRol rolesPermitidos={['organizador']} />}>
+              <Route element={<RutaPorRol rolesPermitidos={['organizador', 'homologador']} />}>
                 <Route path={rutas.equipos} element={<PaginaEquipos />} />
                 <Route path={rutas.partidos} element={<PaginaPartidos />} />
               </Route>

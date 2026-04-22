@@ -91,6 +91,15 @@ function crearRutaConector(origenA, origenB, destino) {
   `
 }
 
+function esCampeonAutomatico(enfrentamientos = []) {
+  return (
+    enfrentamientos.length === 1 &&
+    enfrentamientos[0].ronda === 'final' &&
+    enfrentamientos[0].bye &&
+    enfrentamientos[0].ganador_id
+  )
+}
+
 export function BracketVisual({ enfrentamientos }) {
   const grupos = useMemo(
     () => agruparPorRonda(enfrentamientos || []),
@@ -101,6 +110,7 @@ export function BracketVisual({ enfrentamientos }) {
   const [conectores, setConectores] = useState([])
   const [tamanoSvg, setTamanoSvg] = useState({ alto: 0, ancho: 0 })
   const rondas = useMemo(() => crearRondasBracket(grupos), [grupos])
+  const campeonAutomatico = esCampeonAutomatico(enfrentamientos)
 
   const registrarTarjeta = useCallback((clave, nodo) => {
     if (nodo) {
@@ -175,6 +185,10 @@ export function BracketVisual({ enfrentamientos }) {
       window.removeEventListener('resize', medirConectores)
     }
   }, [medirConectores])
+
+  if (campeonAutomatico) {
+    return null
+  }
 
   return (
     <div className="w-full overflow-x-auto pb-4">
