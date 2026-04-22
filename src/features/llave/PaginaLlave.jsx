@@ -26,12 +26,13 @@ export function PaginaLlave() {
     (subcategoria) => subcategoria.id === subcategoriaSeleccionada,
   )
   const podio = obtenerResumenPodio(enfrentamientos, ganadorFinal, esCampeonAutomatico)
+  const competenciaEnCurso = !competenciaFinalizada
   const mostrarBracket =
     !cargando &&
     tieneSorteo &&
     (
-      !esCampeonAutomatico ||
-      !competenciaFinalizada
+      competenciaEnCurso ||
+      !esCampeonAutomatico
     )
   const mostrarPodio =
     !cargando &&
