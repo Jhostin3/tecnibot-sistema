@@ -14,7 +14,7 @@ const seleccionEquipos = `
   estado_homologacion,
   observaciones,
   created_at,
-  subcategorias(nombre)
+  subcategorias(nombre, categoria_id, categorias(nombre))
 `
 
 const seleccionHomologaciones = `
@@ -49,6 +49,7 @@ export async function listarEquiposParaHomologacion() {
         .from('equipos')
         .select(seleccionEquipos)
         .order('created_at', { ascending: false })
+        .order('nombre_equipo', { ascending: true })
         .limit(500),
       supabase
         .from('homologaciones')
@@ -78,7 +79,7 @@ export async function listarSubcategoriasHomologacion() {
   try {
     const { data, error } = await supabase
       .from('subcategorias')
-      .select('id, nombre')
+      .select('id, nombre, categoria_id, categorias(id, nombre)')
       .order('nombre', { ascending: true })
       .limit(500)
 

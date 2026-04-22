@@ -1,10 +1,66 @@
-import { Trophy } from 'lucide-react'
+import { Medal, Trophy } from 'lucide-react'
 
-export function PantallaGanador({ esWalkover = false, ganador, subcategoria }) {
-  if (!ganador) return null
+function obtenerSubcampeon(enfrentamientos = [], ganador) {
+  const final = enfrentamientos.find(
+    (enfrentamiento) =>
+      enfrentamiento.ronda === 'final' &&
+      enfrentamiento.estado === 'finalizado' &&
+      enfrentamiento.ganador_id,
+  )
+
+  if (!final || !ganador) return null
+
+  if (final.equipo_a?.id === ganador.id) return final.equipo_b || null
+  if (final.equipo_b?.id === ganador.id) return final.equipo_a || null
+
+  return null
+}
+
+function TarjetaPodio({ colorClase, etiqueta, equipos = [], icono }) {
+  if (!equipos.length) return null
 
   return (
-    <section className="rounded-3xl border-2 border-yellow-600 bg-gradient-to-b from-gray-900 to-gray-950 p-8 text-center shadow-xl">
+    <article className="rounded-2xl border border-gray-700 bg-gray-900/70 p-5 text-left">
+      <div className="flex items-center gap-3">
+        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${colorClase}`}>
+          {icono}
+        </span>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
+            {etiqueta}
+          </p>
+          <p className="text-sm text-gray-400">
+            {equipos.length > 1 ? 'Lugar compartido' : 'Posicion final'}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {equipos.map((equipo) => (
+          <div className="rounded-xl border border-gray-700 bg-gray-800 px-4 py-3" key={equipo.id}>
+            <p className="text-lg font-bold text-white">{equipo.nombre_equipo}</p>
+            {equipo.nombre_robot ? (
+              <p className="mt-1 text-sm text-gray-400">Robot: {equipo.nombre_robot}</p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+export function PantallaGanador({
+  enfrentamientos = [],
+  esWalkover = false,
+  ganador,
+  subcategoria,
+}) {
+  if (!ganador) return null
+
+  const subcampeon = obtenerSubcampeon(enfrentamientos, ganador)
+
+  return (
+    <section className="space-y-8 rounded-3xl border-2 border-yellow-600 bg-gradient-to-b from-gray-900 to-gray-950 p-8 text-center shadow-xl">
       <Trophy className="mx-auto h-20 w-20 text-yellow-400" />
       <p
         className={`mx-auto mt-5 inline-flex rounded-full px-3 py-1 text-xs font-bold tracking-widest ${
@@ -34,6 +90,23 @@ export function PantallaGanador({ esWalkover = false, ganador, subcategoria }) {
       <p className="mt-6 text-sm text-gray-500">
         TecniBot Cuenca 2026
       </p>
+
+      {!esWalkover && subcampeon ? (
+        <div className="grid gap-4 lg:grid-cols-1">
+          <TarjetaPodio
+            colorClase="bg-slate-200 text-slate-700"
+            equipos={subcampeon ? [subcampeon] : []}
+            etiqueta="Segundo lugar"
+            icono={<Medal className="h-5 w-5" />}
+          />
+        </div>
+      ) : null}
+
+      {!esWalkover ? (
+        <p className="text-sm text-gray-500">
+          El tercer lugar no se muestra porque esta llave no tiene partido por el tercer puesto.
+        </p>
+      ) : null}
     </section>
   )
 }

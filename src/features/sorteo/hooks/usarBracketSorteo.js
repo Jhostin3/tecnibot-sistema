@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
+import { supabase } from '../../../lib/supabaseCliente'
 import { listarBracketPorSubcategoria } from '../services/servicioSorteo'
 
 export function useBracketSorteo(subcategoriaId) {
@@ -66,10 +67,43 @@ export function useBracketSorteo(subcategoriaId) {
 
     cargarBracketInicial()
 
+    const canal = subcategoriaId
+      ? supabase
+          .channel(`bracket-publico-${subcategoriaId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              filter: `subcategoria_id=eq.${subcategoriaId}`,
+              schema: 'public',
+              table: 'enfrentamientos',
+            },
+            () => {
+              if (componenteActivo) {
+                cargarBracket()
+              }
+            },
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'resultados' },
+            () => {
+              if (componenteActivo) {
+                cargarBracket()
+              }
+            },
+          )
+          .subscribe()
+      : null
+
     return () => {
       componenteActivo = false
+
+      if (canal) {
+        supabase.removeChannel(canal)
+      }
     }
-  }, [subcategoriaId])
+  }, [cargarBracket, subcategoriaId])
 
   return {
     cargando,

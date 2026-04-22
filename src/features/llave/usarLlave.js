@@ -38,6 +38,23 @@ export function useLlave() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
 
+  const cargarOpcionesLlave = useCallback(async () => {
+    const subcategoriasActuales = await listarSubcategorias()
+    const estadosActuales = await listarEstadosSubcategorias(
+      subcategoriasActuales.map((subcategoria) => subcategoria.id),
+    )
+
+    setSubcategorias(subcategoriasActuales)
+    setEstadosSubcategorias(estadosActuales)
+    setSubcategoriaSeleccionada((actual) =>
+      actual && subcategoriasActuales.some((subcategoria) => subcategoria.id === actual)
+        ? actual
+        : (subcategoriasActuales[0]?.id || '')
+    )
+
+    return subcategoriasActuales
+  }, [])
+
   const cargarLlave = useCallback(async (subcategoriaId, { mostrarCarga = true } = {}) => {
     if (!subcategoriaId) {
       setEnfrentamientos([])
@@ -78,19 +95,11 @@ export function useLlave() {
       setError(null)
 
       try {
-        const subcategoriasActuales = await listarSubcategorias()
-        const estadosActuales = await listarEstadosSubcategorias(
-          subcategoriasActuales.map((subcategoria) => subcategoria.id),
-        )
-
         if (!componenteActivo) return
 
-        setSubcategorias(subcategoriasActuales)
-        setEstadosSubcategorias(estadosActuales)
+        const subcategoriasActuales = await cargarOpcionesLlave()
 
-        if (subcategoriasActuales.length) {
-          setSubcategoriaSeleccionada(subcategoriasActuales[0].id)
-        } else {
+        if (!subcategoriasActuales.length) {
           setCargando(false)
         }
       } catch (error) {
@@ -106,7 +115,7 @@ export function useLlave() {
     return () => {
       componenteActivo = false
     }
-  }, [])
+  }, [cargarOpcionesLlave])
 
   useEffect(() => {
     let componenteActivo = true
@@ -147,41 +156,60 @@ export function useLlave() {
 
     cargarDatos()
 
-    const canal = subcategoriaSeleccionada
-      ? supabase
-          .channel(`llave-publica-${subcategoriaSeleccionada}`)
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              filter: `subcategoria_id=eq.${subcategoriaSeleccionada}`,
-              schema: 'public',
-              table: 'enfrentamientos',
-            },
-            () => {
-              if (componenteActivo) {
-                cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
-                listarEstadosSubcategorias(subcategorias.map((subcategoria) => subcategoria.id))
-                  .then((estadosActuales) => {
-                    if (componenteActivo) {
-                      setEstadosSubcategorias(estadosActuales)
-                    }
-                  })
-                  .catch(() => undefined)
-              }
-            },
-          )
-          .subscribe()
-      : null
+    const canal = supabase
+      .channel(`llave-publica-${subcategoriaSeleccionada || 'general'}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'enfrentamientos' },
+        () => {
+          if (!componenteActivo) return
+
+          if (subcategoriaSeleccionada) {
+            cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
+          }
+
+          cargarOpcionesLlave().catch(() => undefined)
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'resultados' },
+        () => {
+          if (!componenteActivo || !subcategoriaSeleccionada) return
+
+          cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sorteo' },
+        () => {
+          if (!componenteActivo) return
+
+          if (subcategoriaSeleccionada) {
+            cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
+          }
+
+          cargarOpcionesLlave().catch(() => undefined)
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'subcategorias' },
+        () => {
+          if (!componenteActivo) return
+
+          cargarOpcionesLlave().catch(() => undefined)
+        },
+      )
+      .subscribe()
 
     return () => {
       componenteActivo = false
 
-      if (canal) {
-        supabase.removeChannel(canal)
-      }
+      supabase.removeChannel(canal)
     }
-  }, [cargarLlave, subcategoriaSeleccionada, subcategorias])
+  }, [cargarLlave, cargarOpcionesLlave, subcategoriaSeleccionada])
 
   return {
     cargando,

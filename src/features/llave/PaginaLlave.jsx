@@ -83,6 +83,7 @@ export function PaginaLlave() {
 
         {!cargando && ganadorFinal ? (
           <PantallaGanador
+            enfrentamientos={enfrentamientos}
             esWalkover={esCampeonAutomatico}
             ganador={ganadorFinal}
             subcategoria={subcategoriaActual}

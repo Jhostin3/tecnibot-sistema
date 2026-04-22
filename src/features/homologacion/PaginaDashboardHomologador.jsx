@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { rutas } from '../../utils/rutas'
-import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
 import { GridBrackets } from '../sorteo/components/GridBrackets'
 import { listarSubcategoriasConSorteo } from '../sorteo/services/servicioSorteo'
 import { SidebarHomologador } from './components/SidebarHomologador'
@@ -28,9 +27,7 @@ const accesos = [
 ]
 
 export function PaginaDashboardHomologador() {
-  const { perfil } = useAutenticacion()
   const [brackets, setBrackets] = useState([])
-  const nombre = perfil?.nombre || 'homologador'
 
   useEffect(() => {
     let activo = true
@@ -61,14 +58,6 @@ export function PaginaDashboardHomologador() {
       <SidebarHomologador activo="inicio" />
       <main className="flex-1 overflow-y-auto">
         <div className="w-full p-8">
-          <header className="mb-6 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 p-6 text-white shadow-sm">
-            <p className="text-sm text-white/70">Bienvenido,</p>
-            <h1 className="mt-1 text-2xl font-bold">{nombre}</h1>
-            <span className="mt-4 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
-              27 · 04 · 26 · UETS Cuenca
-            </span>
-          </header>
-
           <div className="grid grid-cols-2 gap-4">
             {accesos.map((acceso) => {
               const IconoAcceso = acceso.Icono

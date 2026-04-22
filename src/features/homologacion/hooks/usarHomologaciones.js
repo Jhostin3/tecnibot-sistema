@@ -23,6 +23,7 @@ export function useHomologaciones() {
   const [equipos, setEquipos] = useState([])
   const [subcategorias, setSubcategorias] = useState([])
   const [filtros, setFiltros] = useState({
+    categoriaId: '',
     estado: '',
     subcategoriaId: '',
   })
@@ -91,6 +92,9 @@ export function useHomologaciones() {
   const equiposFiltrados = useMemo(
     () =>
       equipos.filter((equipo) => {
+        const coincideCategoria = filtros.categoriaId
+          ? equipo.subcategorias?.categoria_id === filtros.categoriaId
+          : true
         const coincideEstado = filtros.estado
           ? equipo.estado_homologacion === filtros.estado
           : true
@@ -98,7 +102,7 @@ export function useHomologaciones() {
           ? equipo.subcategoria_id === filtros.subcategoriaId
           : true
 
-        return coincideEstado && coincideSubcategoria
+        return coincideCategoria && coincideEstado && coincideSubcategoria
       }),
     [equipos, filtros],
   )
