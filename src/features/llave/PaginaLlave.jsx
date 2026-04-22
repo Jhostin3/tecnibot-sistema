@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { BracketVisual } from './components/BracketVisual'
 import { PantallaGanador } from './components/PantallaGanador'
 import { SelectorSubcategoria } from './components/SelectorSubcategoria'
+import { obtenerResumenPodio } from './utils/resumenPodio'
 import { useLlave } from './usarLlave'
 
 export function PaginaLlave() {
@@ -23,6 +24,12 @@ export function PaginaLlave() {
   const subcategoriaActual = subcategorias.find(
     (subcategoria) => subcategoria.id === subcategoriaSeleccionada,
   )
+  const podio = obtenerResumenPodio(enfrentamientos, ganadorFinal, esCampeonAutomatico)
+  const mostrarBracket =
+    !cargando &&
+    tieneSorteo &&
+    !esCampeonAutomatico &&
+    !podio.podioCompleto
 
   return (
     <section className="min-h-screen bg-gray-950 text-white">
@@ -90,7 +97,7 @@ export function PaginaLlave() {
           />
         ) : null}
 
-        {!cargando && tieneSorteo && !esCampeonAutomatico ? (
+        {mostrarBracket ? (
           <BracketVisual enfrentamientos={enfrentamientos} />
         ) : null}
       </div>

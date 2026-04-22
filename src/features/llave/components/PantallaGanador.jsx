@@ -1,22 +1,7 @@
-import { Medal, Trophy } from 'lucide-react'
+import { Award, Medal, Trophy } from 'lucide-react'
+import { obtenerResumenPodio } from '../utils/resumenPodio'
 
-function obtenerSubcampeon(enfrentamientos = [], ganador) {
-  const final = enfrentamientos.find(
-    (enfrentamiento) =>
-      enfrentamiento.ronda === 'final' &&
-      enfrentamiento.estado === 'finalizado' &&
-      enfrentamiento.ganador_id,
-  )
-
-  if (!final || !ganador) return null
-
-  if (final.equipo_a?.id === ganador.id) return final.equipo_b || null
-  if (final.equipo_b?.id === ganador.id) return final.equipo_a || null
-
-  return null
-}
-
-function TarjetaPodio({ colorClase, etiqueta, equipos = [], icono }) {
+function TarjetaPodio({ colorClase, descripcion, etiqueta, equipos = [], icono }) {
   if (!equipos.length) return null
 
   return (
@@ -30,7 +15,7 @@ function TarjetaPodio({ colorClase, etiqueta, equipos = [], icono }) {
             {etiqueta}
           </p>
           <p className="text-sm text-gray-400">
-            {equipos.length > 1 ? 'Lugar compartido' : 'Posicion final'}
+            {descripcion}
           </p>
         </div>
       </div>
@@ -57,7 +42,11 @@ export function PantallaGanador({
 }) {
   if (!ganador) return null
 
-  const subcampeon = obtenerSubcampeon(enfrentamientos, ganador)
+  const { subcampeon, tercerLugar } = obtenerResumenPodio(
+    enfrentamientos,
+    ganador,
+    esWalkover,
+  )
 
   return (
     <section className="space-y-8 rounded-3xl border-2 border-yellow-600 bg-gradient-to-b from-gray-900 to-gray-950 p-8 text-center shadow-xl">
@@ -91,20 +80,28 @@ export function PantallaGanador({
         TecniBot Cuenca 2026
       </p>
 
-      {!esWalkover && subcampeon ? (
-        <div className="grid gap-4 lg:grid-cols-1">
+      {!esWalkover ? (
+        <div className="grid gap-4 lg:grid-cols-2">
           <TarjetaPodio
             colorClase="bg-slate-200 text-slate-700"
+            descripcion="Posicion final"
             equipos={subcampeon ? [subcampeon] : []}
             etiqueta="Segundo lugar"
             icono={<Medal className="h-5 w-5" />}
           />
+          <TarjetaPodio
+            colorClase="bg-amber-700 text-amber-100"
+            descripcion="Posicion final"
+            equipos={tercerLugar ? [tercerLugar] : []}
+            etiqueta="Tercer lugar"
+            icono={<Award className="h-5 w-5" />}
+          />
         </div>
       ) : null}
 
-      {!esWalkover ? (
+      {!esWalkover && !tercerLugar ? (
         <p className="text-sm text-gray-500">
-          El tercer lugar no se muestra porque esta llave no tiene partido por el tercer puesto.
+          El tercer lugar solo se mostrara cuando exista una forma unica de determinarlo.
         </p>
       ) : null}
     </section>
