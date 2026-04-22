@@ -20,6 +20,7 @@ const etiquetasRonda = {
   cuartos: 'Cuartos de final',
   semifinal: 'Semifinal',
   final: 'Final',
+  tercer_lugar: 'Tercer lugar',
 }
 
 function normalizarGoles(valor) {
@@ -33,7 +34,7 @@ function normalizarGoles(valor) {
 }
 
 function calcularSiguienteRonda(rondaActual, cantidadPartidos) {
-  if (rondaActual === 'final') return null
+  if (rondaActual === 'final' || rondaActual === 'tercer_lugar') return null
 
   const rondasPorPartidos = {
     1: 'final',
@@ -210,7 +211,64 @@ async function generarSiguienteRondaSiCorresponde(partido) {
     enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id
   )
 
-  if (!rondaFinalizada || partido.ronda === 'final') return
+  if (!rondaFinalizada || partido.ronda === 'final' || partido.ronda === 'tercer_lugar') return
+
+  if (partido.ronda === 'semifinal') {
+    const semifinales = [...ronda].sort((a, b) => a.orden - b.orden)
+    const [semifinalA, semifinalB] = semifinales
+
+    if (!semifinalA || !semifinalB) return
+
+    const finalExiste = await existeSiguienteRonda(partido.subcategoria_id, 'final')
+    const tercerLugarExiste = await existeSiguienteRonda(partido.subcategoria_id, 'tercer_lugar')
+    const ganadorSemifinalA = semifinalA.ganador_id
+    const ganadorSemifinalB = semifinalB.ganador_id
+    const perdedorSemifinalA =
+      semifinalA.equipo_a_id === semifinalA.ganador_id
+        ? semifinalA.equipo_b_id
+        : semifinalA.equipo_a_id
+    const perdedorSemifinalB =
+      semifinalB.equipo_a_id === semifinalB.ganador_id
+        ? semifinalB.equipo_b_id
+        : semifinalB.equipo_a_id
+    const nuevosEnfrentamientos = []
+
+    if (!finalExiste && ganadorSemifinalA && ganadorSemifinalB) {
+      nuevosEnfrentamientos.push({
+        bye: false,
+        equipo_a_id: ganadorSemifinalA,
+        equipo_b_id: ganadorSemifinalB,
+        estado: 'pendiente',
+        ganador_id: null,
+        orden: 1,
+        ronda: 'final',
+        subcategoria_id: partido.subcategoria_id,
+      })
+    }
+
+    if (!tercerLugarExiste && perdedorSemifinalA && perdedorSemifinalB) {
+      nuevosEnfrentamientos.push({
+        bye: false,
+        equipo_a_id: perdedorSemifinalA,
+        equipo_b_id: perdedorSemifinalB,
+        estado: 'pendiente',
+        ganador_id: null,
+        orden: 1,
+        ronda: 'tercer_lugar',
+        subcategoria_id: partido.subcategoria_id,
+      })
+    }
+
+    if (!nuevosEnfrentamientos.length) return
+
+    const { error } = await supabase.from('enfrentamientos').insert(nuevosEnfrentamientos)
+
+    if (error) {
+      throw new Error('El resultado se guardo, pero no se pudieron crear los partidos finales.')
+    }
+
+    return
+  }
 
   const siguienteRonda = calcularSiguienteRonda(partido.ronda, ronda.length)
 
