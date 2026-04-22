@@ -1,4 +1,5 @@
 import { useBracketSorteo } from '../hooks/usarBracketSorteo'
+import { obtenerResumenPodio } from '../../llave/utils/resumenPodio'
 
 const rondas = [
   { clave: 'cuartos', titulo: 'Cuartos de final', total: 4 },
@@ -48,6 +49,20 @@ function obtenerGanador(enfrentamiento) {
   return null
 }
 
+function obtenerPerdedor(enfrentamiento) {
+  if (!enfrentamiento?.ganador_id) return null
+
+  if (enfrentamiento.equipo_a?.id === enfrentamiento.ganador_id) {
+    return enfrentamiento.equipo_b || null
+  }
+
+  if (enfrentamiento.equipo_b?.id === enfrentamiento.ganador_id) {
+    return enfrentamiento.equipo_a || null
+  }
+
+  return null
+}
+
 function completarRonda(enfrentamientos, ronda, total) {
   return Array.from({ length: total }).map((_, indice) => {
     const orden = indice + 1
@@ -63,6 +78,7 @@ function construirRondas(enfrentamientos = []) {
   const cuartos = completarRonda(ordenarPorRonda(enfrentamientos, 'cuartos'), 'cuartos', 4)
   const semifinalesExistentes = ordenarPorRonda(enfrentamientos, 'semifinal')
   const finalExistente = ordenarPorRonda(enfrentamientos, 'final')
+  const tercerLugarExistente = ordenarPorRonda(enfrentamientos, 'tercer_lugar')
   const semifinales = semifinalesExistentes.length
     ? completarRonda(semifinalesExistentes, 'semifinal', 2)
     : [
@@ -79,11 +95,24 @@ function construirRondas(enfrentamientos = []) {
           obtenerGanador(semifinales[1]),
         ),
       ]
+  const tercerLugar = tercerLugarExistente.length
+    ? completarRonda(tercerLugarExistente, 'tercer_lugar', 1)
+    : semifinales.every((partido) => partido.ganador_id)
+      ? [
+          crearPartidoPendiente(
+            1,
+            'tercer_lugar',
+            obtenerPerdedor(semifinales[0]),
+            obtenerPerdedor(semifinales[1]),
+          ),
+        ]
+      : []
 
   return {
     cuartos,
     final,
     semifinal: semifinales,
+    tercer_lugar: tercerLugar,
   }
 }
 
@@ -186,6 +215,23 @@ function ColumnaRonda({ partidos, ronda, titulo }) {
   )
 }
 
+function TarjetaPosicion({ descripcion, equipo, etiqueta }) {
+  if (!equipo) return null
+
+  return (
+    <article className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-normal text-slate-500">
+        {etiqueta}
+      </p>
+      <p className="mt-3 text-lg font-bold text-slate-950">{equipo.nombre_equipo}</p>
+      {equipo.nombre_robot ? (
+        <p className="mt-1 text-sm text-slate-500">Robot: {equipo.nombre_robot}</p>
+      ) : null}
+      <p className="mt-2 text-sm text-slate-500">{descripcion}</p>
+    </article>
+  )
+}
+
 export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
   const bracket = useBracketSorteo(subcategoriaId)
 
@@ -195,6 +241,12 @@ export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
 
   const rondasConstruidas = construirRondas(bracket.enfrentamientos)
   const campeonAutomatico = obtenerCampeonAutomatico(bracket.enfrentamientos)
+  const podio = obtenerResumenPodio(
+    bracket.enfrentamientos,
+    rondasConstruidas.final[0] ? obtenerGanador(rondasConstruidas.final[0]) : null,
+    Boolean(campeonAutomatico),
+  )
+  const partidoTercerLugar = rondasConstruidas.tercer_lugar[0] || null
 
   return (
     <div className="space-y-5 rounded-md border border-emerald-200 bg-emerald-50 p-5">
@@ -233,17 +285,48 @@ export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-5">
-          <div className="grid min-w-[980px] grid-cols-3 gap-12">
-            {rondas.map((ronda) => (
-              <ColumnaRonda
-                key={ronda.clave}
-                partidos={rondasConstruidas[ronda.clave]}
-                ronda={ronda.clave}
-                titulo={ronda.titulo}
-              />
-            ))}
+        <div className="space-y-6">
+          <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-5">
+            <div className="grid min-w-[980px] grid-cols-3 gap-12">
+              {rondas.map((ronda) => (
+                <ColumnaRonda
+                  key={ronda.clave}
+                  partidos={rondasConstruidas[ronda.clave]}
+                  ronda={ronda.clave}
+                  titulo={ronda.titulo}
+                />
+              ))}
+            </div>
           </div>
+
+          {partidoTercerLugar ? (
+            <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-center text-sm font-bold uppercase tracking-normal text-slate-500">
+                Tercer lugar
+              </h3>
+              <div className="mx-auto mt-5 max-w-sm">
+                <TarjetaPartido
+                  enfrentamiento={partidoTercerLugar}
+                  indice={0}
+                  ronda="tercer_lugar"
+                />
+              </div>
+              {partidoTercerLugar.estado === 'finalizado' && podio.tercerLugar ? (
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <TarjetaPosicion
+                    descripcion="Posicion final"
+                    equipo={podio.tercerLugar}
+                    etiqueta="Tercer lugar"
+                  />
+                  <TarjetaPosicion
+                    descripcion="Posicion final"
+                    equipo={podio.cuartoLugar}
+                    etiqueta="Cuarto lugar"
+                  />
+                </div>
+              ) : null}
+            </section>
+          ) : null}
         </div>
       )}
     </div>

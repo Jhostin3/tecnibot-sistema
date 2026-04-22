@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { TarjetaEnfrentamiento } from './TarjetaEnfrentamiento'
+import { obtenerResumenPodio } from '../utils/resumenPodio'
 
 const ORDEN_RONDAS = [
   'treintaidosavos',
@@ -100,6 +101,22 @@ function esCampeonAutomatico(enfrentamientos = []) {
   )
 }
 
+function TarjetaPosicion({ colorClase, equipo, etiqueta }) {
+  if (!equipo) return null
+
+  return (
+    <article className="rounded-2xl border border-gray-700 bg-gray-900/70 p-4">
+      <p className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest ${colorClase}`}>
+        {etiqueta}
+      </p>
+      <p className="mt-4 text-lg font-bold text-white">{equipo.nombre_equipo}</p>
+      {equipo.nombre_robot ? (
+        <p className="mt-1 text-sm text-gray-400">Robot: {equipo.nombre_robot}</p>
+      ) : null}
+    </article>
+  )
+}
+
 export function BracketVisual({ enfrentamientos }) {
   const grupos = useMemo(
     () => agruparPorRonda(enfrentamientos || []),
@@ -111,6 +128,15 @@ export function BracketVisual({ enfrentamientos }) {
   const [tamanoSvg, setTamanoSvg] = useState({ alto: 0, ancho: 0 })
   const rondas = useMemo(() => crearRondasBracket(grupos), [grupos])
   const campeonAutomatico = esCampeonAutomatico(enfrentamientos)
+  const partidoTercerLugar = useMemo(
+    () =>
+      [...(grupos.tercer_lugar || [])].sort((a, b) => a.orden - b.orden)[0] || null,
+    [grupos],
+  )
+  const podio = useMemo(
+    () => obtenerResumenPodio(enfrentamientos, grupos.final?.[0]?.ganador || null, campeonAutomatico),
+    [campeonAutomatico, enfrentamientos, grupos.final],
+  )
 
   const registrarTarjeta = useCallback((clave, nodo) => {
     if (nodo) {
@@ -191,58 +217,85 @@ export function BracketVisual({ enfrentamientos }) {
   }
 
   return (
-    <div className="w-full overflow-x-auto pb-4">
-      <div
-        className="relative flex min-w-max items-start gap-24 overflow-visible p-8"
-        ref={contenedorRef}
-      >
-        <svg
-          className="pointer-events-none absolute left-0 top-0 z-10"
-          height={tamanoSvg.alto}
-          width={tamanoSvg.ancho}
+    <div className="space-y-8">
+      <div className="w-full overflow-x-auto pb-4">
+        <div
+          className="relative flex min-w-max items-start gap-24 overflow-visible p-8"
+          ref={contenedorRef}
         >
-          {conectores.map((ruta, indice) => (
-            <path
-              d={ruta}
-              fill="none"
-              key={`conector-${indice}`}
-              stroke="#4b5563"
-              strokeWidth="2"
-            />
-          ))}
-        </svg>
+          <svg
+            className="pointer-events-none absolute left-0 top-0 z-10"
+            height={tamanoSvg.alto}
+            width={tamanoSvg.ancho}
+          >
+            {conectores.map((ruta, indice) => (
+              <path
+                d={ruta}
+                fill="none"
+                key={`conector-${indice}`}
+                stroke="#4b5563"
+                strokeWidth="2"
+              />
+            ))}
+          </svg>
 
-        {rondas.map((ronda) => {
-          const gruposDePartidos = agruparPartidosPorPares(ronda.partidos)
+          {rondas.map((ronda) => {
+            const gruposDePartidos = agruparPartidosPorPares(ronda.partidos)
 
-          return (
-          <section className="relative z-20 space-y-4" key={ronda.ronda}>
-            <div className="mb-4 border-b border-gray-700 pb-2">
-              <h2 className="text-center text-xs font-bold uppercase tracking-widest text-gray-400">
-                {etiquetasRonda[ronda.ronda] || ronda.ronda}
-              </h2>
-            </div>
-            <div className="flex flex-col gap-8">
-              {gruposDePartidos.map((grupo, indiceGrupo) => (
-                <div
-                  className="flex flex-col gap-8"
-                  key={`${ronda.ronda}-grupo-${indiceGrupo}`}
-                >
-                  {grupo.map((partido) => (
+            return (
+              <section className="relative z-20 space-y-4" key={ronda.ronda}>
+                <div className="mb-4 border-b border-gray-700 pb-2">
+                  <h2 className="text-center text-xs font-bold uppercase tracking-widest text-gray-400">
+                    {etiquetasRonda[ronda.ronda] || ronda.ronda}
+                  </h2>
+                </div>
+                <div className="flex flex-col gap-8">
+                  {gruposDePartidos.map((grupo, indiceGrupo) => (
                     <div
-                      key={partido.id}
-                      ref={(nodo) => registrarTarjeta(partido.id, nodo)}
+                      className="flex flex-col gap-8"
+                      key={`${ronda.ronda}-grupo-${indiceGrupo}`}
                     >
-                      <TarjetaEnfrentamiento enfrentamiento={partido.enfrentamiento} />
+                      {grupo.map((partido) => (
+                        <div
+                          key={partido.id}
+                          ref={(nodo) => registrarTarjeta(partido.id, nodo)}
+                        >
+                          <TarjetaEnfrentamiento enfrentamiento={partido.enfrentamiento} />
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
-              ))}
-            </div>
-          </section>
-          )
-        })}
+              </section>
+            )
+          })}
+        </div>
       </div>
+
+      {partidoTercerLugar ? (
+        <section className="rounded-3xl border border-gray-700 bg-gray-900/70 p-6">
+          <h2 className="text-center text-sm font-bold uppercase tracking-widest text-gray-400">
+            Tercer lugar
+          </h2>
+          <div className="mt-5 flex justify-center">
+            <TarjetaEnfrentamiento enfrentamiento={partidoTercerLugar} />
+          </div>
+          {partidoTercerLugar.estado === 'finalizado' && podio.tercerLugar ? (
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <TarjetaPosicion
+                colorClase="bg-amber-700 text-amber-100"
+                equipo={podio.tercerLugar}
+                etiqueta="Tercer lugar"
+              />
+              <TarjetaPosicion
+                colorClase="bg-slate-700 text-slate-100"
+                equipo={podio.cuartoLugar}
+                etiqueta="Cuarto lugar"
+              />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   )
 }

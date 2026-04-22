@@ -5,6 +5,7 @@ const etiquetasRonda = {
   cuartos: 'Cuartos',
   semifinal: 'Semifinal',
   final: 'Final',
+  tercer_lugar: 'Tercer lugar',
 }
 
 function nombreEquipo(equipo) {

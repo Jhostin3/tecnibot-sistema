@@ -20,6 +20,7 @@ const ordenRondas = {
   cuartos: 4,
   semifinal: 5,
   final: 6,
+  tercer_lugar: 7,
 }
 
 async function listarEquiposPorIds(idsEquipos) {

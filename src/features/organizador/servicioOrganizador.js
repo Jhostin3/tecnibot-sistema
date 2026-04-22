@@ -20,6 +20,7 @@ const etiquetasRonda = {
   cuartos: 'Cuartos de final',
   semifinal: 'Semifinal',
   final: 'Final',
+  tercer_lugar: 'Tercer lugar',
 }
 
 async function listarEquiposPorIds(idsEquipos) {
