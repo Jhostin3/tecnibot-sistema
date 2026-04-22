@@ -11,6 +11,7 @@ export function PaginaLlave() {
   const navigate = useNavigate()
   const {
     cargando,
+    competenciaFinalizada,
     enfrentamientos,
     error,
     esCampeonAutomatico,
@@ -28,8 +29,15 @@ export function PaginaLlave() {
   const mostrarBracket =
     !cargando &&
     tieneSorteo &&
-    !esCampeonAutomatico &&
-    !podio.podioCompleto
+    (
+      !esCampeonAutomatico ||
+      !competenciaFinalizada
+    )
+  const mostrarPodio =
+    !cargando &&
+    competenciaFinalizada &&
+    Boolean(ganadorFinal) &&
+    podio.podioCompleto
 
   return (
     <section className="min-h-screen bg-gray-950 text-white">
@@ -88,7 +96,7 @@ export function PaginaLlave() {
           </p>
         ) : null}
 
-        {!cargando && ganadorFinal ? (
+        {mostrarPodio ? (
           <PantallaGanador
             enfrentamientos={enfrentamientos}
             esWalkover={esCampeonAutomatico}

@@ -27,12 +27,19 @@ function obtenerGanadorFinalDesdeEnfrentamientos(enfrentamientos = []) {
   )
 }
 
+function detectarCompetenciaFinalizada(enfrentamientos = []) {
+  return enfrentamientos.length > 0 && enfrentamientos.every((enfrentamiento) =>
+    enfrentamiento.estado === 'finalizado'
+  )
+}
+
 export function useLlave() {
   const [subcategorias, setSubcategorias] = useState([])
   const [estadosSubcategorias, setEstadosSubcategorias] = useState({})
   const [subcategoriaSeleccionada, setSubcategoriaSeleccionada] = useState('')
   const [enfrentamientos, setEnfrentamientos] = useState([])
   const [ganadorFinal, setGanadorFinal] = useState(null)
+  const [competenciaFinalizada, setCompetenciaFinalizada] = useState(false)
   const [esCampeonAutomatico, setEsCampeonAutomatico] = useState(false)
   const [tieneSorteo, setTieneSorteo] = useState(false)
   const [cargando, setCargando] = useState(true)
@@ -59,6 +66,7 @@ export function useLlave() {
     if (!subcategoriaId) {
       setEnfrentamientos([])
       setGanadorFinal(null)
+      setCompetenciaFinalizada(false)
       setEsCampeonAutomatico(false)
       setTieneSorteo(false)
       setCargando(false)
@@ -76,6 +84,7 @@ export function useLlave() {
 
       setEnfrentamientos(enfrentamientosActuales)
       setTieneSorteo(enfrentamientosActuales.length > 0)
+      setCompetenciaFinalizada(detectarCompetenciaFinalizada(enfrentamientosActuales))
       setEsCampeonAutomatico(detectarCampeonAutomatico(enfrentamientosActuales))
       setGanadorFinal(obtenerGanadorFinalDesdeEnfrentamientos(enfrentamientosActuales))
     } catch (error) {
@@ -124,6 +133,7 @@ export function useLlave() {
       if (!subcategoriaSeleccionada) {
         setEnfrentamientos([])
         setGanadorFinal(null)
+        setCompetenciaFinalizada(false)
         setEsCampeonAutomatico(false)
         setTieneSorteo(false)
         setCargando(false)
@@ -140,6 +150,7 @@ export function useLlave() {
         if (componenteActivo) {
           setEnfrentamientos(enfrentamientosActuales)
           setTieneSorteo(enfrentamientosActuales.length > 0)
+          setCompetenciaFinalizada(detectarCompetenciaFinalizada(enfrentamientosActuales))
           setEsCampeonAutomatico(detectarCampeonAutomatico(enfrentamientosActuales))
           setGanadorFinal(obtenerGanadorFinalDesdeEnfrentamientos(enfrentamientosActuales))
         }
@@ -213,6 +224,7 @@ export function useLlave() {
 
   return {
     cargando,
+    competenciaFinalizada,
     enfrentamientos,
     error,
     esCampeonAutomatico,
