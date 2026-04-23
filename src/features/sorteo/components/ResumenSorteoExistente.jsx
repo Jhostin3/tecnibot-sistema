@@ -332,8 +332,8 @@ export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-5">
-            <div className="grid min-w-max grid-flow-col gap-12">
+          <div className="overflow-x-auto overscroll-x-contain rounded-md border border-slate-200 bg-white p-5 pb-6 [scrollbar-gutter:stable]">
+            <div className="grid min-w-[980px] grid-flow-col gap-12 sm:min-w-max">
               {rondasConstruidas.rondas.map((ronda) => (
                 <ColumnaRonda
                   key={ronda.clave}

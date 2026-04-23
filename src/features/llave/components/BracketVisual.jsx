@@ -218,9 +218,9 @@ export function BracketVisual({ enfrentamientos }) {
 
   return (
     <div className="space-y-8">
-      <div className="w-full overflow-x-auto pb-4">
+      <div className="w-full overflow-x-auto overscroll-x-contain pb-4 [scrollbar-gutter:stable]">
         <div
-          className="relative flex min-w-max items-start gap-24 overflow-visible p-8"
+          className="relative flex min-w-[1120px] items-start gap-24 overflow-visible p-8 sm:min-w-max"
           ref={contenedorRef}
         >
           <svg

@@ -185,7 +185,7 @@ export function PaginaBracketCompleto() {
         </h1>
       </header>
 
-      <main className="w-full overflow-x-auto p-6">
+      <main className="w-full overflow-x-auto overscroll-x-contain p-6 pb-8 [scrollbar-gutter:stable]">
         {bracket.cargando ? (
           <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">
             Cargando bracket...
@@ -199,7 +199,7 @@ export function PaginaBracketCompleto() {
         ) : null}
 
         {!bracket.cargando && !bracket.mensaje ? (
-          <div className="flex min-w-max gap-16 overflow-visible pb-6">
+          <div className="flex min-w-[1120px] gap-16 overflow-visible pb-6 sm:min-w-max">
             {rondas.map((ronda) => (
               <ColumnaRonda
                 key={ronda.ronda}
