@@ -66,6 +66,16 @@ export function useLlave() {
     return subcategoriasActuales
   }, [])
 
+  const refrescarEstadosSubcategorias = useCallback(async () => {
+    const subcategoriasActuales = await listarSubcategorias()
+    const estadosActuales = await listarEstadosSubcategorias(
+      subcategoriasActuales.map((subcategoria) => subcategoria.id),
+    )
+
+    setSubcategorias(subcategoriasActuales)
+    setEstadosSubcategorias(estadosActuales)
+  }, [])
+
   const cargarLlave = useCallback(async (subcategoriaId, { mostrarCarga = true } = {}) => {
     if (!subcategoriaId) {
       setEnfrentamientos([])
@@ -187,6 +197,23 @@ export function useLlave() {
           if (subcategoriaSeleccionada) {
             cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
           }
+
+          refrescarEstadosSubcategorias()
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'resultados',
+        },
+        () => {
+          if (!componenteActivo) return
+
+          if (subcategoriaSeleccionada) {
+            cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
+          }
         },
       )
       .subscribe((estadoCanal) => {
@@ -201,7 +228,7 @@ export function useLlave() {
 
       supabase.removeChannel(canal)
     }
-  }, [cargarLlave, subcategoriaSeleccionada])
+  }, [cargarLlave, refrescarEstadosSubcategorias, subcategoriaSeleccionada])
 
   return {
     cargando,

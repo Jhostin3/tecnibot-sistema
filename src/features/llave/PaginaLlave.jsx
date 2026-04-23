@@ -5,14 +5,12 @@ import { IndicadorEnVivo } from '../../components/molecules/IndicadorEnVivo'
 import { BracketVisual } from './components/BracketVisual'
 import { PantallaGanador } from './components/PantallaGanador'
 import { SelectorSubcategoria } from './components/SelectorSubcategoria'
-import { obtenerResumenPodio } from './utils/resumenPodio'
 import { useLlave } from './usarLlave'
 
 export function PaginaLlave() {
   const navigate = useNavigate()
   const {
     cargando,
-    competenciaFinalizada,
     enfrentamientos,
     error,
     esCampeonAutomatico,
@@ -24,23 +22,17 @@ export function PaginaLlave() {
     subcategorias,
     tieneSorteo,
   } = useLlave()
+
   const subcategoriaActual = subcategorias.find(
     (subcategoria) => subcategoria.id === subcategoriaSeleccionada,
   )
-  const podio = obtenerResumenPodio(enfrentamientos, ganadorFinal, esCampeonAutomatico)
-  const competenciaEnCurso = !competenciaFinalizada
+  const mostrarPodio =
+    !cargando &&
+    Boolean(ganadorFinal)
   const mostrarBracket =
     !cargando &&
     tieneSorteo &&
-    (
-      competenciaEnCurso ||
-      !esCampeonAutomatico
-    )
-  const mostrarPodio =
-    !cargando &&
-    competenciaFinalizada &&
-    Boolean(ganadorFinal) &&
-    podio.podioCompleto
+    !mostrarPodio
 
   return (
     <section className="min-h-screen bg-gray-950 text-white">
@@ -60,7 +52,7 @@ export function PaginaLlave() {
               </h1>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <p className="text-sm font-semibold text-cyan-400">
-                  En vivo · TecniBot Cuenca 2026
+                  En vivo - TecniBot Cuenca 2026
                 </p>
                 <IndicadorEnVivo activo={realtimeActivo} />
               </div>
@@ -76,6 +68,7 @@ export function PaginaLlave() {
           </button>
         </div>
       </header>
+
       <div className="mx-auto max-w-7xl space-y-8 bg-gray-900 px-4 py-8 sm:px-8">
         <SelectorSubcategoria
           alSeleccionar={seleccionarSubcategoria}
@@ -98,17 +91,28 @@ export function PaginaLlave() {
 
         {!cargando && !tieneSorteo ? (
           <p className="py-12 text-center text-gray-400">
-            El sorteo aún no ha sido realizado
+            El sorteo aun no ha sido realizado
           </p>
         ) : null}
 
         {mostrarPodio ? (
-          <PantallaGanador
-            enfrentamientos={enfrentamientos}
-            esWalkover={esCampeonAutomatico}
-            ganador={ganadorFinal}
-            subcategoria={subcategoriaActual}
-          />
+          <div className="space-y-6">
+            <PantallaGanador
+              enfrentamientos={enfrentamientos}
+              esWalkover={esCampeonAutomatico}
+              ganador={ganadorFinal}
+              subcategoria={subcategoriaActual}
+            />
+
+            <details className="rounded-3xl border border-gray-700 bg-gray-900/80 p-5">
+              <summary className="cursor-pointer list-none text-base font-bold text-gray-200">
+                Ver bracket completo
+              </summary>
+              <div className="mt-6">
+                <BracketVisual enfrentamientos={enfrentamientos} />
+              </div>
+            </details>
+          </div>
         ) : null}
 
         {mostrarBracket ? (
