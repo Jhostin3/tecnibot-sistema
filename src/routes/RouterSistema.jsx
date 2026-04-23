@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { ProveedorAutenticacion } from '../features/autenticacion/hooks/ContextoAutenticacion'
 import { useAutenticacion } from '../features/autenticacion/hooks/useAutenticacion'
@@ -35,7 +35,7 @@ function PaginaInicioPorRol() {
 export function RouterSistema() {
   return (
     <ProveedorAutenticacion>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route element={<LayoutPublico />}>
             <Route path={rutas.login} element={<PaginaLogin />} />
@@ -68,7 +68,7 @@ export function RouterSistema() {
           </Route>
           <Route path="*" element={<Navigate replace to={rutas.login} />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </ProveedorAutenticacion>
   )
 }

@@ -1,24 +1,36 @@
 import { obtenerResumenPodio } from '../utils/resumenPodio'
 
+function calcularTamanoNombre(nombre = '', tamanoBase, tamanoReducido) {
+  return nombre.length > 16 ? tamanoReducido : tamanoBase
+}
+
 function PlataformaPodio({
   alturaPx,
+  anchoColumna,
+  anchoPlataforma,
   badge,
   colorBase,
-  emoji,
   descripcion,
+  emoji,
   equipo,
   numero,
   ordenClase = '',
   resaltar = false,
-  tamanoNombre = '16px',
-  tamanoPlataforma = '160px',
 }) {
+  const nombreEquipo = equipo?.nombre_equipo || 'Por definir'
+  const institucion = equipo?.institucion || descripcion
+  const tamanoNombre = calcularTamanoNombre(
+    nombreEquipo,
+    resaltar ? '20px' : '16px',
+    resaltar ? '16px' : '14px',
+  )
+
   return (
     <article
-      className={`flex flex-col items-center text-center ${ordenClase}`.trim()}
-      style={{ width: resaltar ? '200px' : '180px' }}
+      className={`flex flex-col items-center justify-end text-center ${ordenClase}`.trim()}
+      style={{ width: anchoColumna }}
     >
-      <div className="mb-4 min-h-20 flex items-end justify-center">
+      <div className="mb-3 flex min-h-16 items-end justify-center">
         {resaltar ? (
           <div className="flex flex-col items-center gap-3">
             <span
@@ -32,53 +44,50 @@ function PlataformaPodio({
             </span>
           </div>
         ) : (
-          <span style={{ fontSize: '32px' }}>
-            {emoji}
-          </span>
+          <span style={{ fontSize: '32px' }}>{emoji}</span>
         )}
       </div>
 
-      <div className="mb-3 w-full space-y-1">
+      <div
+        className="mb-3 flex w-full flex-col items-center justify-end"
+        style={{ minHeight: '92px' }}
+      >
         <p
-          className="text-center font-black text-white"
+          className="font-black text-white"
           style={{
             fontSize: tamanoNombre,
             lineHeight: '1.3',
-            marginInline: 'auto',
             maxWidth: '160px',
             textAlign: 'center',
           }}
         >
-          {equipo?.nombre_equipo || 'Por definir'}
+          {nombreEquipo}
         </p>
         <p
-          className="text-gray-400"
+          className="mt-1 text-gray-400"
           style={{
             fontSize: '11px',
             lineHeight: '1.3',
-            marginInline: 'auto',
             maxWidth: '160px',
             textAlign: 'center',
           }}
         >
-          {equipo?.institucion || descripcion}
+          {institucion}
         </p>
       </div>
 
       <div
-        className={`flex w-full flex-col justify-between rounded-t-[2rem] border border-white/15 px-5 pb-6 pt-5 shadow-2xl ${colorBase}`}
-        style={{ height: alturaPx, width: tamanoPlataforma }}
+        className={`flex flex-col items-center justify-center overflow-hidden rounded-t-[2rem] border border-white/15 px-4 py-4 shadow-2xl ${colorBase}`}
+        style={{ height: alturaPx, width: anchoPlataforma }}
       >
-        <div className="text-4xl font-black text-white/90 sm:text-5xl">
-          {numero}
-        </div>
-        <div className="space-y-2">
+        <div className="text-4xl font-black text-white/90 sm:text-5xl">{numero}</div>
+        <div className="mt-3 space-y-1">
           {!resaltar ? (
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-white/70">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/75">
               {badge}
             </p>
           ) : null}
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/75">
             {resaltar ? 'Campeon' : 'Posicion final'}
           </p>
         </div>
@@ -110,9 +119,7 @@ export function PantallaGanador({
         <h2 className="text-3xl font-black text-white sm:text-4xl">
           {subcategoria?.nombre || 'Gran final'}
         </h2>
-        <p className="text-sm text-gray-400">
-          TecniBot Cuenca 2026
-        </p>
+        <p className="text-sm text-gray-400">TecniBot Cuenca 2026</p>
       </div>
 
       {esWalkover ? (
@@ -134,40 +141,40 @@ export function PantallaGanador({
           >
             <PlataformaPodio
               alturaPx="140px"
+              anchoColumna="180px"
+              anchoPlataforma="160px"
               badge="SEGUNDO LUGAR"
               colorBase="bg-gradient-to-b from-slate-200 to-slate-400"
               descripcion="Institucion por confirmar"
-              equipo={subcampeon}
               emoji="🥈"
+              equipo={subcampeon}
               numero="2"
               ordenClase="order-2 md:order-1"
-              tamanoNombre="16px"
-              tamanoPlataforma="160px"
             />
             <PlataformaPodio
               alturaPx="200px"
+              anchoColumna="200px"
+              anchoPlataforma="180px"
               badge="CAMPEON"
               colorBase="bg-gradient-to-b from-amber-300 to-amber-500"
               descripcion="Institucion por confirmar"
-              equipo={ganador}
               emoji="🏆"
+              equipo={ganador}
               numero="1"
               ordenClase="order-1 md:order-2"
               resaltar
-              tamanoNombre="20px"
-              tamanoPlataforma="180px"
             />
             <PlataformaPodio
               alturaPx="100px"
+              anchoColumna="180px"
+              anchoPlataforma="160px"
               badge={tercerLugar ? 'TERCER LUGAR' : 'POR DEFINIR'}
               colorBase="bg-gradient-to-b from-orange-300 to-orange-500"
               descripcion="Institucion por confirmar"
-              equipo={tercerLugar}
               emoji="🥉"
+              equipo={tercerLugar}
               numero="3"
               ordenClase="order-3"
-              tamanoNombre="16px"
-              tamanoPlataforma="160px"
             />
           </div>
 

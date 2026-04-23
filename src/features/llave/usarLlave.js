@@ -8,7 +8,9 @@ import {
 } from './servicioLlave'
 
 // Nota para desarrollo:
-// Habilita Realtime manualmente en Supabase Dashboard -> Table Editor -> enfrentamientos -> Enable Realtime.
+// Habilita Realtime manualmente en Supabase Dashboard -> Table Editor -> enfrentamientos/resultados -> Enable Realtime.
+
+const INTERVALO_REFRESCO_LLAVE = 2000
 
 function detectarCampeonAutomatico(enfrentamientos = []) {
   return (
@@ -181,6 +183,13 @@ export function useLlave() {
 
     cargarDatos()
 
+    const intervalo = window.setInterval(() => {
+      if (!componenteActivo || !subcategoriaSeleccionada) return
+
+      cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
+      refrescarEstadosSubcategorias()
+    }, INTERVALO_REFRESCO_LLAVE)
+
     const canal = supabase
       .channel(`tecnibot-enfrentamientos-${subcategoriaSeleccionada || 'general'}`)
       .on(
@@ -225,6 +234,7 @@ export function useLlave() {
     return () => {
       componenteActivo = false
       setRealtimeActivo(false)
+      window.clearInterval(intervalo)
 
       supabase.removeChannel(canal)
     }

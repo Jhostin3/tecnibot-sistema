@@ -10,6 +10,7 @@ const ORDEN_RONDAS = [
   'cuartos',
   'semifinal',
   'final',
+  'tercer_lugar',
 ]
 
 const etiquetasRonda = {
@@ -19,6 +20,7 @@ const etiquetasRonda = {
   cuartos: 'Cuartos',
   semifinal: 'Semifinal',
   final: 'Final',
+  tercer_lugar: 'Tercer lugar',
 }
 
 function agruparPorRonda(enfrentamientos) {
@@ -113,6 +115,52 @@ function crearRutaConectorSimple(origen, destino) {
   `
 }
 
+function crearConectoresDesdeSemifinales(rondas, posiciones) {
+  const rondaSemifinal = rondas.find((ronda) => ronda.ronda === 'semifinal')
+  const rondaFinal = rondas.find((ronda) => ronda.ronda === 'final')
+  const rondaTercerLugar = rondas.find((ronda) => ronda.ronda === 'tercer_lugar')
+
+  if (!rondaSemifinal || !rondaFinal || !rondaTercerLugar) {
+    return []
+  }
+
+  const partidoFinal = rondaFinal.partidos[0]
+  const partidoTercerLugar = rondaTercerLugar.partidos[0]
+
+  if (!partidoFinal || !partidoTercerLugar) {
+    return []
+  }
+
+  const [semiSuperior, semiInferior] = rondaSemifinal.partidos
+  const rectSemiSuperior = posiciones.get(semiSuperior?.id)
+  const rectSemiInferior = posiciones.get(semiInferior?.id)
+  const rectFinal = posiciones.get(partidoFinal.id)
+  const rectTercerLugar = posiciones.get(partidoTercerLugar.id)
+
+  if (!rectSemiSuperior || !rectSemiInferior || !rectFinal || !rectTercerLugar) {
+    return []
+  }
+
+  const origenSuperiorX = rectSemiSuperior.x + rectSemiSuperior.width
+  const origenSuperiorY = rectSemiSuperior.y + rectSemiSuperior.height / 2
+  const origenInferiorX = rectSemiInferior.x + rectSemiInferior.width
+  const origenInferiorY = rectSemiInferior.y + rectSemiInferior.height / 2
+  const xHubSemifinal = Math.max(origenSuperiorX, origenInferiorX) + 28
+  const xHubDestino = Math.min(rectFinal.x, rectTercerLugar.x) - 28
+  const yFinal = rectFinal.y + rectFinal.height / 2
+  const yTercerLugar = rectTercerLugar.y + rectTercerLugar.height / 2
+
+  return [
+    `M ${origenSuperiorX} ${origenSuperiorY} H ${xHubSemifinal}`,
+    `M ${origenInferiorX} ${origenInferiorY} H ${xHubSemifinal}`,
+    `M ${xHubSemifinal} ${origenSuperiorY} V ${origenInferiorY}`,
+    `M ${xHubSemifinal} ${(origenSuperiorY + origenInferiorY) / 2} H ${xHubDestino}`,
+    `M ${xHubDestino} ${yFinal} H ${rectFinal.x}`,
+    `M ${xHubDestino} ${yTercerLugar} H ${rectTercerLugar.x}`,
+    `M ${xHubDestino} ${yFinal} V ${yTercerLugar}`,
+  ]
+}
+
 function esCampeonAutomatico(enfrentamientos = []) {
   return (
     enfrentamientos.length === 1 &&
@@ -149,11 +197,6 @@ export function BracketVisual({ enfrentamientos }) {
   const [tamanoSvg, setTamanoSvg] = useState({ alto: 0, ancho: 0 })
   const rondas = useMemo(() => crearRondasBracket(grupos), [grupos])
   const campeonAutomatico = esCampeonAutomatico(enfrentamientos)
-  const partidoTercerLugar = useMemo(
-    () =>
-      [...(grupos.tercer_lugar || [])].sort((a, b) => a.orden - b.orden)[0] || null,
-    [grupos],
-  )
   const podio = useMemo(
     () => obtenerResumenPodio(enfrentamientos, grupos.final?.[0]?.ganador || null, campeonAutomatico),
     [campeonAutomatico, enfrentamientos, grupos.final],
@@ -190,6 +233,10 @@ export function BracketVisual({ enfrentamientos }) {
     const rutas = []
 
     rondas.slice(0, -1).forEach((ronda, indiceRonda) => {
+      if (ronda.ronda === 'semifinal') {
+        return
+      }
+
       const rondaDestino = rondas[indiceRonda + 1]
       const destinosAsignados = new Set()
 
@@ -211,6 +258,8 @@ export function BracketVisual({ enfrentamientos }) {
         rutas.push(crearRutaConectorSimple(rectOrigen, rectDestino))
       })
     })
+
+    rutas.push(...crearConectoresDesdeSemifinales(rondas, posiciones))
 
     setTamanoSvg({
       alto: contenedor.scrollHeight,
@@ -266,6 +315,7 @@ export function BracketVisual({ enfrentamientos }) {
 
           {rondas.map((ronda) => {
             const gruposDePartidos = agruparPartidosPorPares(ronda.partidos)
+            const esRondaTercerLugar = ronda.ronda === 'tercer_lugar'
 
             return (
               <section className="relative z-20 space-y-4" key={ronda.ronda}>
@@ -274,7 +324,7 @@ export function BracketVisual({ enfrentamientos }) {
                     {etiquetasRonda[ronda.ronda] || ronda.ronda}
                   </h2>
                 </div>
-                <div className="flex flex-col gap-8">
+                <div className={`flex flex-col ${esRondaTercerLugar ? 'justify-start pt-[72px]' : ''} gap-8`}>
                   {gruposDePartidos.map((grupo, indiceGrupo) => (
                     <div
                       className="flex flex-col gap-8"
@@ -297,28 +347,23 @@ export function BracketVisual({ enfrentamientos }) {
         </div>
       </div>
 
-      {partidoTercerLugar ? (
+      {grupos.tercer_lugar?.[0]?.estado === 'finalizado' && podio.tercerLugar ? (
         <section className="rounded-3xl border border-gray-700 bg-gray-900/70 p-6">
           <h2 className="text-center text-sm font-bold uppercase tracking-widest text-gray-400">
-            Tercer lugar
+            Podio por tercer lugar
           </h2>
-          <div className="mt-5 flex justify-center">
-            <TarjetaEnfrentamiento enfrentamiento={partidoTercerLugar} />
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <TarjetaPosicion
+              colorClase="bg-amber-700 text-amber-100"
+              equipo={podio.tercerLugar}
+              etiqueta="Tercer lugar"
+            />
+            <TarjetaPosicion
+              colorClase="bg-slate-700 text-slate-100"
+              equipo={podio.cuartoLugar}
+              etiqueta="Cuarto lugar"
+            />
           </div>
-          {partidoTercerLugar.estado === 'finalizado' && podio.tercerLugar ? (
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <TarjetaPosicion
-                colorClase="bg-amber-700 text-amber-100"
-                equipo={podio.tercerLugar}
-                etiqueta="Tercer lugar"
-              />
-              <TarjetaPosicion
-                colorClase="bg-slate-700 text-slate-100"
-                equipo={podio.cuartoLugar}
-                etiqueta="Cuarto lugar"
-              />
-            </div>
-          ) : null}
         </section>
       ) : null}
     </div>
