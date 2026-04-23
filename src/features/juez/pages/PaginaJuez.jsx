@@ -4,21 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { IndicadorEnVivo } from '../../../components/molecules/IndicadorEnVivo'
 import { useJuez } from '../hooks/usarJuez'
 
-function EstadoVacio() {
-  return (
-    <div className="rounded-3xl border border-blue-100 bg-white/90 p-12 text-center shadow-xl shadow-blue-950/10">
-      <Clock className="mx-auto mb-4 h-16 w-16 text-blue-200" />
-      <h2 className="text-xl font-semibold text-slate-800">No hay partidos activos</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">
-        El organizador debe activar un partido para que aparezca aqui
-      </p>
-      <p className="mt-6 animate-pulse text-xs font-semibold text-cyan-600">
-        Esperando partidos...
-      </p>
-    </div>
-  )
-}
-
 function obtenerNombreEquipo(equipo, respaldo) {
   return equipo?.nombre_equipo || respaldo
 }
@@ -27,19 +12,68 @@ function obtenerNombreRobot(equipo) {
   return equipo?.nombre_robot || 'Robot sin nombre'
 }
 
-function TarjetaPartidoSimple({ alIniciar, partido }) {
+function EstadoPanel({ cuentaRegresiva, estadoVista }) {
+  if (estadoVista === 'preparando_siguiente_ronda') {
+    return (
+      <div className="rounded-3xl border border-amber-200 bg-amber-50/90 p-8 text-center shadow-xl shadow-amber-950/10">
+        <Clock className="mx-auto mb-4 h-14 w-14 text-amber-500" />
+        <h2 className="text-xl font-bold text-amber-900">¡Ronda completada!</h2>
+        <p className="mt-2 text-sm leading-6 text-amber-800">
+          Siguiente ronda en {cuentaRegresiva}...
+        </p>
+      </div>
+    )
+  }
+
+  if (estadoVista === 'esperando_organizador') {
+    return (
+      <div className="rounded-3xl border border-blue-100 bg-white/90 p-12 text-center shadow-xl shadow-blue-950/10">
+        <Clock className="mx-auto mb-4 h-16 w-16 text-blue-200" />
+        <h2 className="text-xl font-semibold text-slate-800">
+          Esperando que el organizador active los partidos
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          La siguiente ronda ya esta lista. Apenas se active, aparecera aqui automaticamente.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-3xl border border-blue-100 bg-white/90 p-12 text-center shadow-xl shadow-blue-950/10">
+      <Clock className="mx-auto mb-4 h-16 w-16 text-blue-200" />
+      <h2 className="text-xl font-semibold text-slate-800">No hay partidos activos</h2>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        Todavia no hay una ronda disponible para arbitrar.
+      </p>
+    </div>
+  )
+}
+
+function TarjetaPartidoSimple({ alIniciar, indice, partido, total }) {
   return (
     <article className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-lg shadow-blue-950/10 transition-all hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-          {partido.subcategoria?.nombre || 'Subcategoria'} · {partido.etiqueta_ronda}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            {partido.etiqueta_ronda}
+          </p>
+          <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+            Partido {indice} de {total}
+          </p>
+        </div>
         {partido.cancha ? (
           <p className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
             <MapPin className="h-3 w-3" />
             {partido.cancha}
           </p>
         ) : null}
+      </div>
+
+      <div className="mt-3">
+        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          {partido.subcategoria?.nombre || 'Subcategoria'}
+        </p>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-4">
@@ -51,7 +85,7 @@ function TarjetaPartidoSimple({ alIniciar, partido }) {
             {obtenerNombreRobot(partido.equipo_a)}
           </p>
         </div>
-        <span className="text-xl font-black text-slate-300">VS</span>
+        <span className="text-base font-black text-slate-300">VS</span>
         <div className="min-w-0 flex-1 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-sky-100 p-4 text-center">
           <p className="break-words text-lg font-bold text-cyan-800">
             {obtenerNombreEquipo(partido.equipo_b, 'Equipo B')}
@@ -78,10 +112,13 @@ export function PaginaJuez() {
   const navigate = useNavigate()
   const {
     cargando,
+    cuentaRegresiva,
     error,
+    estadoVista,
     mensaje,
     partidos,
     realtimeActivo,
+    rondaActual,
   } = useJuez()
 
   function iniciarPartido(partidoId) {
@@ -96,11 +133,20 @@ export function PaginaJuez() {
             <p className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-xs font-bold tracking-widest text-blue-700">
               MODULO DE JUECES
             </p>
+            {rondaActual ? (
+              <p className="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold tracking-widest text-cyan-800">
+                {rondaActual.etiqueta_ronda.toUpperCase()}
+              </p>
+            ) : null}
             <IndicadorEnVivo activo={realtimeActivo} />
           </div>
-          <h1 className="text-3xl font-black text-slate-900">Partidos activos</h1>
+          <h1 className="text-3xl font-black text-slate-900">
+            {estadoVista === 'ronda_activa'
+              ? 'Partidos de la ronda activa'
+              : 'Panel de arbitraje'}
+          </h1>
           <p className="max-w-2xl text-sm leading-6 text-slate-600">
-            Registra marcadores de forma rapida durante cada encuentro.
+            Registra marcadores de forma rapida y deja que el avance de rondas se actualice solo.
           </p>
         </header>
 
@@ -119,18 +165,22 @@ export function PaginaJuez() {
         <div className="space-y-4">
           {cargando ? (
             <p className="rounded-3xl border border-blue-100 bg-white/90 p-6 text-center text-lg font-semibold text-slate-700 shadow-lg shadow-blue-950/10">
-              Cargando partidos activos...
+              Cargando estado de la ronda...
             </p>
           ) : null}
 
-          {!cargando && partidos.length === 0 ? <EstadoVacio /> : null}
+          {!cargando && partidos.length === 0 ? (
+            <EstadoPanel cuentaRegresiva={cuentaRegresiva} estadoVista={estadoVista} />
+          ) : null}
 
           {!cargando && partidos.length > 0
-            ? partidos.map((partido) => (
+            ? partidos.map((partido, indice) => (
                 <TarjetaPartidoSimple
                   alIniciar={iniciarPartido}
+                  indice={indice + 1}
                   key={partido.id}
                   partido={partido}
+                  total={partidos.length}
                 />
               ))
             : null}

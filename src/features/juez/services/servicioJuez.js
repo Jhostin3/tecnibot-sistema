@@ -23,6 +23,35 @@ const etiquetasRonda = {
   tercer_lugar: 'Tercer lugar',
 }
 
+const ordenRondas = {
+  treintaidosavos: 1,
+  dieciseisavos: 2,
+  octavos: 3,
+  cuartos: 4,
+  semifinal: 5,
+  tercer_lugar: 6,
+  final: 6,
+}
+
+function compararPorRondaYOrden(a, b) {
+  const ordenRondaA = ordenRondas[a.ronda] || 999
+  const ordenRondaB = ordenRondas[b.ronda] || 999
+
+  if (ordenRondaA !== ordenRondaB) {
+    return ordenRondaA - ordenRondaB
+  }
+
+  if (a.subcategoria_id !== b.subcategoria_id) {
+    return `${a.subcategoria_id}`.localeCompare(`${b.subcategoria_id}`)
+  }
+
+  return (a.orden || 0) - (b.orden || 0)
+}
+
+function obtenerClaveRonda(partido) {
+  return `${partido.subcategoria_id}-${partido.ronda}`
+}
+
 function normalizarGoles(valor) {
   const numero = Number(valor)
 
@@ -128,11 +157,55 @@ export async function listarPartidosActivos() {
       listarSubcategoriasPorIds(idsSubcategorias),
     ])
 
-    return enfrentamientos.map((partido) =>
+    return enfrentamientos
+      .sort(compararPorRondaYOrden)
+      .map((partido) =>
       adjuntarDatosPartido(partido, equiposPorId, subcategoriasPorId),
-    )
+      )
   } catch (error) {
     throw new Error(error.message || 'No se pudieron cargar los partidos activos.')
+  }
+}
+
+export async function listarPanelJuez() {
+  try {
+    const { data, error } = await supabase
+      .from('enfrentamientos')
+      .select(seleccionEnfrentamientos)
+      .in('estado', ['activo', 'pendiente'])
+      .eq('bye', false)
+      .limit(500)
+
+    if (error) {
+      throw new Error('No se pudo cargar el estado actual de la competencia.')
+    }
+
+    const enfrentamientos = (data || []).sort(compararPorRondaYOrden)
+    const idsEquipos = enfrentamientos.flatMap((partido) => [
+      partido.equipo_a_id,
+      partido.equipo_b_id,
+    ])
+    const idsSubcategorias = enfrentamientos.map((partido) => partido.subcategoria_id)
+    const [equiposPorId, subcategoriasPorId] = await Promise.all([
+      listarEquiposPorIds(idsEquipos),
+      listarSubcategoriasPorIds(idsSubcategorias),
+    ])
+    const partidos = enfrentamientos.map((partido) =>
+      adjuntarDatosPartido(partido, equiposPorId, subcategoriasPorId),
+    )
+    const partidosActivos = partidos.filter((partido) => partido.estado === 'activo')
+    const partidosPendientes = partidos.filter((partido) => partido.estado === 'pendiente')
+    const claveActiva = partidosActivos[0] ? obtenerClaveRonda(partidosActivos[0]) : null
+    const clavePendiente = partidosPendientes[0] ? obtenerClaveRonda(partidosPendientes[0]) : null
+
+    return {
+      claveActiva,
+      clavePendiente,
+      partidosActivos,
+      partidosPendientes,
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo cargar el estado actual de la competencia.')
   }
 }
 

@@ -1,42 +1,93 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { supabase } from '../../../lib/supabaseCliente'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import {
-  listarPartidosActivos,
+  listarPanelJuez,
   registrarResultadoPartido,
 } from '../services/servicioJuez'
 
 // Nota para desarrollo:
 // Habilita Realtime manualmente en Supabase Dashboard -> Table Editor -> enfrentamientos -> Enable Realtime.
 
+const CUENTA_REGRESIVA_INICIAL = 5
+
+function construirEstadoInicial() {
+  return {
+    cargando: true,
+    claveRondaActiva: null,
+    claveRondaPendiente: null,
+    error: null,
+    estadoVista: 'sin_partidos',
+    mensaje: '',
+    partidos: [],
+    partidosPendientes: [],
+  }
+}
+
+function obtenerRondaReferencia(partidos = []) {
+  return partidos[0] || null
+}
+
 export function useJuez() {
   const { perfil } = useAutenticacion()
-  const [partidos, setPartidos] = useState([])
+  const [estadoPanel, setEstadoPanel] = useState(construirEstadoInicial)
   const [partidoFinalizado, setPartidoFinalizado] = useState(null)
   const [realtimeActivo, setRealtimeActivo] = useState(false)
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState(null)
   const [guardando, setGuardando] = useState(false)
+  const [cuentaRegresiva, setCuentaRegresiva] = useState(0)
   const [mensaje, setMensaje] = useState('')
+  const ultimaRondaActivaRef = useRef(null)
+  const preparandoSiguienteRondaRef = useRef(false)
 
   const cargarPartidos = useCallback(async ({ mostrarCarga = true } = {}) => {
     if (mostrarCarga) {
-      setCargando(true)
+      setEstadoPanel((actual) => ({
+        ...actual,
+        cargando: true,
+      }))
     }
 
-    setError(null)
+    setEstadoPanel((actual) => ({
+      ...actual,
+      error: null,
+    }))
 
     try {
-      const partidosActivos = await listarPartidosActivos()
-      setPartidos(partidosActivos)
-    } catch (error) {
-      setError(error.message)
-      setMensaje(error.message)
-    } finally {
-      if (mostrarCarga) {
-        setCargando(false)
+      const panel = await listarPanelJuez()
+      const hayActivos = panel.partidosActivos.length > 0
+      const hayPendientes = panel.partidosPendientes.length > 0
+      let estadoVista = 'sin_partidos'
+
+      if (hayActivos) {
+        estadoVista = 'ronda_activa'
+        ultimaRondaActivaRef.current = panel.claveActiva
+        preparandoSiguienteRondaRef.current = false
+        setCuentaRegresiva(0)
+      } else if (hayPendientes) {
+        estadoVista = preparandoSiguienteRondaRef.current
+          ? 'preparando_siguiente_ronda'
+          : 'esperando_organizador'
       }
+
+      setEstadoPanel({
+        cargando: false,
+        claveRondaActiva: panel.claveActiva,
+        claveRondaPendiente: panel.clavePendiente,
+        error: null,
+        estadoVista,
+        mensaje: '',
+        partidos: panel.partidosActivos,
+        partidosPendientes: panel.partidosPendientes,
+      })
+    } catch (error) {
+      setEstadoPanel((actual) => ({
+        ...actual,
+        cargando: false,
+        error: error.message,
+        mensaje: error.message,
+      }))
+      setMensaje(error.message)
     }
   }, [])
 
@@ -44,38 +95,19 @@ export function useJuez() {
     let componenteActivo = true
 
     async function cargarPartidosIniciales() {
-      setCargando(true)
-      setError(null)
-
-      try {
-        const partidosActivos = await listarPartidosActivos()
-
-        if (componenteActivo) {
-          setPartidos(partidosActivos)
-        }
-      } catch (error) {
-        if (componenteActivo) {
-          setError(error.message)
-          setMensaje(error.message)
-        }
-      } finally {
-        if (componenteActivo) {
-          setCargando(false)
-        }
-      }
+      await cargarPartidos()
     }
 
     cargarPartidosIniciales()
 
     const canal = supabase
-      .channel('tecnibot-enfrentamientos-juez')
+      .channel('tecnibot-enfrentamientos-juez-panel')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'enfrentamientos' },
-        () => {
-          if (componenteActivo) {
-            cargarPartidos({ mostrarCarga: false })
-          }
+        async () => {
+          if (!componenteActivo) return
+          await cargarPartidos({ mostrarCarga: false })
         },
       )
       .subscribe((estadoCanal) => {
@@ -91,6 +123,50 @@ export function useJuez() {
     }
   }, [cargarPartidos])
 
+  useEffect(() => {
+    const hayTransicionDeRonda =
+      Boolean(ultimaRondaActivaRef.current) &&
+      estadoPanel.partidos.length === 0 &&
+      estadoPanel.partidosPendientes.length > 0
+
+    if (hayTransicionDeRonda) {
+      preparandoSiguienteRondaRef.current = true
+      ultimaRondaActivaRef.current = null
+      setCuentaRegresiva(CUENTA_REGRESIVA_INICIAL)
+      setEstadoPanel((actual) => ({
+        ...actual,
+        estadoVista: 'preparando_siguiente_ronda',
+      }))
+      return
+    }
+
+    if (estadoPanel.partidos.length > 0) {
+      preparandoSiguienteRondaRef.current = false
+      setCuentaRegresiva(0)
+    }
+  }, [estadoPanel.partidos.length, estadoPanel.partidosPendientes.length])
+
+  useEffect(() => {
+    if (estadoPanel.estadoVista !== 'preparando_siguiente_ronda' || !cuentaRegresiva) {
+      return undefined
+    }
+
+    const temporizador = window.setTimeout(async () => {
+      if (cuentaRegresiva === 1) {
+        preparandoSiguienteRondaRef.current = false
+        setCuentaRegresiva(0)
+        await cargarPartidos({ mostrarCarga: false })
+        return
+      }
+
+      setCuentaRegresiva((actual) => actual - 1)
+    }, 1000)
+
+    return () => {
+      window.clearTimeout(temporizador)
+    }
+  }, [cargarPartidos, cuentaRegresiva, estadoPanel.estadoVista])
+
   async function guardarResultado({ enfrentamiento, golesA, golesB, observacion }) {
     if (!perfil?.id) {
       setMensaje('No se pudo identificar al juez actual.')
@@ -98,7 +174,10 @@ export function useJuez() {
     }
 
     setGuardando(true)
-    setError(null)
+    setEstadoPanel((actual) => ({
+      ...actual,
+      error: null,
+    }))
     setMensaje('')
 
     try {
@@ -121,7 +200,11 @@ export function useJuez() {
 
       return resultado
     } catch (error) {
-      setError(error.message)
+      setEstadoPanel((actual) => ({
+        ...actual,
+        error: error.message,
+        mensaje: error.message,
+      }))
       setMensaje(error.message)
       throw error
     } finally {
@@ -129,16 +212,24 @@ export function useJuez() {
     }
   }
 
+  const rondaActual = obtenerRondaReferencia(
+    estadoPanel.partidos.length ? estadoPanel.partidos : estadoPanel.partidosPendientes,
+  )
+
   return {
-    cargando,
-    error,
+    cargando: estadoPanel.cargando,
+    cuentaRegresiva,
+    error: estadoPanel.error,
+    estadoVista: estadoPanel.estadoVista,
     guardarResultado,
     guardando,
     mensaje,
     partidoFinalizado,
-    partidos,
-    recargar: cargarPartidos,
+    partidos: estadoPanel.partidos,
+    partidosPendientes: estadoPanel.partidosPendientes,
     realtimeActivo,
+    recargar: cargarPartidos,
+    rondaActual,
     setMensaje,
     setPartidoFinalizado,
   }
