@@ -417,10 +417,6 @@ function calcularSiguientePotenciaDeDos(cantidad) {
   return potencia
 }
 
-function obtenerRondaInicial(tamanoBracket) {
-  return obtenerNombreRonda(tamanoBracket)
-}
-
 function crearSlotsBracket(asignaciones, tamanoBracket) {
   const slotsEquipos = [...asignaciones]
     .sort((a, b) => Number(a.numero_bola) - Number(b.numero_bola))
@@ -442,33 +438,31 @@ function crearSlotsBracket(asignaciones, tamanoBracket) {
 function crearParticipanteDesdeAsignacion(asignacion) {
   return {
     equipo_id: asignacion.equipo_id,
-    origen: 'equipo',
   }
 }
 
 function crearParticipanteDesdeGanador(ordenPartido) {
   return {
     equipo_id: null,
-    origen: 'ganador',
     orden_partido_origen: ordenPartido,
   }
 }
 
-function crearEnfrentamientosDesdeParticipantes(subcategoriaId, ronda, participantes) {
+function crearEnfrentamientosDesdeParticipantes(subcategoriaId, participantes) {
+  const ronda = obtenerNombreRonda(participantes.length)
+
   return Array.from({ length: participantes.length / 2 }).map((_, indice) => {
     const participanteA = participantes[indice * 2]
     const participanteB = participantes[indice * 2 + 1]
     const equipoA = participanteA?.equipo_id || null
     const equipoB = participanteB?.equipo_id || null
-    const tieneBye = Boolean(equipoA) !== Boolean(equipoB)
-    const ganadorId = tieneBye ? equipoA || equipoB : null
 
     return {
-      bye: tieneBye,
+      bye: false,
       equipo_a_id: equipoA,
       equipo_b_id: equipoB,
-      estado: tieneBye ? 'finalizado' : 'pendiente',
-      ganador_id: ganadorId,
+      estado: 'pendiente',
+      ganador_id: null,
       orden: indice + 1,
       ronda,
       subcategoria_id: subcategoriaId,
@@ -476,44 +470,68 @@ function crearEnfrentamientosDesdeParticipantes(subcategoriaId, ronda, participa
   })
 }
 
-function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
-  const tamanoBracket = calcularSiguientePotenciaDeDos(asignaciones.length)
-  const cantidadByes = tamanoBracket - asignaciones.length
-  const rondaInicial = obtenerRondaInicial(tamanoBracket)
-  const slots = crearSlotsBracket(asignaciones, tamanoBracket).filter((slot) => slot.tipo === 'equipo')
+function crearBracketDesdeParticipantes(subcategoriaId, participantesIniciales) {
+  const enfrentamientos = []
+  let participantesActuales = participantesIniciales
 
-  if (!cantidadByes) {
-    return crearEnfrentamientosDesdeParticipantes(
+  while (participantesActuales.length > 1) {
+    const rondaActual = crearEnfrentamientosDesdeParticipantes(
       subcategoriaId,
-      rondaInicial,
-      slots.map((slot) => ({
-        equipo_id: slot.equipo_id,
-      })),
+      participantesActuales,
+    )
+
+    enfrentamientos.push(...rondaActual)
+    participantesActuales = rondaActual.map((partido) =>
+      crearParticipanteDesdeGanador(partido.orden),
     )
   }
 
-  const cantidadEquiposConBye = cantidadByes
-  const equiposConBye = slots.slice(0, cantidadEquiposConBye)
-  const equiposPrimeraRonda = slots.slice(cantidadEquiposConBye)
-  const siguienteRonda = obtenerNombreRonda(tamanoBracket / 2)
+  return enfrentamientos
+}
+
+function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
+  const tamanoBracket = calcularSiguientePotenciaDeDos(asignaciones.length)
+  const cantidadByes = tamanoBracket - asignaciones.length
+  const slots = crearSlotsBracket(asignaciones, tamanoBracket).filter((slot) => slot.tipo === 'equipo')
+
+  if (!cantidadByes) {
+    return crearBracketDesdeParticipantes(
+      subcategoriaId,
+      slots.map(crearParticipanteDesdeAsignacion),
+    )
+  }
+
+  const equiposConBye = slots.slice(0, cantidadByes)
+  const equiposPrimeraRonda = slots.slice(cantidadByes)
   const enfrentamientosPrimeraRonda = crearEnfrentamientosDesdeParticipantes(
     subcategoriaId,
-    rondaInicial,
-    equiposPrimeraRonda.map((slot) => ({
-      equipo_id: slot.equipo_id,
-    })),
+    equiposPrimeraRonda.map(crearParticipanteDesdeAsignacion),
   )
-  const participantesSiguienteRonda = [
-    ...equiposConBye.map(crearParticipanteDesdeAsignacion),
-    ...enfrentamientosPrimeraRonda.map((partido) => crearParticipanteDesdeGanador(partido.orden)),
-  ]
-  const enfrentamientosSiguienteRonda = crearEnfrentamientosDesdeParticipantes(
+  const participantesSiguienteRonda = []
+  const ganadoresPrimeraRonda = enfrentamientosPrimeraRonda.map((partido) =>
+    crearParticipanteDesdeGanador(partido.orden),
+  )
+  const crucesConGanador = Math.min(cantidadByes, ganadoresPrimeraRonda.length)
+
+  for (let indice = 0; indice < crucesConGanador; indice += 1) {
+    participantesSiguienteRonda.push(crearParticipanteDesdeAsignacion(equiposConBye[indice]))
+    participantesSiguienteRonda.push(ganadoresPrimeraRonda[indice])
+  }
+
+  for (let indice = crucesConGanador; indice < equiposConBye.length; indice += 1) {
+    participantesSiguienteRonda.push(crearParticipanteDesdeAsignacion(equiposConBye[indice]))
+  }
+
+  for (let indice = crucesConGanador; indice < ganadoresPrimeraRonda.length; indice += 1) {
+    participantesSiguienteRonda.push(ganadoresPrimeraRonda[indice])
+  }
+
+  const enfrentamientosPosteriores = crearBracketDesdeParticipantes(
     subcategoriaId,
-    siguienteRonda,
     participantesSiguienteRonda,
   )
 
-  return [...enfrentamientosPrimeraRonda, ...enfrentamientosSiguienteRonda]
+  return [...enfrentamientosPrimeraRonda, ...enfrentamientosPosteriores]
 }
 
 export async function guardarSorteoYGenerarCuartos({
