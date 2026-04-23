@@ -525,6 +525,35 @@ function construirMensajeErrorSupabase(error, mensajeBase) {
   return detalle ? `${mensajeBase} ${detalle}` : mensajeBase
 }
 
+function validarEnfrentamientosAntesDeInsertar(enfrentamientos = []) {
+  if (!Array.isArray(enfrentamientos) || !enfrentamientos.length) {
+    throw new Error('No se pudieron generar enfrentamientos válidos para guardar.')
+  }
+
+  enfrentamientos.forEach((enfrentamiento, indice) => {
+    const camposRequeridos = [
+      'subcategoria_id',
+      'ronda',
+      'estado',
+      'orden',
+      'bye',
+    ]
+
+    camposRequeridos.forEach((campo) => {
+      if (enfrentamiento[campo] === undefined) {
+        throw new Error(
+          `El enfrentamiento ${indice + 1} no tiene un valor válido para ${campo}.`,
+        )
+      }
+    })
+
+    if (!enfrentamiento.equipo_a_id && !enfrentamiento.equipo_b_id) {
+      throw new Error(
+        `El enfrentamiento ${indice + 1} no tiene equipos válidos para insertarse.`,
+      )
+    }
+  })
+}
 
 export async function guardarSorteoYGenerarCuartos({
   asignaciones,
@@ -560,6 +589,8 @@ export async function guardarSorteoYGenerarCuartos({
     const enfrentamientos = asignaciones.length === 1
       ? [crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignaciones[0])]
       : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
+
+    validarEnfrentamientosAntesDeInsertar(enfrentamientos)
 
     const { data: enfrentamientosInsertados, error: errorEnfrentamientos } = await supabase
       .from('enfrentamientos')
