@@ -376,7 +376,7 @@ function validarAsignaciones(asignaciones) {
   }
 
   if (asignaciones.length > MAX_EQUIPOS_POR_SUBCATEGORIA) {
-    throw new Error('El sistema soporta hasta 64 equipos por subcategoría')
+    throw new Error('El sistema soporta hasta 64 equipos por subcategorÃ­a')
   }
 
   if (asignaciones.length !== 1 && asignaciones.length < MIN_EQUIPOS_PARA_SORTEO) {
@@ -470,25 +470,6 @@ function crearEnfrentamientosDesdeParticipantes(subcategoriaId, participantes) {
   })
 }
 
-function crearBracketDesdeParticipantes(subcategoriaId, participantesIniciales) {
-  const enfrentamientos = []
-  let participantesActuales = participantesIniciales
-
-  while (participantesActuales.length > 1) {
-    const rondaActual = crearEnfrentamientosDesdeParticipantes(
-      subcategoriaId,
-      participantesActuales,
-    )
-
-    enfrentamientos.push(...rondaActual)
-    participantesActuales = rondaActual.map((partido) =>
-      crearParticipanteDesdeGanador(partido.orden),
-    )
-  }
-
-  return enfrentamientos
-}
-
 function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
   const tamanoBracket = calcularSiguientePotenciaDeDos(asignaciones.length)
   const cantidadByes = tamanoBracket - asignaciones.length
@@ -534,6 +515,16 @@ function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
   return [...enfrentamientosPrimeraRonda, ...enfrentamientosSiguienteRonda]
 }
 
+function construirMensajeErrorSupabase(error, mensajeBase) {
+  const detalle = [
+    error?.message,
+    error?.details,
+    error?.hint,
+  ].filter(Boolean).join(' | ')
+
+  return detalle ? `${mensajeBase} ${detalle}` : mensajeBase
+}
+
 export async function guardarSorteoYGenerarCuartos({
   asignaciones,
   registradoPor,
@@ -559,23 +550,55 @@ export async function guardarSorteoYGenerarCuartos({
     const { error: errorSorteo } = await supabase.from('sorteo').insert(filasSorteo)
 
     if (errorSorteo) {
+      console.error('Fallo al insertar sorteo', {
+        asignaciones,
+        error: errorSorteo,
+        filasSorteo,
+        subcategoriaId,
+      })
       throw (
         manejarErrorUnicidadSorteo(errorSorteo) ||
-        new Error('No se pudo guardar el sorteo.')
+        new Error(construirMensajeErrorSupabase(errorSorteo, 'No se pudo guardar el sorteo.'))
       )
     }
 
     const enfrentamientos = asignaciones.length === 1
       ? [crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignaciones[0])]
       : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
+
+    if (!enfrentamientos.length) {
+      console.error('No se generaron enfrentamientos para el sorteo', {
+        asignaciones,
+        subcategoriaId,
+      })
+      throw new Error('No se pudieron generar los enfrentamientos iniciales del sorteo.')
+    }
+
     const { error: errorEnfrentamientos } = await supabase
       .from('enfrentamientos')
       .insert(enfrentamientos)
 
     if (errorEnfrentamientos) {
-      throw new Error('El sorteo se guardo, pero no se pudieron generar los enfrentamientos.')
+      console.error('Fallo al insertar enfrentamientos', {
+        asignaciones,
+        enfrentamientos,
+        error: errorEnfrentamientos,
+        subcategoriaId,
+      })
+      throw new Error(
+        construirMensajeErrorSupabase(
+          errorEnfrentamientos,
+          'El sorteo se guardo, pero no se pudieron generar los enfrentamientos.',
+        ),
+      )
     }
   } catch (error) {
+    console.error('Error en guardarSorteoYGenerarCuartos', {
+      asignaciones,
+      error,
+      registradoPor,
+      subcategoriaId,
+    })
     throw new Error(error.message || 'No se pudo guardar el sorteo.')
   }
 }
