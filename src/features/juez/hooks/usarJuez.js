@@ -7,10 +7,14 @@ import {
   registrarResultadoPartido,
 } from '../services/servicioJuez'
 
+// Nota para desarrollo:
+// Habilita Realtime manualmente en Supabase Dashboard -> Table Editor -> enfrentamientos -> Enable Realtime.
+
 export function useJuez() {
   const { perfil } = useAutenticacion()
   const [partidos, setPartidos] = useState([])
   const [partidoFinalizado, setPartidoFinalizado] = useState(null)
+  const [realtimeActivo, setRealtimeActivo] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
   const [guardando, setGuardando] = useState(false)
@@ -64,7 +68,7 @@ export function useJuez() {
     cargarPartidosIniciales()
 
     const canal = supabase
-      .channel('partidos-activos-juez')
+      .channel('tecnibot-enfrentamientos-juez')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'enfrentamientos' },
@@ -74,10 +78,15 @@ export function useJuez() {
           }
         },
       )
-      .subscribe()
+      .subscribe((estadoCanal) => {
+        if (!componenteActivo) return
+
+        setRealtimeActivo(estadoCanal === 'SUBSCRIBED')
+      })
 
     return () => {
       componenteActivo = false
+      setRealtimeActivo(false)
       supabase.removeChannel(canal)
     }
   }, [cargarPartidos])
@@ -129,6 +138,7 @@ export function useJuez() {
     partidoFinalizado,
     partidos,
     recargar: cargarPartidos,
+    realtimeActivo,
     setMensaje,
     setPartidoFinalizado,
   }
