@@ -334,7 +334,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
                 onClick={() => setSheetAbierto(true)}
                 type="button"
               >
-                Abrir marcador
+                Registrar resultado
               </button>
             </div>
 
@@ -499,8 +499,10 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
             onClick={() => setSheetAbierto(false)}
             type="button"
           />
-          <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-[2rem] border-t border-slate-700 bg-slate-900 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-4 shadow-[0_-20px_60px_rgba(2,6,23,0.8)]">
-            <div className="mx-auto mb-4 h-1.5 w-16 rounded-full bg-slate-700" />
+          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[82vh] overflow-y-auto overscroll-contain rounded-t-[2rem] border-t border-slate-700 bg-slate-900 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-4 shadow-[0_-20px_60px_rgba(2,6,23,0.8)]">
+            <div className="sticky top-0 z-10 -mx-4 mb-4 bg-slate-900 px-4 pb-3">
+              <div className="mx-auto mb-4 h-1.5 w-16 rounded-full bg-slate-700" />
+            </div>
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <p className="text-base font-black uppercase tracking-[0.18em] text-cyan-200">
