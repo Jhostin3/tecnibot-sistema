@@ -213,7 +213,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   }
 
   function iniciarReparacion(equipo, nombreEquipo) {
-    if (!esTiempoJuego || reparacionesUsadas[equipo]) return
+    if (!puedeSolicitarReparacion || reparacionesUsadas[equipo]) return
 
     setTimer((actual) => ({
       ...actual,
@@ -247,6 +247,9 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   const esTiempoJuego = [estadosTimer.primerTiempo, estadosTimer.segundoTiempo].includes(
     timer.estado,
   )
+  const puedeSolicitarReparacion =
+    timer.estado !== estadosTimer.finalizado &&
+    !reparacion.activa
   const tituloTimer = {
     [estadosTimer.descanso]: 'Medio tiempo',
     [estadosTimer.descansoFinalizado]: 'Medio tiempo finalizado',
@@ -260,186 +263,198 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   const nombreEquipoB = obtenerNombreEquipo(partido.equipo_b, 'Equipo B')
 
   return (
-    <article className="rounded-2xl border border-gray-700 bg-gray-800 p-6 shadow-lg">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="rounded-full bg-gray-700 px-3 py-1 text-xs font-semibold text-gray-300">
-          {partido.subcategoria?.nombre || 'Subcategoria'} - {partido.etiqueta_ronda}
-        </p>
-        {partido.cancha ? (
-          <p className="inline-flex items-center gap-1 text-sm font-semibold text-cyan-400">
-            <MapPin className="h-4 w-4" />
-            {partido.cancha}
-          </p>
-        ) : null}
-      </div>
-
-      <h2 className="mt-4 text-2xl font-bold text-white">Partido #{partido.orden}</h2>
-
-      <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-start gap-3">
-        <div className="min-w-0 rounded-2xl border border-blue-800 bg-blue-950 p-4 text-center">
-          <p className="break-words text-lg font-bold text-blue-400">
-            {nombreEquipoA}
-          </p>
-          <p className="mt-2 break-words text-sm text-gray-400">
-            {obtenerNombreRobot(partido.equipo_a)}
-          </p>
-        </div>
-
-        <span className="pt-5 text-xl font-black text-gray-600">VS</span>
-
-        <div className="min-w-0 rounded-2xl border border-red-800 bg-red-950 p-4 text-center">
-          <p className="break-words text-lg font-bold text-red-400">
-            {nombreEquipoB}
-          </p>
-          <p className="mt-2 break-words text-sm text-gray-400">
-            {obtenerNombreRobot(partido.equipo_b)}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-2xl border border-gray-700 bg-gray-800 p-6 text-center">
-        <p
-          className={`text-lg font-black uppercase tracking-normal ${
-            timer.estado === estadosTimer.descanso ? 'text-amber-400' : 'text-white'
-          }`}
-        >
-          {tituloTimer}
-        </p>
-
-        {timer.estado === estadosTimer.listo ? (
-          <button
-            className="mt-5 h-12 w-full rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
-            onClick={iniciarPrimerTiempo}
-            type="button"
-          >
-            Iniciar primer tiempo
-          </button>
-        ) : null}
-
-        {timerActivo ? (
-          <>
-            <p
-              className={`mt-4 font-mono font-bold ${
-                timer.estado === estadosTimer.descanso
-                  ? 'text-amber-400 text-4xl'
-                  : 'text-6xl text-cyan-400'
-              }`}
-            >
-              {formatearTiempo(timer.segundos)}
+    <article className="overflow-hidden rounded-[28px] border border-blue-100 bg-white/92 p-4 shadow-2xl shadow-blue-950/10 backdrop-blur sm:p-6">
+      <div className="sticky -top-1 z-10 -mx-4 border-b border-blue-100 bg-white/95 px-4 pb-4 pt-1 backdrop-blur sm:static sm:m-0 sm:border-0 sm:bg-transparent sm:p-0">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-3">
+            <p className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+              {partido.subcategoria?.nombre || 'Subcategoria'} - {partido.etiqueta_ronda}
             </p>
-            {timer.estado === estadosTimer.descanso ? (
-              <p className="mt-3 text-base font-semibold text-amber-400">
-                Cambio de cancha
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-600">
+                Partido en curso
               </p>
-            ) : null}
-          </>
-        ) : null}
-
-        {timer.estado === estadosTimer.primerTiempoFinalizado ? (
-          <div className="mt-5 space-y-4">
-            <p className="text-base font-semibold text-amber-400">
-              Primer tiempo terminado - cambio de cancha
-            </p>
-            <button
-              className="h-12 w-full rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
-              onClick={iniciarMedioTiempo}
-              type="button"
-            >
-              Iniciar medio tiempo (30s)
-            </button>
+              <h2 className="mt-1 text-2xl font-black text-slate-900 sm:mt-2 sm:text-3xl">
+                Partido #{partido.orden}
+              </h2>
+            </div>
           </div>
-        ) : null}
+          {partido.cancha ? (
+            <p className="inline-flex items-center gap-1 self-start rounded-full bg-cyan-50 px-3 py-1 text-sm font-semibold text-cyan-700">
+              <MapPin className="h-4 w-4" />
+              {partido.cancha}
+            </p>
+          ) : null}
+        </div>
 
-        {timer.estado === estadosTimer.descansoFinalizado ? (
-          <button
-            className="mt-5 h-12 w-full rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
-            onClick={iniciarSegundoTiempo}
-            type="button"
+        <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:mt-5 sm:gap-3">
+          <div className="min-w-0 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-3 text-center shadow-inner shadow-blue-100 sm:rounded-3xl sm:p-5">
+            <p className="break-words text-base font-bold text-blue-700 sm:text-xl">
+              {nombreEquipoA}
+            </p>
+            <p className="mt-1 hidden break-words text-sm text-blue-500 sm:block">
+              {obtenerNombreRobot(partido.equipo_a)}
+            </p>
+          </div>
+
+          <span className="px-1 py-1 text-center text-xs font-black tracking-[0.12em] text-slate-300 sm:pt-3 sm:text-base">
+            VS
+          </span>
+
+          <div className="min-w-0 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-sky-100 p-3 text-center shadow-inner shadow-cyan-100 sm:rounded-3xl sm:p-5">
+            <p className="break-words text-base font-bold text-cyan-800 sm:text-xl">
+              {nombreEquipoB}
+            </p>
+            <p className="mt-1 hidden break-words text-sm text-cyan-600 sm:block">
+              {obtenerNombreRobot(partido.equipo_b)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 sm:mt-5">
+          <FormularioResultado
+            alGuardar={alGuardarResultado}
+            guardando={guardando}
+            mostrarEncabezado={false}
+            partido={partido}
+          />
+        </div>
+
+        <div className="mt-3 rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-700 to-cyan-600 p-4 text-center text-white shadow-lg shadow-blue-950/15 sm:mt-5 sm:p-6">
+          <p
+            className={`text-sm font-black uppercase tracking-[0.18em] sm:text-lg ${
+              timer.estado === estadosTimer.descanso ? 'text-amber-100' : 'text-white'
+            }`}
           >
-            Iniciar segundo tiempo
-          </button>
-        ) : null}
-
-        {timer.estado === estadosTimer.finalizado ? (
-          <p className="mt-5 text-base font-semibold text-emerald-400">
-            Tiempo finalizado
+            {tituloTimer}
           </p>
-        ) : null}
 
-        {esTiempoJuego ? (
-          <div className="mt-5 grid grid-cols-2 gap-3">
+          {timer.estado === estadosTimer.listo ? (
             <button
-              className="h-12 rounded-xl bg-gray-700 px-5 py-3 font-bold text-white transition hover:bg-gray-600"
-              onClick={alternarPausa}
+              className="mt-5 min-h-14 w-full rounded-2xl bg-white/95 px-5 py-3 text-base font-bold text-blue-800 transition hover:bg-white"
+              onClick={iniciarPrimerTiempo}
               type="button"
             >
-              {timer.pausado ? 'Reanudar' : 'Pausar'}
+              Iniciar primer tiempo
+            </button>
+          ) : null}
+
+          {timerActivo ? (
+            <>
+              <p
+                className={`mt-2 font-mono font-bold ${
+                  timer.estado === estadosTimer.descanso
+                    ? 'text-amber-100 text-3xl sm:text-5xl'
+                    : 'text-white text-4xl sm:text-7xl'
+                }`}
+              >
+                {formatearTiempo(timer.segundos)}
+              </p>
+              {timer.estado === estadosTimer.descanso ? (
+                <p className="mt-3 text-sm font-semibold text-amber-100 sm:text-base">
+                  Cambio de cancha
+                </p>
+              ) : null}
+            </>
+          ) : null}
+
+          {timer.estado === estadosTimer.primerTiempoFinalizado ? (
+            <div className="mt-5 space-y-4">
+              <p className="text-sm font-semibold text-amber-100 sm:text-base">
+                Primer tiempo terminado - cambio de cancha
+              </p>
+              <button
+                className="min-h-14 w-full rounded-2xl bg-white/95 px-5 py-3 text-base font-bold text-blue-800 transition hover:bg-white"
+                onClick={iniciarMedioTiempo}
+                type="button"
+              >
+                Iniciar medio tiempo (30s)
+              </button>
+            </div>
+          ) : null}
+
+          {timer.estado === estadosTimer.descansoFinalizado ? (
+            <button
+              className="mt-5 min-h-14 w-full rounded-2xl bg-white/95 px-5 py-3 text-base font-bold text-blue-800 transition hover:bg-white"
+              onClick={iniciarSegundoTiempo}
+              type="button"
+            >
+              Iniciar segundo tiempo
+            </button>
+          ) : null}
+
+          {timer.estado === estadosTimer.finalizado ? (
+            <p className="mt-5 text-sm font-semibold text-cyan-100 sm:text-base">
+              Tiempo finalizado
+            </p>
+          ) : null}
+
+          {esTiempoJuego ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <button
+                className="min-h-14 rounded-2xl bg-blue-950/35 px-5 py-3 text-base font-bold text-white transition hover:bg-blue-950/45"
+                onClick={alternarPausa}
+                type="button"
+              >
+                {timer.pausado ? 'Reanudar' : 'Pausar'}
+              </button>
+              <button
+                className="min-h-14 rounded-2xl bg-white/95 px-5 py-3 text-base font-bold text-blue-800 transition hover:bg-white"
+                onClick={
+                  timer.estado === estadosTimer.primerTiempo
+                    ? terminarPrimerTiempo
+                    : finalizarPartido
+                }
+                type="button"
+              >
+                {timer.estado === estadosTimer.primerTiempo
+                  ? 'Terminar primer tiempo'
+                  : 'Terminar segundo tiempo'}
+              </button>
+            </div>
+          ) : null}
+
+          {reparacion.activa ? (
+            <div className="mt-5 rounded-3xl border border-cyan-200 bg-white/20 p-4 backdrop-blur">
+              <p className="text-sm font-black uppercase tracking-[0.22em] text-cyan-50 sm:text-base">
+                Reparacion - {reparacion.nombreEquipo}
+              </p>
+              <p className="mt-3 font-mono text-4xl font-bold text-white sm:text-5xl">
+                {formatearTiempo(reparacion.segundos)}
+              </p>
+              <button
+                className="mt-4 min-h-14 w-full rounded-2xl bg-cyan-50 px-5 py-3 text-base font-bold text-cyan-800 transition hover:bg-white"
+                onClick={terminarReparacion}
+                type="button"
+              >
+                Terminar reparacion
+              </button>
+            </div>
+          ) : null}
+
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2">
+            <button
+              className="min-h-14 rounded-2xl border border-blue-200 bg-white/15 px-4 py-3 text-left text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-blue-950/20 disabled:text-blue-100/40 disabled:line-through sm:px-5 sm:text-base"
+              disabled={!puedeSolicitarReparacion || reparacionesUsadas.equipoA}
+              onClick={() => iniciarReparacion('equipoA', nombreEquipoA)}
+              type="button"
+            >
+              {reparacionesUsadas.equipoA
+                ? `Reparacion usada - ${nombreEquipoA}`
+                : `Reparacion ${nombreEquipoA}`}
             </button>
             <button
-              className="h-12 rounded-xl bg-cyan-500 px-5 py-3 font-bold text-black transition hover:bg-cyan-400"
-              onClick={
-                timer.estado === estadosTimer.primerTiempo
-                  ? terminarPrimerTiempo
-                  : finalizarPartido
-              }
+              className="min-h-14 rounded-2xl border border-cyan-200 bg-white/15 px-4 py-3 text-left text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-blue-950/20 disabled:text-blue-100/40 disabled:line-through sm:px-5 sm:text-right sm:text-base"
+              disabled={!puedeSolicitarReparacion || reparacionesUsadas.equipoB}
+              onClick={() => iniciarReparacion('equipoB', nombreEquipoB)}
               type="button"
             >
-              {timer.estado === estadosTimer.primerTiempo
-                ? 'Terminar primer tiempo'
-                : 'Terminar segundo tiempo'}
+              {reparacionesUsadas.equipoB
+                ? `Reparacion usada - ${nombreEquipoB}`
+                : `Reparacion ${nombreEquipoB}`}
             </button>
           </div>
-        ) : null}
-
-        {reparacion.activa ? (
-          <div className="mt-5 rounded-2xl border border-amber-700 bg-amber-950 p-4">
-            <p className="text-base font-black uppercase tracking-normal text-amber-400">
-              Reparacion - {reparacion.nombreEquipo}
-            </p>
-            <p className="mt-3 font-mono text-4xl font-bold text-amber-400">
-              {formatearTiempo(reparacion.segundos)}
-            </p>
-            <button
-              className="mt-4 h-12 w-full rounded-xl bg-amber-500 px-5 py-3 font-bold text-black transition hover:bg-amber-400"
-              onClick={terminarReparacion}
-              type="button"
-            >
-              Terminar reparacion
-            </button>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <button
-          className="min-h-14 rounded-xl border border-amber-700 bg-amber-950 px-5 py-3 text-left text-base font-bold text-amber-400 transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:line-through"
-          disabled={!esTiempoJuego || reparacion.activa || reparacionesUsadas.equipoA}
-          onClick={() => iniciarReparacion('equipoA', nombreEquipoA)}
-          type="button"
-        >
-          {reparacionesUsadas.equipoA
-            ? `Reparacion usada - ${nombreEquipoA}`
-            : `Reparacion ${nombreEquipoA}`}
-        </button>
-        <button
-          className="min-h-14 rounded-xl border border-amber-700 bg-amber-950 px-5 py-3 text-right text-base font-bold text-amber-400 transition hover:bg-amber-900 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-600 disabled:line-through"
-          disabled={!esTiempoJuego || reparacion.activa || reparacionesUsadas.equipoB}
-          onClick={() => iniciarReparacion('equipoB', nombreEquipoB)}
-          type="button"
-        >
-          {reparacionesUsadas.equipoB
-            ? `Reparacion usada - ${nombreEquipoB}`
-            : `Reparacion ${nombreEquipoB}`}
-        </button>
-      </div>
-
-      <div className="mt-6">
-        <FormularioResultado
-          alGuardar={alGuardarResultado}
-          guardando={guardando}
-          mostrarEncabezado={false}
-          partido={partido}
-        />
+        </div>
       </div>
     </article>
   )

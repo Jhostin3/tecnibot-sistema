@@ -6,11 +6,11 @@ function obtenerNombreEquipo(equipo, respaldo) {
 }
 
 function obtenerClaseMarcador({ golesA, golesB, lado }) {
-  if (golesA === golesB) return 'text-gray-400'
-  if (lado === 'a' && golesA > golesB) return 'text-blue-400'
-  if (lado === 'b' && golesB > golesA) return 'text-red-400'
+  if (golesA === golesB) return 'text-slate-400'
+  if (lado === 'a' && golesA > golesB) return 'text-blue-700'
+  if (lado === 'b' && golesB > golesA) return 'text-cyan-700'
 
-  return 'text-white'
+  return 'text-slate-700'
 }
 
 function ControlGoles({
@@ -22,24 +22,24 @@ function ControlGoles({
 }) {
   const claseIncrementar =
     color === 'azul'
-      ? 'bg-blue-600 hover:bg-blue-500'
-      : 'bg-red-600 hover:bg-red-500'
+      ? 'bg-blue-600 hover:bg-blue-700'
+      : 'bg-cyan-500 hover:bg-cyan-600'
 
   return (
-    <div className="flex items-center justify-center gap-4">
+    <div className="flex items-center justify-center gap-3 sm:gap-4">
       <button
-        className="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-700 text-xl font-bold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-30"
+        className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-xl font-bold text-slate-500 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-40 sm:h-16 sm:w-16"
         disabled={goles === 0}
         onClick={onDecrementar}
         type="button"
       >
         <Minus className="h-6 w-6" />
       </button>
-      <span className={`min-w-20 text-center font-mono text-6xl font-bold ${claseNumero}`}>
+      <span className={`min-w-16 text-center font-mono text-5xl font-bold sm:min-w-20 sm:text-6xl ${claseNumero}`}>
         {goles}
       </span>
       <button
-        className={`flex h-14 w-14 items-center justify-center rounded-xl text-xl font-bold text-white transition ${claseIncrementar}`}
+        className={`flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold text-white transition sm:h-16 sm:w-16 ${claseIncrementar}`}
         onClick={onIncrementar}
         type="button"
       >
@@ -58,7 +58,6 @@ export function FormularioResultado({
 }) {
   const [golesA, setGolesA] = useState(0)
   const [golesB, setGolesB] = useState(0)
-  const [observacion, setObservacion] = useState('')
   const [errorLocal, setErrorLocal] = useState('')
 
   const hayEmpate = useMemo(
@@ -83,7 +82,7 @@ export function FormularioResultado({
         enfrentamiento: partido,
         golesA,
         golesB,
-        observacion,
+        observacion: '',
       })
     } catch (error) {
       setErrorLocal(error.message)
@@ -92,36 +91,36 @@ export function FormularioResultado({
 
   return (
     <form
-      className="rounded-2xl border border-gray-700 bg-gray-800 p-6 shadow-xl"
+      className="rounded-3xl border border-blue-100 bg-white/92 p-4 shadow-xl shadow-blue-950/10 sm:p-6"
       onSubmit={manejarEnvio}
     >
       {mostrarEncabezado ? (
         <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
           <div className="min-w-0 text-center">
-            <p className="break-words text-xl font-bold text-blue-400">
+            <p className="break-words text-xl font-bold text-blue-700">
               {obtenerNombreEquipo(partido.equipo_a, 'Equipo A')}
             </p>
-            <p className="mt-1 text-base text-gray-400">Azul</p>
+            <p className="mt-1 text-base text-blue-500">Azul</p>
           </div>
-          <span className="pt-2 text-lg font-black text-gray-400">VS</span>
+          <span className="pt-2 text-lg font-black text-slate-300">VS</span>
           <div className="min-w-0 text-center">
-            <p className="break-words text-xl font-bold text-red-400">
+            <p className="break-words text-xl font-bold text-cyan-700">
               {obtenerNombreEquipo(partido.equipo_b, 'Equipo B')}
             </p>
-            <p className="mt-1 text-base text-gray-400">Rojo</p>
+            <p className="mt-1 text-base text-cyan-600">Cian</p>
           </div>
         </div>
       ) : (
         <div className="text-center">
-          <p className="text-base font-black uppercase tracking-normal text-gray-400">
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-blue-500 sm:text-base">
             Marcador
           </p>
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-[1fr_auto_1fr] md:items-center">
-        <div className="space-y-4">
-          <p className="text-center text-base font-semibold text-blue-400">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-6 md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <div className="space-y-3">
+          <p className="text-center text-xs font-semibold text-blue-700 sm:text-base">
             {obtenerNombreEquipo(partido.equipo_a, 'Equipo A')}
           </p>
           <ControlGoles
@@ -137,12 +136,12 @@ export function FormularioResultado({
           />
         </div>
 
-        <span className="hidden text-center text-xl font-black text-gray-500 md:block">
+        <span className="hidden text-center text-sm font-black tracking-[0.18em] text-slate-300 md:block">
           VS
         </span>
 
-        <div className="space-y-4">
-          <p className="text-center text-base font-semibold text-red-400">
+        <div className="space-y-3">
+          <p className="text-center text-xs font-semibold text-cyan-700 sm:text-base">
             {obtenerNombreEquipo(partido.equipo_b, 'Equipo B')}
           </p>
           <ControlGoles
@@ -159,25 +158,15 @@ export function FormularioResultado({
         </div>
       </div>
 
-      <label className="mt-8 block text-base font-semibold text-gray-200">
-        Observacion
-        <textarea
-          className="mt-3 min-h-28 w-full rounded-xl border border-gray-700 bg-gray-900 p-4 text-base text-white outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-400/20"
-          onChange={(evento) => setObservacion(evento.target.value)}
-          placeholder="Detalle opcional del partido"
-          value={observacion}
-        />
-      </label>
-
       {hayEmpate || errorLocal ? (
-        <p className="mt-4 rounded-xl border border-red-800 bg-red-950 p-3 text-base font-semibold text-red-400">
+        <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-700 sm:text-base">
           {errorLocal || 'Debe haber un ganador. Modifica el marcador.'}
         </p>
       ) : null}
 
-      <div className="mt-6 grid gap-3">
+      <div className="mt-5 grid gap-3">
         <button
-          className="h-14 w-full rounded-xl bg-emerald-500 px-5 py-3 text-lg font-bold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+          className="min-h-14 w-full rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-500 px-5 py-3 text-base font-bold text-white transition hover:from-blue-800 hover:to-cyan-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 sm:text-lg"
           disabled={formularioBloqueado}
           type="submit"
         >
@@ -185,7 +174,7 @@ export function FormularioResultado({
         </button>
         {alCancelar ? (
           <button
-            className="h-14 rounded-xl bg-gray-700 px-5 py-3 text-lg font-bold text-white transition hover:bg-gray-600"
+            className="min-h-14 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 text-base font-bold text-blue-800 transition hover:bg-blue-100 sm:text-lg"
             onClick={alCancelar}
             type="button"
           >

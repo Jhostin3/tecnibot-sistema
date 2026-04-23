@@ -1,0 +1,54 @@
+{
+  "name": "TecniBot",
+  "short_name": "TecniBot",
+  "description": "Gestion y operacion del torneo TecniBot desde celular o escritorio.",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#1d4ed8",
+  "orientation": "portrait",
+  "lang": "es-EC",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Modulo juez",
+      "short_name": "Juez",
+      "description": "Abrir rapidamente el panel del juez.",
+      "url": "/juez",
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Llave publica",
+      "short_name": "Llave",
+      "description": "Consultar el bracket del torneo.",
+      "url": "/llave",
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
