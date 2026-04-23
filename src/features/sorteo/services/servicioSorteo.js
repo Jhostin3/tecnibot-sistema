@@ -525,6 +525,7 @@ function construirMensajeErrorSupabase(error, mensajeBase) {
   return detalle ? `${mensajeBase} ${detalle}` : mensajeBase
 }
 
+
 export async function guardarSorteoYGenerarCuartos({
   asignaciones,
   registradoPor,
@@ -550,12 +551,6 @@ export async function guardarSorteoYGenerarCuartos({
     const { error: errorSorteo } = await supabase.from('sorteo').insert(filasSorteo)
 
     if (errorSorteo) {
-      console.error('Fallo al insertar sorteo', {
-        asignaciones,
-        error: errorSorteo,
-        filasSorteo,
-        subcategoriaId,
-      })
       throw (
         manejarErrorUnicidadSorteo(errorSorteo) ||
         new Error(construirMensajeErrorSupabase(errorSorteo, 'No se pudo guardar el sorteo.'))
@@ -566,25 +561,12 @@ export async function guardarSorteoYGenerarCuartos({
       ? [crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignaciones[0])]
       : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
 
-    if (!enfrentamientos.length) {
-      console.error('No se generaron enfrentamientos para el sorteo', {
-        asignaciones,
-        subcategoriaId,
-      })
-      throw new Error('No se pudieron generar los enfrentamientos iniciales del sorteo.')
-    }
-
-    const { error: errorEnfrentamientos } = await supabase
+    const { data: enfrentamientosInsertados, error: errorEnfrentamientos } = await supabase
       .from('enfrentamientos')
       .insert(enfrentamientos)
+      .select()
 
     if (errorEnfrentamientos) {
-      console.error('Fallo al insertar enfrentamientos', {
-        asignaciones,
-        enfrentamientos,
-        error: errorEnfrentamientos,
-        subcategoriaId,
-      })
       throw new Error(
         construirMensajeErrorSupabase(
           errorEnfrentamientos,
@@ -592,13 +574,13 @@ export async function guardarSorteoYGenerarCuartos({
         ),
       )
     }
+
+    if (!enfrentamientosInsertados?.length) {
+      throw new Error(
+        'El sorteo se guardó, pero Supabase no confirmó la inserción de enfrentamientos.',
+      )
+    }
   } catch (error) {
-    console.error('Error en guardarSorteoYGenerarCuartos', {
-      asignaciones,
-      error,
-      registradoPor,
-      subcategoriaId,
-    })
     throw new Error(error.message || 'No se pudo guardar el sorteo.')
   }
 }
