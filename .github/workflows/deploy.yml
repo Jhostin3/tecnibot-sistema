@@ -13,6 +13,10 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - name: Verificar variables
+        run: |
+          echo "URL definida: ${{ secrets.VITE_SUPABASE_URL != '' }}"
+          echo "KEY definida: ${{ secrets.VITE_SUPABASE_ANON_KEY != '' }}"
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
