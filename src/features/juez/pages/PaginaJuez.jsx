@@ -17,9 +17,9 @@ function EstadoPanel({ cuentaRegresiva, estadoVista }) {
     return (
       <div className="rounded-3xl border border-amber-200 bg-amber-50/90 p-8 text-center shadow-xl shadow-amber-950/10">
         <Clock className="mx-auto mb-4 h-14 w-14 text-amber-500" />
-        <h2 className="text-xl font-bold text-amber-900">¡Ronda completada!</h2>
+        <h2 className="text-xl font-bold text-amber-900">Preparando siguiente ronda...</h2>
         <p className="mt-2 text-sm leading-6 text-amber-800">
-          Siguiente ronda en {cuentaRegresiva}...
+          La ronda actual ya termino. Recargando en {cuentaRegresiva} segundos.
         </p>
       </div>
     )
