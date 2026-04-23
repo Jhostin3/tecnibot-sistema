@@ -376,7 +376,7 @@ function validarAsignaciones(asignaciones) {
   }
 
   if (asignaciones.length > MAX_EQUIPOS_POR_SUBCATEGORIA) {
-    throw new Error('El sistema soporta hasta 64 equipos por subcategorÃ­a')
+    throw new Error('El sistema soporta hasta 64 equipos por subcategoría')
   }
 
   if (asignaciones.length !== 1 && asignaciones.length < MIN_EQUIPOS_PARA_SORTEO) {
@@ -495,7 +495,7 @@ function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
   const slots = crearSlotsBracket(asignaciones, tamanoBracket).filter((slot) => slot.tipo === 'equipo')
 
   if (!cantidadByes) {
-    return crearBracketDesdeParticipantes(
+    return crearEnfrentamientosDesdeParticipantes(
       subcategoriaId,
       slots.map(crearParticipanteDesdeAsignacion),
     )
@@ -526,12 +526,12 @@ function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
     participantesSiguienteRonda.push(ganadoresPrimeraRonda[indice])
   }
 
-  const enfrentamientosPosteriores = crearBracketDesdeParticipantes(
+  const enfrentamientosSiguienteRonda = crearEnfrentamientosDesdeParticipantes(
     subcategoriaId,
     participantesSiguienteRonda,
   )
 
-  return [...enfrentamientosPrimeraRonda, ...enfrentamientosPosteriores]
+  return [...enfrentamientosPrimeraRonda, ...enfrentamientosSiguienteRonda]
 }
 
 export async function guardarSorteoYGenerarCuartos({
