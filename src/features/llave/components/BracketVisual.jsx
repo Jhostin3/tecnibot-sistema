@@ -75,20 +75,41 @@ function agruparPartidosPorPares(partidos) {
   }, [])
 }
 
-function crearRutaConector(origenA, origenB, destino) {
-  const xInicioA = origenA.x + origenA.width
-  const yA = origenA.y + origenA.height / 2
-  const xInicioB = origenB.x + origenB.width
-  const yB = origenB.y + origenB.height / 2
-  const xMedio = (xInicioA + destino.x) / 2
-  const yMedio = (yA + yB) / 2
+function encontrarPartidoDestinoParaOrigen(origen, rondaDestino) {
+  if (!origen?.enfrentamiento || !rondaDestino) return null
+
+  const ganadorId = origen.enfrentamiento.ganador_id
+
+  if (ganadorId) {
+    const destinoConGanador = rondaDestino.partidos.find((destino) => (
+      destino.enfrentamiento?.equipo_a_id === ganadorId ||
+      destino.enfrentamiento?.equipo_b_id === ganadorId
+    ))
+
+    if (destinoConGanador) {
+      return destinoConGanador
+    }
+  }
+
+  const destinosDisponibles = rondaDestino.partidos.filter((destino) => (
+    !destino.enfrentamiento ||
+    !destino.enfrentamiento.equipo_a_id ||
+    !destino.enfrentamiento.equipo_b_id
+  ))
+
+  return destinosDisponibles[0] || null
+}
+
+function crearRutaConectorSimple(origen, destino) {
+  const xInicio = origen.x + origen.width
+  const yInicio = origen.y + origen.height / 2
   const xFin = destino.x
   const yFin = destino.y + destino.height / 2
+  const xMedio = (xInicio + xFin) / 2
 
   return `
-    M ${xInicioA} ${yA} H ${xMedio} V ${yMedio}
-    M ${xInicioB} ${yB} H ${xMedio} V ${yMedio}
-    M ${xMedio} ${yMedio} H ${xFin} V ${yFin}
+    M ${xInicio} ${yInicio} H ${xMedio} V ${yFin}
+    M ${xMedio} ${yFin} H ${xFin}
   `
 }
 
@@ -170,20 +191,24 @@ export function BracketVisual({ enfrentamientos }) {
 
     rondas.slice(0, -1).forEach((ronda, indiceRonda) => {
       const rondaDestino = rondas[indiceRonda + 1]
+      const destinosAsignados = new Set()
 
-      rondaDestino.partidos.forEach((destino, indiceDestino) => {
-        const origenA = ronda.partidos[indiceDestino * 2]
-        const origenB = ronda.partidos[indiceDestino * 2 + 1]
+      ronda.partidos.forEach((origen) => {
+        const destino = encontrarPartidoDestinoParaOrigen(origen, {
+          ...rondaDestino,
+          partidos: rondaDestino.partidos.filter((partido) => !destinosAsignados.has(partido.id)),
+        })
 
-        if (!origenA || !origenB) return
+        if (!destino) return
 
-        const rectA = posiciones.get(origenA.id)
-        const rectB = posiciones.get(origenB.id)
+        destinosAsignados.add(destino.id)
+
+        const rectOrigen = posiciones.get(origen.id)
         const rectDestino = posiciones.get(destino.id)
 
-        if (!rectA || !rectB || !rectDestino) return
+        if (!rectOrigen || !rectDestino) return
 
-        rutas.push(crearRutaConector(rectA, rectB, rectDestino))
+        rutas.push(crearRutaConectorSimple(rectOrigen, rectDestino))
       })
     })
 
