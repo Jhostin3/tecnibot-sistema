@@ -148,6 +148,11 @@ export function PaginaJuez() {
           <p className="max-w-2xl text-sm leading-6 text-slate-600">
             Registra marcadores de forma rapida y deja que el avance de rondas se actualice solo.
           </p>
+          {rondaActual && partidos.length ? (
+            <p className="inline-flex rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+              {rondaActual.etiqueta_ronda} · {partidos.length} partidos activos en esta ronda
+            </p>
+          ) : null}
         </header>
 
         {mensaje ? (
