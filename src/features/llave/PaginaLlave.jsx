@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import { IndicadorEnVivo } from '../../components/molecules/IndicadorEnVivo'
 import { BracketVisual } from './components/BracketVisual'
 import { PantallaGanador } from './components/PantallaGanador'
 import { SelectorSubcategoria } from './components/SelectorSubcategoria'
@@ -17,6 +18,7 @@ export function PaginaLlave() {
     esCampeonAutomatico,
     estadosSubcategorias,
     ganadorFinal,
+    realtimeActivo,
     seleccionarSubcategoria,
     subcategoriaSeleccionada,
     subcategorias,
@@ -56,9 +58,12 @@ export function PaginaLlave() {
               <h1 className="text-2xl font-bold text-white sm:text-3xl">
                 Llave del Torneo
               </h1>
-              <p className="text-sm font-semibold text-cyan-400">
-                En vivo · TecniBot Cuenca 2026
-              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold text-cyan-400">
+                  En vivo · TecniBot Cuenca 2026
+                </p>
+                <IndicadorEnVivo activo={realtimeActivo} />
+              </div>
             </div>
           </div>
           <button

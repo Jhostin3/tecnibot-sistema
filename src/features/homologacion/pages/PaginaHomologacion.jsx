@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import { IndicadorEnVivo } from '../../../components/molecules/IndicadorEnVivo'
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import { useModoSorteo } from '../../sorteo/hooks/useModoSorteo'
@@ -329,9 +330,12 @@ export function PaginaHomologacion() {
           <ChevronLeft className="h-4 w-4" />
           Inicio
         </button>
-        <p className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600">
-          Control tecnico
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-600">
+            Control tecnico
+          </p>
+          <IndicadorEnVivo activo={homologaciones.realtimeActivo} />
+        </div>
         <h1 className="mt-2 text-2xl font-bold text-slate-800">
           Homologacion de equipos
         </h1>
