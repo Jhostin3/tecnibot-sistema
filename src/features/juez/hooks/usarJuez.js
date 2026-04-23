@@ -19,7 +19,6 @@ function construirEstadoInicial() {
     claveRondaPendiente: null,
     error: null,
     estadoVista: 'sin_partidos',
-    mensaje: '',
     partidos: [],
     partidosPendientes: [],
   }
@@ -68,7 +67,7 @@ export function useJuez() {
       } else if (hayPendientes) {
         estadoVista = preparandoSiguienteRondaRef.current
           ? 'preparando_siguiente_ronda'
-          : 'esperando_organizador'
+          : 'esperando_torneo'
       }
 
       setEstadoPanel({
@@ -77,7 +76,6 @@ export function useJuez() {
         claveRondaPendiente: panel.clavePendiente,
         error: null,
         estadoVista,
-        mensaje: '',
         partidos: panel.partidosActivos,
         partidosPendientes: panel.partidosPendientes,
       })
@@ -86,7 +84,6 @@ export function useJuez() {
         ...actual,
         cargando: false,
         error: error.message,
-        mensaje: error.message,
       }))
       setMensaje(error.message)
     }
@@ -134,7 +131,7 @@ export function useJuez() {
       preparandoSiguienteRondaRef.current = true
       ultimaRondaActivaRef.current = null
       setCuentaRegresiva(CUENTA_REGRESIVA_INICIAL)
-      setMensaje('¡Ronda completada! Preparando siguiente ronda...')
+      setMensaje('Ronda completada. Preparando siguiente ronda...')
       setEstadoPanel((actual) => ({
         ...actual,
         estadoVista: 'preparando_siguiente_ronda',
@@ -205,7 +202,6 @@ export function useJuez() {
       setEstadoPanel((actual) => ({
         ...actual,
         error: error.message,
-        mensaje: error.message,
       }))
       setMensaje(error.message)
       throw error

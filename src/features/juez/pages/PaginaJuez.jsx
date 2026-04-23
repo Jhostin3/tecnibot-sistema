@@ -19,21 +19,19 @@ function EstadoPanel({ cuentaRegresiva, estadoVista }) {
         <Clock className="mx-auto mb-4 h-14 w-14 text-amber-500" />
         <h2 className="text-xl font-bold text-amber-900">Preparando siguiente ronda...</h2>
         <p className="mt-2 text-sm leading-6 text-amber-800">
-          La ronda actual ya termino. Recargando en {cuentaRegresiva} segundos.
+          Ronda completada. Siguiente ronda en {cuentaRegresiva}...
         </p>
       </div>
     )
   }
 
-  if (estadoVista === 'esperando_organizador') {
+  if (estadoVista === 'esperando_torneo') {
     return (
       <div className="rounded-3xl border border-blue-100 bg-white/90 p-12 text-center shadow-xl shadow-blue-950/10">
         <Clock className="mx-auto mb-4 h-16 w-16 text-blue-200" />
-        <h2 className="text-xl font-semibold text-slate-800">
-          Esperando que el organizador active los partidos
-        </h2>
+        <h2 className="text-xl font-semibold text-slate-800">Esperando que inicie el torneo</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          La siguiente ronda ya esta lista. Apenas se active, aparecera aqui automaticamente.
+          Los partidos de la primera ronda apareceran aqui automaticamente cuando el torneo arranque.
         </p>
       </div>
     )
@@ -150,7 +148,7 @@ export function PaginaJuez() {
           </p>
           {rondaActual && partidos.length ? (
             <p className="inline-flex rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-              {rondaActual.etiqueta_ronda} · {partidos.length} partidos activos en esta ronda
+              {rondaActual.etiqueta_ronda} - {partidos.length} partidos activos en esta ronda
             </p>
           ) : null}
         </header>
