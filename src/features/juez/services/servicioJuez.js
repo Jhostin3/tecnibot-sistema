@@ -321,12 +321,25 @@ async function completarSiguienteRondaExistente(subcategoriaId, siguienteRonda, 
     }
   })
 
-  if (!actualizaciones.length) return
+  if (!actualizaciones.length) {
+    const { error: errorActivacion } = await supabase
+      .from('enfrentamientos')
+      .update({ estado: 'activo' })
+      .eq('subcategoria_id', subcategoriaId)
+      .eq('ronda', siguienteRonda)
+
+    if (errorActivacion) {
+      throw new Error('El resultado se guardo, pero no se pudo activar la siguiente ronda.')
+    }
+
+    return
+  }
 
   const operaciones = actualizaciones.map((actualizacion) =>
     supabase
       .from('enfrentamientos')
       .update({
+        estado: 'activo',
         equipo_a_id: actualizacion.equipo_a_id,
         equipo_b_id: actualizacion.equipo_b_id,
       })
@@ -338,6 +351,22 @@ async function completarSiguienteRondaExistente(subcategoriaId, siguienteRonda, 
 
   if (primerError) {
     throw new Error('El resultado se guardo, pero no se pudo completar la siguiente ronda.')
+  }
+
+  const idsActualizados = actualizaciones.map((actualizacion) => actualizacion.id)
+  const idsSinActualizar = enfrentamientos
+    .filter((enfrentamiento) => !idsActualizados.includes(enfrentamiento.id))
+    .map((enfrentamiento) => enfrentamiento.id)
+
+  if (idsSinActualizar.length) {
+    const { error: errorActivacion } = await supabase
+      .from('enfrentamientos')
+      .update({ estado: 'activo' })
+      .in('id', idsSinActualizar)
+
+    if (errorActivacion) {
+      throw new Error('El resultado se guardo, pero no se pudo activar la siguiente ronda.')
+    }
   }
 }
 
@@ -374,7 +403,7 @@ async function generarSiguienteRondaSiCorresponde(partido) {
         bye: false,
         equipo_a_id: ganadorSemifinalA,
         equipo_b_id: ganadorSemifinalB,
-        estado: 'pendiente',
+        estado: 'activo',
         ganador_id: null,
         orden: 1,
         ronda: 'final',
@@ -387,7 +416,7 @@ async function generarSiguienteRondaSiCorresponde(partido) {
         bye: false,
         equipo_a_id: perdedorSemifinalA,
         equipo_b_id: perdedorSemifinalB,
-        estado: 'pendiente',
+        estado: 'activo',
         ganador_id: null,
         orden: 1,
         ronda: 'tercer_lugar',
@@ -433,7 +462,7 @@ async function generarSiguienteRondaSiCorresponde(partido) {
       bye: false,
       equipo_a_id: equipoA,
       equipo_b_id: equipoB,
-      estado: 'pendiente',
+      estado: 'activo',
       ganador_id: null,
       orden: nuevosEnfrentamientos.length + 1,
       ronda: siguienteRonda,
