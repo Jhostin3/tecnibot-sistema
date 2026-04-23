@@ -7,6 +7,9 @@ import {
   listarSubcategorias,
 } from './servicioLlave'
 
+// Nota para desarrollo:
+// Habilita Realtime manualmente en Supabase Dashboard -> Table Editor -> enfrentamientos -> Enable Realtime.
+
 function detectarCampeonAutomatico(enfrentamientos = []) {
   return (
     enfrentamientos.length === 1 &&
@@ -42,6 +45,7 @@ export function useLlave() {
   const [competenciaFinalizada, setCompetenciaFinalizada] = useState(false)
   const [esCampeonAutomatico, setEsCampeonAutomatico] = useState(false)
   const [tieneSorteo, setTieneSorteo] = useState(false)
+  const [realtimeActivo, setRealtimeActivo] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
 
@@ -168,59 +172,36 @@ export function useLlave() {
     cargarDatos()
 
     const canal = supabase
-      .channel(`llave-publica-${subcategoriaSeleccionada || 'general'}`)
+      .channel(`tecnibot-enfrentamientos-${subcategoriaSeleccionada || 'general'}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'enfrentamientos' },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'enfrentamientos',
+          filter: `subcategoria_id=eq.${subcategoriaSeleccionada}`,
+        },
         () => {
           if (!componenteActivo) return
 
           if (subcategoriaSeleccionada) {
             cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
           }
-
-          cargarOpcionesLlave().catch(() => undefined)
         },
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'resultados' },
-        () => {
-          if (!componenteActivo || !subcategoriaSeleccionada) return
+      .subscribe((estadoCanal) => {
+        if (!componenteActivo) return
 
-          cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'sorteo' },
-        () => {
-          if (!componenteActivo) return
-
-          if (subcategoriaSeleccionada) {
-            cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
-          }
-
-          cargarOpcionesLlave().catch(() => undefined)
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'subcategorias' },
-        () => {
-          if (!componenteActivo) return
-
-          cargarOpcionesLlave().catch(() => undefined)
-        },
-      )
-      .subscribe()
+        setRealtimeActivo(estadoCanal === 'SUBSCRIBED')
+      })
 
     return () => {
       componenteActivo = false
+      setRealtimeActivo(false)
 
       supabase.removeChannel(canal)
     }
-  }, [cargarLlave, cargarOpcionesLlave, subcategoriaSeleccionada])
+  }, [cargarLlave, subcategoriaSeleccionada])
 
   return {
     cargando,
@@ -230,6 +211,7 @@ export function useLlave() {
     esCampeonAutomatico,
     estadosSubcategorias,
     ganadorFinal,
+    realtimeActivo,
     seleccionarSubcategoria: setSubcategoriaSeleccionada,
     subcategoriaSeleccionada,
     subcategorias,
