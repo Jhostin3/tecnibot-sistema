@@ -13,7 +13,10 @@ function PlataformaPodio({
   resaltar = false,
 }) {
   return (
-    <article className={`flex flex-col items-center text-center ${ordenClase}`.trim()}>
+    <article
+      className={`flex flex-col items-center text-center ${ordenClase}`.trim()}
+      style={{ width: '140px' }}
+    >
       <div className="mb-4 min-h-20 flex items-end justify-center">
         {resaltar ? (
           <div className="flex flex-col items-center gap-3">
@@ -29,17 +32,17 @@ function PlataformaPodio({
         )}
       </div>
 
-      <div className="mb-4 space-y-1">
-        <p className="text-2xl font-black text-white sm:text-3xl">
+      <div className="mb-3 w-full space-y-1">
+        <p className="text-center text-2xl font-black text-white sm:text-3xl">
           {equipo?.nombre_equipo || 'Por definir'}
         </p>
-        <p className="text-sm text-gray-400">
+        <p className="text-center text-sm text-gray-400">
           {equipo?.institucion || descripcion}
         </p>
       </div>
 
       <div
-        className={`flex w-full max-w-[260px] flex-col justify-between rounded-t-[2rem] border border-white/15 px-5 pb-6 pt-5 shadow-2xl ${colorBase}`}
+        className={`flex w-full flex-col justify-between rounded-t-[2rem] border border-white/15 px-5 pb-6 pt-5 shadow-2xl ${colorBase}`}
         style={{ height: alturaPx }}
       >
         <div className="text-4xl font-black text-white/90 sm:text-5xl">
