@@ -630,6 +630,10 @@ async function listarEquiposPorSubcategoria(subcategoriaId) {
 
 async function obtenerEnfrentamientosPorSubcategoria(subcategoriaId) {
   try {
+    if (!subcategoriaId || typeof subcategoriaId !== 'string') {
+      return []
+    }
+
     const { data, error } = await supabase
       .from('enfrentamientos')
       .select('id')
@@ -647,10 +651,16 @@ async function obtenerEnfrentamientosPorSubcategoria(subcategoriaId) {
 }
 
 async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
+  if (!subcategoriaId || typeof subcategoriaId !== 'string') return
+
+  const subcategoriaNormalizada = subcategoriaId.trim().replace(/^"+|"+$/g, '')
+
+  if (!subcategoriaNormalizada) return
+
   const [equiposSubcategoria, sorteoActual, enfrentamientosActuales] = await Promise.all([
-    listarEquiposPorSubcategoria(subcategoriaId),
-    obtenerSorteoPorSubcategoria(subcategoriaId),
-    obtenerEnfrentamientosPorSubcategoria(subcategoriaId),
+    listarEquiposPorSubcategoria(subcategoriaNormalizada),
+    obtenerSorteoPorSubcategoria(subcategoriaNormalizada),
+    obtenerEnfrentamientosPorSubcategoria(subcategoriaNormalizada),
   ])
 
   if (enfrentamientosActuales.length) return
@@ -676,12 +686,20 @@ async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
       numero_bola: Number(asignacion.numero_bola),
     }))
   const enfrentamientos = asignaciones.length === 1
-    ? [crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignaciones[0])]
-    : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
-  const { error } = await supabase.from('enfrentamientos').insert(enfrentamientos)
+    ? [crearEnfrentamientoCampeonAutomatico(subcategoriaNormalizada, asignaciones[0])]
+    : crearEnfrentamientosDesdeBolas(subcategoriaNormalizada, asignaciones)
+  const { data, error } = await supabase
+    .from('enfrentamientos')
+    .insert(enfrentamientos)
+    .select()
 
   if (error) {
+    console.error('Error 400 detalle completo:', JSON.stringify(error, null, 2))
     throw new Error('No se pudo generar el bracket del sorteo presencial.')
+  }
+
+  if (!data?.length) {
+    throw new Error('Supabase no confirmó la inserción del bracket presencial.')
   }
 }
 
