@@ -127,7 +127,8 @@ export function PaginaJuez() {
     <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_20%),radial-gradient(circle_at_20%_0%,_rgba(250,204,21,0.08),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0f172a_24%,_#111827_100%)] px-4 py-8 sm:px-6">
       <div className="mx-auto w-full max-w-5xl space-y-6">
         <header className="rounded-[2rem] border border-slate-700/80 bg-slate-900/90 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:p-6">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
             <p className="inline-flex rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs font-black tracking-[0.22em] text-cyan-200">
               MODULO DE JUECES
             </p>
@@ -136,6 +137,7 @@ export function PaginaJuez() {
                 {rondaActual.etiqueta_ronda.toUpperCase()}
               </p>
             ) : null}
+            </div>
             <IndicadorEnVivo
               activo={realtimeActivo}
               className="border-emerald-300/30 bg-emerald-400/10 text-emerald-200"
@@ -143,12 +145,12 @@ export function PaginaJuez() {
           </div>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-black text-white">
+              <h1 className="text-[1.75rem] font-black leading-tight text-white sm:text-3xl">
                 {estadoVista === 'ronda_activa'
                   ? 'Partidos de la ronda activa'
                   : 'Panel de arbitraje'}
               </h1>
-              <p className="mt-2 max-w-2xl text-base leading-7 text-slate-300">
+              <p className="mt-2 hidden max-w-2xl text-base leading-7 text-slate-300 sm:block">
                 Registra marcadores de forma rapida y deja que el avance de rondas se actualice solo.
               </p>
             </div>
