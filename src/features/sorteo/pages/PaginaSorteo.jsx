@@ -11,6 +11,10 @@ import { RuletaEquipos } from '../components/RuletaEquipos'
 import { SelectorSubcategoriaSorteo } from '../components/SelectorSubcategoriaSorteo'
 import { useModoSorteo } from '../hooks/useModoSorteo'
 import { useSorteo } from '../hooks/usarSorteo'
+import {
+  MAX_EQUIPOS_POR_SUBCATEGORIA,
+  MIN_EQUIPOS_PARA_SORTEO,
+} from '../services/servicioSorteo'
 import { listarSubcategoriasConSorteo } from '../services/servicioSorteo'
 import { modosSorteo } from '../utils/modoSorteo'
 
@@ -18,11 +22,10 @@ function obtenerMensajeValidacion({
   cantidadByes,
   esCampeonAutomatico,
   equipos = [],
-  partidosPrimeraRonda,
+  nombrePrimeraRonda,
   sorteoExistente = [],
   subcategoriaId,
   subcategorias = [],
-  tamanoBracket,
 }) {
   if (!subcategorias || !subcategorias.length) {
     return 'No hay subcategorias listas para sorteo.'
@@ -40,11 +43,15 @@ function obtenerMensajeValidacion({
     return 'Hay 1 equipo aprobado. Esta subcategoria se registra como campeon automatico.'
   }
 
-  if (equipos.length < 2) {
-    return `Hay ${equipos.length} equipos aprobados. El sorteo requiere al menos 2 equipos.`
+  if (equipos.length > MAX_EQUIPOS_POR_SUBCATEGORIA) {
+    return 'El sistema soporta hasta 64 equipos por subcategoría'
   }
 
-  return `Hay ${equipos.length} equipos aprobados. Bracket de ${tamanoBracket}, ${cantidadByes} BYEs y ${partidosPrimeraRonda} partidos en primera ronda.`
+  if (equipos.length < MIN_EQUIPOS_PARA_SORTEO) {
+    return `Hay ${equipos.length} equipos aprobados. El sorteo requiere al menos 4 equipos.`
+  }
+
+  return `${equipos.length} equipos aprobados → se agregarán ${cantidadByes} BYEs → ${nombrePrimeraRonda} de final`
 }
 
 function CardCampeonAutomatico({ equipo, guardando, onConfirmar }) {
@@ -129,6 +136,7 @@ export function PaginaSorteo() {
     cantidadByes: sorteo.cantidadByes,
     esCampeonAutomatico: sorteo.esCampeonAutomatico,
     equipos: sorteo.equipos,
+    nombrePrimeraRonda: sorteo.nombrePrimeraRonda,
     partidosPrimeraRonda: sorteo.partidosPrimeraRonda,
     sorteoExistente: sorteo.sorteoExistente,
     subcategoriaId: sorteo.subcategoriaId,
@@ -237,6 +245,7 @@ export function PaginaSorteo() {
                 <OrdenBatalla
                   cantidadByes={sorteo.cantidadByes}
                   guardando={sorteo.guardando}
+                  nombrePrimeraRonda={sorteo.nombrePrimeraRonda}
                   onConfirmar={sorteo.guardarSorteo}
                   ordenSorteo={sorteo.ordenSorteo}
                   partidosPrimeraRonda={sorteo.partidosPrimeraRonda}
@@ -302,6 +311,7 @@ export function PaginaSorteo() {
         cantidadByes={sorteo.cantidadByes}
         compacto
         guardando={sorteo.guardando}
+        nombrePrimeraRonda={sorteo.nombrePrimeraRonda}
         onConfirmar={sorteo.guardarSorteo}
         ordenSorteo={sorteo.ordenSorteo}
         partidosPrimeraRonda={sorteo.partidosPrimeraRonda}

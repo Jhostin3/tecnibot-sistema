@@ -6,6 +6,9 @@ import {
   listarCategoriasSorteo,
   listarEquiposAprobadosPorSubcategoria,
   listarSubcategoriasListasParaSorteo,
+  MAX_EQUIPOS_POR_SUBCATEGORIA,
+  MIN_EQUIPOS_PARA_SORTEO,
+  obtenerNombreRonda,
   obtenerSorteoPorSubcategoria,
 } from '../services/servicioSorteo'
 
@@ -52,12 +55,16 @@ export function useSorteo() {
   )
   const cantidadByes = Math.max(0, tamanoBracket - equipos.length)
   const partidosPrimeraRonda = tamanoBracket / 2
+  const nombrePrimeraRonda = obtenerNombreRonda(tamanoBracket)
   const subcategoriaSeleccionada = subcategorias.find(
     (subcategoria) => subcategoria.id === subcategoriaId,
   )
   const esCampeonAutomatico =
     Boolean(subcategoriaSeleccionada?.campeonAutomatico) || equipos.length === 1
   const equipoCampeon = esCampeonAutomatico ? equipos[0] || null : null
+  const excedeMaximoEquipos = equipos.length > MAX_EQUIPOS_POR_SUBCATEGORIA
+  const cumpleMinimoEquipos =
+    equipos.length === 1 || equipos.length >= MIN_EQUIPOS_PARA_SORTEO
 
   const cargarOpciones = useCallback(async () => {
     setCargando(true)
@@ -237,7 +244,7 @@ export function useSorteo() {
       })
       await cargarDatosSubcategoria(subcategoriaId)
       await cargarOpciones()
-      setMensaje('Sorteo guardado y bracket de cuartos generado correctamente.')
+      setMensaje(`Sorteo guardado y bracket de ${nombrePrimeraRonda} generado correctamente.`)
     } catch (error) {
       setError(error.message)
       setMensaje(error.message)
@@ -317,8 +324,12 @@ export function useSorteo() {
     partidosPrimeraRonda,
     puedeConfirmar:
       equipos.length >= 2 &&
+      equipos.length <= MAX_EQUIPOS_POR_SUBCATEGORIA &&
+      equipos.length >= MIN_EQUIPOS_PARA_SORTEO &&
       ordenSorteo.length === equipos.length &&
       !sorteoExistente.length,
+    cumpleMinimoEquipos,
+    excedeMaximoEquipos,
     seleccionarCategoria,
     seleccionarSubcategoria,
     sorteoExistente,
@@ -326,5 +337,6 @@ export function useSorteo() {
     subcategoriaSeleccionada,
     subcategorias,
     tamanoBracket,
+    nombrePrimeraRonda,
   }
 }

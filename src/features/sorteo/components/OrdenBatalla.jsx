@@ -45,6 +45,7 @@ export function OrdenBatalla({
   cantidadByes = 0,
   compacto = false,
   guardando,
+  nombrePrimeraRonda = 'final',
   onConfirmar,
   ordenSorteo = [],
   partidosPrimeraRonda = 0,
@@ -72,7 +73,7 @@ export function OrdenBatalla({
           {ordenSorteo.length} de {totalEquipos} equipos sorteados
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Bracket de {tamanoBracket} con {cantidadByes} BYEs inferidos.
+          Bracket de {tamanoBracket} con {cantidadByes} BYEs hacia {nombrePrimeraRonda}.
         </p>
       </div>
       <div className={compacto ? 'flex-1 space-y-2 overflow-y-auto p-4' : 'space-y-2'}>
@@ -100,7 +101,7 @@ export function OrdenBatalla({
         <div className={compacto ? 'space-y-3 border-t border-slate-200 p-4' : 'space-y-3 border-t border-slate-200 pt-4'}>
           <h3 className="font-bold text-slate-950">Primera ronda generada</h3>
           <p className="text-sm text-slate-600">
-            {partidosPrimeraRonda} partidos con BYEs aplicados al final del bracket.
+            {partidosPrimeraRonda} partidos en {nombrePrimeraRonda} con BYEs aplicados al final del bracket.
           </p>
           <div className="space-y-2">
             {parejas.map((pareja) => (

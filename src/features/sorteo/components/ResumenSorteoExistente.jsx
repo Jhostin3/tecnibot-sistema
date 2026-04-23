@@ -1,10 +1,13 @@
 import { useBracketSorteo } from '../hooks/usarBracketSorteo'
 import { obtenerResumenPodio } from '../../llave/utils/resumenPodio'
 
-const rondas = [
-  { clave: 'cuartos', titulo: 'Cuartos de final', total: 4 },
-  { clave: 'semifinal', titulo: 'Semifinales', total: 2 },
-  { clave: 'final', titulo: 'Final', total: 1 },
+const ORDEN_RONDAS = [
+  { clave: 'treintaidosavos', titulo: 'Treintaidosavos de final' },
+  { clave: 'dieciseisavos', titulo: 'Dieciseisavos de final' },
+  { clave: 'octavos', titulo: 'Octavos de final' },
+  { clave: 'cuartos', titulo: 'Cuartos de final' },
+  { clave: 'semifinal', titulo: 'Semifinales' },
+  { clave: 'final', titulo: 'Final' },
 ]
 
 function formatearFecha(fecha) {
@@ -75,29 +78,61 @@ function completarRonda(enfrentamientos, ronda, total) {
 }
 
 function construirRondas(enfrentamientos = []) {
-  const cuartos = completarRonda(ordenarPorRonda(enfrentamientos, 'cuartos'), 'cuartos', 4)
-  const semifinalesExistentes = ordenarPorRonda(enfrentamientos, 'semifinal')
-  const finalExistente = ordenarPorRonda(enfrentamientos, 'final')
+  const primerIndice = ORDEN_RONDAS.findIndex(({ clave }) =>
+    ordenarPorRonda(enfrentamientos, clave).length,
+  )
+
+  if (primerIndice === -1) {
+    return { rondas: [], tercer_lugar: [] }
+  }
+
+  const rondas = []
+
+  ORDEN_RONDAS.slice(primerIndice).forEach(({ clave }, indice) => {
+    const existentes = ordenarPorRonda(enfrentamientos, clave)
+
+    if (indice === 0) {
+      rondas.push({
+        clave,
+        partidos: completarRonda(existentes, clave, existentes.length),
+        titulo: ORDEN_RONDAS[primerIndice].titulo,
+      })
+      return
+    }
+
+    const rondaAnterior = rondas[indice - 1]
+    const totalEsperado = Math.max(1, Math.ceil(rondaAnterior.partidos.length / 2))
+
+    if (existentes.length) {
+      rondas.push({
+        clave,
+        partidos: completarRonda(existentes, clave, totalEsperado),
+        titulo: ORDEN_RONDAS[primerIndice + indice].titulo,
+      })
+      return
+    }
+
+    const partidosInferidos = Array.from({ length: totalEsperado }).map((_, partidoIndice) =>
+      crearPartidoPendiente(
+        partidoIndice + 1,
+        clave,
+        obtenerGanador(rondaAnterior.partidos[partidoIndice * 2]),
+        obtenerGanador(rondaAnterior.partidos[partidoIndice * 2 + 1]),
+      ),
+    )
+
+    rondas.push({
+      clave,
+      partidos: partidosInferidos,
+      titulo: ORDEN_RONDAS[primerIndice + indice].titulo,
+    })
+  })
+
+  const semifinales = rondas.find((ronda) => ronda.clave === 'semifinal')?.partidos || []
   const tercerLugarExistente = ordenarPorRonda(enfrentamientos, 'tercer_lugar')
-  const semifinales = semifinalesExistentes.length
-    ? completarRonda(semifinalesExistentes, 'semifinal', 2)
-    : [
-        crearPartidoPendiente(1, 'semifinal', obtenerGanador(cuartos[0]), obtenerGanador(cuartos[1])),
-        crearPartidoPendiente(2, 'semifinal', obtenerGanador(cuartos[2]), obtenerGanador(cuartos[3])),
-      ]
-  const final = finalExistente.length
-    ? completarRonda(finalExistente, 'final', 1)
-    : [
-        crearPartidoPendiente(
-          1,
-          'final',
-          obtenerGanador(semifinales[0]),
-          obtenerGanador(semifinales[1]),
-        ),
-      ]
   const tercerLugar = tercerLugarExistente.length
     ? completarRonda(tercerLugarExistente, 'tercer_lugar', 1)
-    : semifinales.every((partido) => partido.ganador_id)
+    : semifinales.length === 2 && semifinales.every((partido) => partido.ganador_id)
       ? [
           crearPartidoPendiente(
             1,
@@ -109,9 +144,7 @@ function construirRondas(enfrentamientos = []) {
       : []
 
   return {
-    cuartos,
-    final,
-    semifinal: semifinales,
+    rondas,
     tercer_lugar: tercerLugar,
   }
 }
@@ -152,7 +185,9 @@ function FilaEquipo({ enfrentamiento, equipo, esBye = false, lado }) {
     ? 'border-slate-200 bg-slate-100 text-slate-500'
     : ganador
       ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-      : 'border-slate-200 bg-white text-slate-700'
+      : enfrentamiento.estado === 'activo'
+        ? 'border-cyan-200 bg-cyan-50 text-cyan-900'
+        : 'border-slate-200 bg-white text-slate-700'
 
   return (
     <div className={`flex min-h-12 items-center gap-3 border px-3 py-2 ${clases}`}>
@@ -162,6 +197,11 @@ function FilaEquipo({ enfrentamiento, equipo, esBye = false, lado }) {
       <span className="min-w-0 flex-1 truncate text-sm font-semibold">
         {esBye ? 'BYE' : equipo?.nombre_equipo || 'Por definir'}
       </span>
+      {enfrentamiento.estado === 'activo' && !marcador ? (
+        <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-700">
+          Activo
+        </span>
+      ) : null}
       <span className="w-8 text-right text-sm font-bold">
         {marcador ?? ''}
       </span>
@@ -196,7 +236,12 @@ function TarjetaPartido({ enfrentamiento, indice, ronda }) {
 }
 
 function ColumnaRonda({ partidos, ronda, titulo }) {
-  const espaciado = ronda === 'semifinal' ? 'lg:space-y-24' : ronda === 'final' ? 'lg:pt-32' : ''
+  const espaciado =
+    ronda === 'semifinal'
+      ? 'lg:space-y-24'
+      : ronda === 'final'
+        ? 'lg:pt-32'
+        : ''
 
   return (
     <section className={`space-y-4 ${espaciado}`}>
@@ -241,9 +286,10 @@ export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
 
   const rondasConstruidas = construirRondas(bracket.enfrentamientos)
   const campeonAutomatico = obtenerCampeonAutomatico(bracket.enfrentamientos)
+  const final = rondasConstruidas.rondas.find((ronda) => ronda.clave === 'final')?.partidos?.[0] || null
   const podio = obtenerResumenPodio(
     bracket.enfrentamientos,
-    rondasConstruidas.final[0] ? obtenerGanador(rondasConstruidas.final[0]) : null,
+    final ? obtenerGanador(final) : null,
     Boolean(campeonAutomatico),
   )
   const partidoTercerLugar = rondasConstruidas.tercer_lugar[0] || null
@@ -287,11 +333,11 @@ export function ResumenSorteoExistente({ sorteo = [], subcategoriaId }) {
       ) : (
         <div className="space-y-6">
           <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-5">
-            <div className="grid min-w-[980px] grid-cols-3 gap-12">
-              {rondas.map((ronda) => (
+            <div className="grid min-w-max grid-flow-col gap-12">
+              {rondasConstruidas.rondas.map((ronda) => (
                 <ColumnaRonda
                   key={ronda.clave}
-                  partidos={rondasConstruidas[ronda.clave]}
+                  partidos={ronda.partidos}
                   ronda={ronda.clave}
                   titulo={ronda.titulo}
                 />

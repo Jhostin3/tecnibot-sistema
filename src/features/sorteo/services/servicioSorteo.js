@@ -32,6 +32,9 @@ const seleccionEnfrentamientos = `
   created_at
 `
 
+const MAX_EQUIPOS_POR_SUBCATEGORIA = 64
+const MIN_EQUIPOS_PARA_SORTEO = 4
+
 export async function listarCategoriasSorteo() {
   try {
     const { data, error } = await supabase
@@ -372,6 +375,14 @@ function validarAsignaciones(asignaciones) {
     throw new Error('Se necesita al menos 1 equipo aprobado.')
   }
 
+  if (asignaciones.length > MAX_EQUIPOS_POR_SUBCATEGORIA) {
+    throw new Error('El sistema soporta hasta 64 equipos por subcategoría')
+  }
+
+  if (asignaciones.length !== 1 && asignaciones.length < MIN_EQUIPOS_PARA_SORTEO) {
+    throw new Error('Se necesitan al menos 4 equipos aprobados para realizar el sorteo.')
+  }
+
   const numeros = asignaciones.map((asignacion) => Number(asignacion.numero_bola))
   const numerosUnicos = new Set(numeros)
   const tieneRangoValido = numeros.every(
@@ -407,16 +418,7 @@ function calcularSiguientePotenciaDeDos(cantidad) {
 }
 
 function obtenerRondaInicial(tamanoBracket) {
-  const rondas = {
-    2: 'final',
-    4: 'semifinal',
-    8: 'cuartos',
-    16: 'octavos',
-    32: 'dieciseisavos',
-    64: 'treintaidosavos',
-  }
-
-  return rondas[tamanoBracket] || `ronda_${Math.log2(tamanoBracket)}`
+  return obtenerNombreRonda(tamanoBracket)
 }
 
 function crearSlotsBracket(asignaciones, tamanoBracket) {
@@ -670,3 +672,18 @@ export async function registrarNumeroBolaPresencial({
     throw new Error(error.message || 'No se pudo registrar el sorteo presencial.')
   }
 }
+
+export function obtenerNombreRonda(tamanoBracket) {
+  const nombreRonda = {
+    64: 'treintaidosavos',
+    32: 'dieciseisavos',
+    16: 'octavos',
+    8: 'cuartos',
+    4: 'semifinal',
+    2: 'final',
+  }
+
+  return nombreRonda[tamanoBracket] || `ronda_${Math.log2(tamanoBracket)}`
+}
+
+export { MAX_EQUIPOS_POR_SUBCATEGORIA, MIN_EQUIPOS_PARA_SORTEO }
