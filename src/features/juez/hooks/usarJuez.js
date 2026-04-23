@@ -64,6 +64,7 @@ export function useJuez() {
         ultimaRondaActivaRef.current = panel.claveActiva
         preparandoSiguienteRondaRef.current = false
         setCuentaRegresiva(0)
+        setMensaje('')
       } else if (hayPendientes) {
         estadoVista = preparandoSiguienteRondaRef.current
           ? 'preparando_siguiente_ronda'
@@ -133,6 +134,7 @@ export function useJuez() {
       preparandoSiguienteRondaRef.current = true
       ultimaRondaActivaRef.current = null
       setCuentaRegresiva(CUENTA_REGRESIVA_INICIAL)
+      setMensaje('¡Ronda completada! Preparando siguiente ronda...')
       setEstadoPanel((actual) => ({
         ...actual,
         estadoVista: 'preparando_siguiente_ronda',
