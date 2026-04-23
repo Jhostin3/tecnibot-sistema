@@ -32,33 +32,38 @@ function ControlGoles({
       <div className="flex items-center justify-center gap-3 sm:gap-4">
         <button
           aria-label={`Reducir marcador de ${nombreEquipo}`}
-          className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-600 bg-slate-800 text-xl font-bold text-slate-300 transition active:border-slate-500 active:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 sm:h-16 sm:w-16"
+          className="flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-600 bg-slate-800 text-xl font-bold text-slate-300 transition active:border-slate-500 active:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 sm:h-20 sm:w-20"
           disabled={goles === 0}
           onClick={onDecrementar}
           type="button"
         >
-          <Minus className="h-6 w-6" />
+          <Minus className="h-7 w-7" />
         </button>
 
         <input
-          className={`h-16 w-24 rounded-2xl border border-slate-600 bg-slate-950 px-3 text-center font-mono text-4xl font-bold outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 sm:h-20 sm:w-28 sm:text-5xl ${claseNumero}`}
+          className={`h-16 w-28 rounded-2xl border border-slate-600 bg-slate-950 px-3 text-center font-mono text-4xl font-bold outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 sm:h-20 sm:w-32 sm:text-5xl ${claseNumero}`}
+          enterKeyHint="done"
           inputMode="numeric"
           min="0"
           onChange={(evento) => onCambiar(evento.target.value)}
           pattern="[0-9]*"
+          step="1"
           type="number"
           value={goles}
         />
 
         <button
           aria-label={`Aumentar marcador de ${nombreEquipo}`}
-          className={`flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold text-white transition sm:h-16 sm:w-16 ${claseIncrementar}`}
+          className={`flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-bold text-white transition sm:h-20 sm:w-20 ${claseIncrementar}`}
           onClick={onIncrementar}
           type="button"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-7 w-7" />
         </button>
       </div>
+      <p className="text-center text-sm text-slate-400">
+        Ajusta con + o - o escribe el marcador.
+      </p>
     </div>
   )
 }
