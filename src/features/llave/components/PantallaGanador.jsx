@@ -17,7 +17,7 @@ function PlataformaPodio({
       <div className="mb-4 min-h-20 flex items-end justify-center">
         {resaltar ? (
           <div className="flex flex-col items-center gap-3">
-            <Trophy className="h-14 w-14 text-amber-300" />
+            <Trophy className="h-14 w-14 animate-pulse text-amber-300 drop-shadow-[0_0_16px_rgba(252,211,77,0.5)]" />
             <span className="rounded-full bg-amber-900/80 px-4 py-1 text-xs font-black tracking-[0.24em] text-amber-200">
               {badge}
             </span>
