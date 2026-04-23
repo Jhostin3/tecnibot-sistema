@@ -181,6 +181,12 @@ function obtenerBola(enfrentamiento, lado) {
 function FilaEquipo({ enfrentamiento, equipo, esBye = false, lado }) {
   const ganador = equipo?.id && equipo.id === enfrentamiento.ganador_id
   const marcador = obtenerMarcador(enfrentamiento, lado)
+  const clasificadoPorBye =
+    !enfrentamiento.bye &&
+    enfrentamiento.estado === 'pendiente' &&
+    lado === 'a' &&
+    enfrentamiento.equipo_a &&
+    !enfrentamiento.equipo_b
   const clases = esBye
     ? 'border-slate-200 bg-slate-100 text-slate-500'
     : ganador
@@ -197,6 +203,11 @@ function FilaEquipo({ enfrentamiento, equipo, esBye = false, lado }) {
       <span className="min-w-0 flex-1 truncate text-sm font-semibold">
         {esBye ? 'BYE' : equipo?.nombre_equipo || 'Por definir'}
       </span>
+      {clasificadoPorBye ? (
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+          BYE
+        </span>
+      ) : null}
       {enfrentamiento.estado === 'activo' && !marcador ? (
         <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-700">
           Activo

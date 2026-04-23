@@ -19,7 +19,7 @@ function claseTarjeta(estado) {
   return 'border border-gray-600'
 }
 
-function FilaEquipo({ color, equipo, ganador, goles, perdedor }) {
+function FilaEquipo({ color, equipo, ganador, goles, perdedor, clasificadoPorBye = false }) {
   const colorPunto = color === 'azul' ? 'text-blue-400' : 'text-red-400'
 
   return (
@@ -37,6 +37,11 @@ function FilaEquipo({ color, equipo, ganador, goles, perdedor }) {
       <span className="min-w-0 truncate">
         <span className={colorPunto}>{'\u25CF'}</span> {nombreEquipo(equipo)}
       </span>
+      {clasificadoPorBye ? (
+        <span className="rounded bg-amber-500/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-300">
+          BYE
+        </span>
+      ) : null}
       {goles !== null && goles !== undefined ? (
         <span
           className={`font-mono ${
@@ -80,6 +85,11 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
   const perdedorA = enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id && !ganadorA
   const perdedorB = enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id && !ganadorB
   const esBye = enfrentamiento.bye && !enfrentamiento.equipo_b
+  const clasificadoPorBye =
+    !enfrentamiento.bye &&
+    enfrentamiento.estado === 'pendiente' &&
+    enfrentamiento.equipo_a &&
+    !enfrentamiento.equipo_b
 
   return (
     <article className={`w-56 rounded-xl bg-gray-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
@@ -96,6 +106,7 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
             <FilaEquipo
               color="azul"
               equipo={enfrentamiento.equipo_a}
+              clasificadoPorBye={clasificadoPorBye}
               ganador={ganadorA}
               goles={resultadoVisible ? enfrentamiento.resultado.goles_a : null}
               perdedor={perdedorA}
