@@ -100,9 +100,9 @@ export function PantallaGanador({
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid gap-5 md:grid-cols-[1fr_1.25fr_1fr] md:items-end">
+          <div className="grid items-end gap-5 md:grid-cols-[1fr_1.25fr_1fr] md:items-end">
             <PlataformaPodio
-              alturaClase="min-h-[220px] bg-gradient-to-b from-slate-200 to-slate-400"
+              alturaClase="h-40 bg-gradient-to-b from-slate-200 to-slate-400"
               badge="SEGUNDO LUGAR"
               colorBase=""
               descripcion="Institucion por confirmar"
@@ -112,7 +112,7 @@ export function PantallaGanador({
               ordenClase="order-2 md:order-1"
             />
             <PlataformaPodio
-              alturaClase="min-h-[300px] bg-gradient-to-b from-amber-300 to-amber-500"
+              alturaClase="h-52 bg-gradient-to-b from-amber-300 to-amber-500"
               badge="CAMPEON"
               colorBase=""
               descripcion="Institucion por confirmar"
@@ -123,7 +123,7 @@ export function PantallaGanador({
               resaltar
             />
             <PlataformaPodio
-              alturaClase="min-h-[180px] bg-gradient-to-b from-orange-300 to-orange-500"
+              alturaClase="h-32 bg-gradient-to-b from-orange-300 to-orange-500"
               badge={tercerLugar ? 'TERCER LUGAR' : 'POR DEFINIR'}
               colorBase=""
               descripcion="Institucion por confirmar"
