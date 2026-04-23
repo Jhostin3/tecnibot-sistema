@@ -53,6 +53,7 @@ export function TarjetaEnfrentamiento({
   alActivar,
   alDesactivar,
   guardando,
+  mostrarAcciones = true,
   partido,
 }) {
   if (!partido) return null
@@ -94,7 +95,7 @@ export function TarjetaEnfrentamiento({
 
       <ResultadoFinal partido={partido} />
 
-      {partido.estado === 'pendiente' ? (
+      {mostrarAcciones && partido.estado === 'pendiente' ? (
         <button
           className="mt-5 min-h-10 rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           disabled={guardando}
@@ -105,7 +106,7 @@ export function TarjetaEnfrentamiento({
         </button>
       ) : null}
 
-      {partido.estado === 'activo' ? (
+      {mostrarAcciones && partido.estado === 'activo' ? (
         <button
           className="mt-5 min-h-10 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
           disabled={guardando}

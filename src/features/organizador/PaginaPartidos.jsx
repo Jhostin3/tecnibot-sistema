@@ -6,8 +6,6 @@ import { CampoSeleccion } from '../../components/atoms/CampoSeleccion'
 import { Etiqueta } from '../../components/atoms/Etiqueta'
 import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
 import { SidebarHomologador } from '../homologacion/components/SidebarHomologador'
-import { ModalActivarPartido } from './components/ModalActivarPartido'
-import { ModalActivarRonda } from './components/ModalActivarRonda'
 import { SidebarOrganizador } from './components/SidebarOrganizador'
 import { TarjetaEnfrentamiento } from './components/TarjetaEnfrentamiento'
 import { usePartidos } from './usarPartidos'
@@ -57,12 +55,8 @@ function agruparPartidos(partidos) {
 }
 
 function ListaPartidos({
-  alActivar,
-  alActivarGrupo,
-  alDesactivar,
-  guardando,
   mensajeVacio,
-  mostrarBotonGrupo = false,
+  mostrarAcciones = false,
   partidos,
 }) {
   const grupos = useMemo(() => agruparPartidos(partidos || []), [partidos])
@@ -80,7 +74,7 @@ function ListaPartidos({
     <div className="space-y-6">
       {entradas.map(([grupo, partidosGrupo]) => (
         <section className="space-y-3" key={grupo}>
-          <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
             <div>
               <p className="text-xs font-semibold uppercase tracking-normal text-cyan-800">
                 Grupo de ronda
@@ -89,24 +83,12 @@ function ListaPartidos({
                 {crearTituloGrupo(partidosGrupo[0])}
               </h2>
             </div>
-            {mostrarBotonGrupo ? (
-              <button
-                className="min-h-10 rounded-md bg-cyan-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-                disabled={guardando}
-                onClick={() => alActivarGrupo(partidosGrupo)}
-                type="button"
-              >
-                Activar ronda completa
-              </button>
-            ) : null}
           </div>
           <div className="grid gap-4">
             {partidosGrupo.map((partido) => (
               <TarjetaEnfrentamiento
-                alActivar={alActivar}
-                alDesactivar={alDesactivar}
-                guardando={guardando}
                 key={partido.id}
+                mostrarAcciones={mostrarAcciones}
                 partido={partido}
               />
             ))}
@@ -121,21 +103,17 @@ export function PaginaPartidos() {
   const navigate = useNavigate()
   const { perfil } = useAutenticacion()
   const {
-    activarPartido,
-    activarRonda,
     activos,
     cargando,
-    desactivarPartido,
     error,
     finalizados,
     guardando,
+    iniciarTorneo,
     mensaje,
     pendientes,
     subcategorias,
   } = usePartidos()
   const [pestanaActiva, setPestanaActiva] = useState('pendientes')
-  const [partidoParaActivar, setPartidoParaActivar] = useState(null)
-  const [grupoParaActivar, setGrupoParaActivar] = useState([])
   const [canchas, setCanchas] = useState(obtenerCanchasGuardadas)
   const [nuevaCancha, setNuevaCancha] = useState('')
   const [categoriaId, setCategoriaId] = useState('')
@@ -196,6 +174,7 @@ export function PaginaPartidos() {
     finalizados: filtrarPartidos(finalizados),
     pendientes: filtrarPartidos(pendientes),
   }
+  const puedeIniciarTorneo = pendientes.length > 0 && activos.length === 0
   const mensajesVacios = {
     activos: 'No hay partidos en juego.',
     finalizados: 'Aun no hay partidos finalizados.',
@@ -243,7 +222,7 @@ export function PaginaPartidos() {
           Gestionar partidos
         </h1>
         <p className="mt-1 max-w-3xl text-sm text-slate-500">
-          Activa enfrentamientos, asigna cancha y revisa el estado del torneo.
+          Inicia el torneo una sola vez y revisa como las rondas avanzan automaticamente.
         </p>
       </div>
 
@@ -304,6 +283,33 @@ export function PaginaPartidos() {
           ))}
         </div>
       </section>
+
+      {puedeIniciarTorneo ? (
+        <section className="rounded-md border border-cyan-200 bg-cyan-50 p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
+                Inicio automatico
+              </p>
+              <h2 className="mt-1 text-2xl font-bold text-slate-950">
+                Todo listo para iniciar el torneo
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Se activara automaticamente la primera ronda disponible y el resto del torneo
+                avanzara sin intervencion manual.
+              </p>
+            </div>
+            <button
+              className="min-h-10 rounded-md bg-cyan-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              disabled={guardando}
+              onClick={() => iniciarTorneo()}
+              type="button"
+            >
+              {guardando ? 'Iniciando...' : 'Iniciar torneo'}
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2">
@@ -368,35 +374,10 @@ export function PaginaPartidos() {
         </div>
       ) : (
         <ListaPartidos
-          alActivar={setPartidoParaActivar}
-          alActivarGrupo={setGrupoParaActivar}
-          alDesactivar={desactivarPartido}
-          guardando={guardando}
           mensajeVacio={mensajesVacios[pestanaActiva]}
-          mostrarBotonGrupo={pestanaActiva === 'pendientes'}
           partidos={partidosPorPestana[pestanaActiva]}
         />
       )}
-
-      {partidoParaActivar ? (
-        <ModalActivarPartido
-          alCerrar={() => setPartidoParaActivar(null)}
-          alConfirmar={activarPartido}
-          canchas={canchas}
-          guardando={guardando}
-          partido={partidoParaActivar}
-        />
-      ) : null}
-
-      {grupoParaActivar.length ? (
-        <ModalActivarRonda
-          alCerrar={() => setGrupoParaActivar([])}
-          alConfirmar={activarRonda}
-          canchas={canchas}
-          guardando={guardando}
-          partidos={grupoParaActivar}
-        />
-      ) : null}
     </section>
   )
 

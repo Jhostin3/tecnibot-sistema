@@ -4,8 +4,8 @@ import { supabase } from '../../lib/supabaseCliente'
 import { listarSubcategorias } from '../equipos/services/servicioSubcategorias'
 import {
   activarEnfrentamiento,
-  activarRondaCompleta,
   desactivarEnfrentamiento,
+  iniciarTorneo,
   listarEnfrentamientosFinalizados,
   listarEnfrentamientosPorEstado,
 } from './servicioOrganizador'
@@ -123,15 +123,15 @@ export function usePartidos() {
     }
   }
 
-  async function activarRonda(enfrentamientos) {
+  async function iniciarTorneoCompleto() {
     setGuardando(true)
     setError(null)
     setMensaje('')
 
     try {
-      await activarRondaCompleta(enfrentamientos)
+      const cantidadPartidos = await iniciarTorneo()
       await cargarPartidos({ mostrarCarga: false })
-      setMensaje('Ronda activada correctamente.')
+      setMensaje(`Torneo iniciado. ${cantidadPartidos} partidos quedaron activos.`)
     } catch (error) {
       setError(error.message)
       setMensaje(error.message)
@@ -161,13 +161,13 @@ export function usePartidos() {
 
   return {
     activarPartido,
-    activarRonda,
     activos,
     cargando,
     desactivarPartido,
     error,
     finalizados,
     guardando,
+    iniciarTorneo: iniciarTorneoCompleto,
     mensaje,
     pendientes,
     recargar: cargarPartidos,

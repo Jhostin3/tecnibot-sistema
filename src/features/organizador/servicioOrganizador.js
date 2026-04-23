@@ -188,6 +188,55 @@ async function asegurarSinOtraRondaActiva(enfrentamientosObjetivo) {
   )
 }
 
+export async function iniciarTorneo() {
+  try {
+    const enfrentamientosActivos = await listarEnfrentamientosActivos()
+
+    if (enfrentamientosActivos.length) {
+      throw new Error('El torneo ya tiene partidos activos en este momento.')
+    }
+
+    const { data: enfrentamientosPendientes, error } = await supabase
+      .from('enfrentamientos')
+      .select(seleccionEnfrentamientos)
+      .eq('estado', 'pendiente')
+      .eq('bye', false)
+      .limit(500)
+
+    if (error) {
+      throw new Error('No se pudo verificar la primera ronda del torneo.')
+    }
+
+    if (!enfrentamientosPendientes?.length) {
+      throw new Error('No hay partidos pendientes para iniciar el torneo.')
+    }
+
+    const primeraRonda = [...enfrentamientosPendientes].sort(compararEnfrentamientos)[0]?.ronda
+
+    if (!primeraRonda) {
+      throw new Error('No se pudo determinar la primera ronda del torneo.')
+    }
+
+    const partidosPrimeraRonda = enfrentamientosPendientes.filter(
+      (enfrentamiento) => enfrentamiento.ronda === primeraRonda,
+    )
+    const ids = partidosPrimeraRonda.map((enfrentamiento) => enfrentamiento.id).filter(Boolean)
+
+    const { error: errorActivacion } = await supabase
+      .from('enfrentamientos')
+      .update({ estado: 'activo' })
+      .in('id', ids)
+
+    if (errorActivacion) {
+      throw new Error('No se pudo iniciar la primera ronda del torneo.')
+    }
+
+    return partidosPrimeraRonda.length
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo iniciar el torneo.')
+  }
+}
+
 export async function listarEnfrentamientosPorEstado(estado) {
   try {
     const { data, error } = await supabase
@@ -252,54 +301,6 @@ export async function activarEnfrentamiento(id, cancha) {
     }
   } catch (error) {
     throw new Error(error.message || 'No se pudo activar el partido.')
-  }
-}
-
-export async function activarRondaCompleta(enfrentamientos) {
-  try {
-    if (!Array.isArray(enfrentamientos) || !enfrentamientos.length) {
-      throw new Error('No hay partidos para activar en esta ronda.')
-    }
-
-    const ids = enfrentamientos.map((enfrentamiento) => enfrentamiento.id).filter(Boolean)
-
-    if (ids.length !== enfrentamientos.length) {
-      throw new Error('No se pudo identificar un partido de la ronda.')
-    }
-
-    const { data: enfrentamientosObjetivo, error: errorObjetivo } = await supabase
-      .from('enfrentamientos')
-      .select(seleccionEnfrentamientos)
-      .in('id', ids)
-      .limit(500)
-
-    if (errorObjetivo) {
-      throw new Error('No se pudo verificar la ronda que intentas activar.')
-    }
-
-    await asegurarSinOtraRondaActiva(enfrentamientosObjetivo || [])
-
-    await Promise.all(
-      enfrentamientos.map(async (enfrentamiento) => {
-        if (!enfrentamiento.id) {
-          throw new Error('No se pudo identificar un partido de la ronda.')
-        }
-
-        const { error } = await supabase
-          .from('enfrentamientos')
-          .update({
-            cancha: enfrentamiento.cancha?.trim() || null,
-            estado: 'activo',
-          })
-          .eq('id', enfrentamiento.id)
-
-        if (error) {
-          throw new Error('No se pudo activar uno de los partidos de la ronda.')
-        }
-      }),
-    )
-  } catch (error) {
-    throw new Error(error.message || 'No se pudo activar la ronda completa.')
   }
 }
 
