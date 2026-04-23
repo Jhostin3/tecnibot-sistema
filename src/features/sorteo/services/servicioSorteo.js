@@ -546,12 +546,6 @@ function validarEnfrentamientosAntesDeInsertar(enfrentamientos = []) {
         )
       }
     })
-
-    if (!enfrentamiento.equipo_a_id && !enfrentamiento.equipo_b_id) {
-      throw new Error(
-        `El enfrentamiento ${indice + 1} no tiene equipos válidos para insertarse.`,
-      )
-    }
   })
 }
 
