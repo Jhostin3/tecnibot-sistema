@@ -778,6 +778,9 @@ export async function registrarNumeroBolaPresencial({
 }
 
 export function obtenerNombreRonda(tamanoBracket) {
+  const tamanoNormalizado = calcularSiguientePotenciaDeDos(
+    Math.max(2, Number(tamanoBracket) || 2),
+  )
   const nombreRonda = {
     64: 'treintaidosavos',
     32: 'dieciseisavos',
@@ -787,7 +790,7 @@ export function obtenerNombreRonda(tamanoBracket) {
     2: 'final',
   }
 
-  return nombreRonda[tamanoBracket] || `ronda_${Math.log2(tamanoBracket)}`
+  return nombreRonda[tamanoNormalizado] || 'cuartos'
 }
 
 export { MAX_EQUIPOS_POR_SUBCATEGORIA, MIN_EQUIPOS_PARA_SORTEO }
