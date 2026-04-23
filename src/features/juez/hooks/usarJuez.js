@@ -102,7 +102,7 @@ export function useJuez() {
     cargarPartidosIniciales()
 
     const canal = supabase
-      .channel('tecnibot-enfrentamientos-juez-panel')
+      .channel('tecnibot-enfrentamientos-juez-rondas')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'enfrentamientos' },
