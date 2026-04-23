@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { supabase } from '../../../lib/supabaseCliente'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import {
   listarEquiposParaHomologacion,
   listarSubcategoriasHomologacion,
   registrarCambioHomologacion,
 } from '../services/servicioHomologacion'
+
+// Nota para desarrollo:
+// Habilita Realtime manualmente en Supabase Dashboard -> Table Editor -> equipos -> Enable Realtime.
 
 export const estadosHomologacion = [
   { etiqueta: 'Pendiente', valor: 'pendiente' },
@@ -31,6 +35,7 @@ export function useHomologaciones() {
   const [error, setError] = useState(null)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const [realtimeActivo, setRealtimeActivo] = useState(false)
 
   const cargarDatos = useCallback(async () => {
     setCargando(true)
@@ -84,10 +89,29 @@ export function useHomologaciones() {
 
     cargarDatosIniciales()
 
+    const canal = supabase
+      .channel('tecnibot-equipos-homologacion')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'equipos' },
+        () => {
+          if (!componenteActivo) return
+
+          cargarDatos().catch(() => undefined)
+        },
+      )
+      .subscribe((estadoCanal) => {
+        if (!componenteActivo) return
+
+        setRealtimeActivo(estadoCanal === 'SUBSCRIBED')
+      })
+
     return () => {
       componenteActivo = false
+      setRealtimeActivo(false)
+      supabase.removeChannel(canal)
     }
-  }, [])
+  }, [cargarDatos])
 
   const equiposFiltrados = useMemo(
     () =>
@@ -161,6 +185,7 @@ export function useHomologaciones() {
     guardando,
     mensaje,
     recargar: cargarDatos,
+    realtimeActivo,
     setMensaje,
     subcategorias,
     totalEquipos: equipos.length,
