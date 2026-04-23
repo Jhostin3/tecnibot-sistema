@@ -439,43 +439,81 @@ function crearSlotsBracket(asignaciones, tamanoBracket) {
   return [...slotsEquipos, ...slotsBye]
 }
 
-function crearParejasIniciales(slots, cantidadByes) {
-  if (!cantidadByes) {
-    return Array.from({ length: slots.length / 2 }).map((_, indice) => [
-      slots[indice * 2],
-      slots[indice * 2 + 1],
-    ])
+function crearParticipanteDesdeAsignacion(asignacion) {
+  return {
+    equipo_id: asignacion.equipo_id,
+    origen: 'equipo',
   }
+}
 
-  return Array.from({ length: slots.length / 2 }).map((_, indice) => [
-    slots[indice],
-    slots[slots.length - 1 - indice],
-  ])
+function crearParticipanteDesdeGanador(ordenPartido) {
+  return {
+    equipo_id: null,
+    origen: 'ganador',
+    orden_partido_origen: ordenPartido,
+  }
+}
+
+function crearEnfrentamientosDesdeParticipantes(subcategoriaId, ronda, participantes) {
+  return Array.from({ length: participantes.length / 2 }).map((_, indice) => {
+    const participanteA = participantes[indice * 2]
+    const participanteB = participantes[indice * 2 + 1]
+    const equipoA = participanteA?.equipo_id || null
+    const equipoB = participanteB?.equipo_id || null
+    const tieneBye = Boolean(equipoA) !== Boolean(equipoB)
+    const ganadorId = tieneBye ? equipoA || equipoB : null
+
+    return {
+      bye: tieneBye,
+      equipo_a_id: equipoA,
+      equipo_b_id: equipoB,
+      estado: tieneBye ? 'finalizado' : 'pendiente',
+      ganador_id: ganadorId,
+      orden: indice + 1,
+      ronda,
+      subcategoria_id: subcategoriaId,
+    }
+  })
 }
 
 function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
   const tamanoBracket = calcularSiguientePotenciaDeDos(asignaciones.length)
   const cantidadByes = tamanoBracket - asignaciones.length
   const rondaInicial = obtenerRondaInicial(tamanoBracket)
-  const slots = crearSlotsBracket(asignaciones, tamanoBracket)
+  const slots = crearSlotsBracket(asignaciones, tamanoBracket).filter((slot) => slot.tipo === 'equipo')
 
-  return crearParejasIniciales(slots, cantidadByes).map(([slotA, slotB], indice) => {
-    const equipoA = slotA.equipo_id
-    const equipoB = slotB.equipo_id
-    const tieneBye = !equipoA || !equipoB
-    const equipoGanador = tieneBye ? equipoA || equipoB : null
+  if (!cantidadByes) {
+    return crearEnfrentamientosDesdeParticipantes(
+      subcategoriaId,
+      rondaInicial,
+      slots.map((slot) => ({
+        equipo_id: slot.equipo_id,
+      })),
+    )
+  }
 
-    return {
-      bye: tieneBye,
-      equipo_a_id: equipoGanador || equipoA,
-      equipo_b_id: tieneBye ? null : equipoB,
-      estado: tieneBye ? 'finalizado' : 'pendiente',
-      ganador_id: equipoGanador,
-      orden: indice + 1,
-      ronda: rondaInicial,
-      subcategoria_id: subcategoriaId,
-    }
-  })
+  const cantidadEquiposConBye = cantidadByes
+  const equiposConBye = slots.slice(0, cantidadEquiposConBye)
+  const equiposPrimeraRonda = slots.slice(cantidadEquiposConBye)
+  const siguienteRonda = obtenerNombreRonda(tamanoBracket / 2)
+  const enfrentamientosPrimeraRonda = crearEnfrentamientosDesdeParticipantes(
+    subcategoriaId,
+    rondaInicial,
+    equiposPrimeraRonda.map((slot) => ({
+      equipo_id: slot.equipo_id,
+    })),
+  )
+  const participantesSiguienteRonda = [
+    ...equiposConBye.map(crearParticipanteDesdeAsignacion),
+    ...enfrentamientosPrimeraRonda.map((partido) => crearParticipanteDesdeGanador(partido.orden)),
+  ]
+  const enfrentamientosSiguienteRonda = crearEnfrentamientosDesdeParticipantes(
+    subcategoriaId,
+    siguienteRonda,
+    participantesSiguienteRonda,
+  )
+
+  return [...enfrentamientosPrimeraRonda, ...enfrentamientosSiguienteRonda]
 }
 
 export async function guardarSorteoYGenerarCuartos({

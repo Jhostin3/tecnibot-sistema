@@ -205,6 +205,69 @@ async function existeSiguienteRonda(subcategoriaId, ronda) {
   }
 }
 
+async function completarSiguienteRondaExistente(subcategoriaId, siguienteRonda, ganadores) {
+  const { data, error } = await supabase
+    .from('enfrentamientos')
+    .select(seleccionEnfrentamientos)
+    .eq('subcategoria_id', subcategoriaId)
+    .eq('ronda', siguienteRonda)
+    .order('orden', { ascending: true })
+    .limit(500)
+
+  if (error) {
+    throw new Error('No se pudo actualizar la siguiente ronda.')
+  }
+
+  const enfrentamientos = data || []
+  const actualizaciones = []
+  let indiceGanador = 0
+
+  enfrentamientos.forEach((enfrentamiento) => {
+    let equipoA = enfrentamiento.equipo_a_id
+    let equipoB = enfrentamiento.equipo_b_id
+
+    if (!equipoA && indiceGanador < ganadores.length) {
+      equipoA = ganadores[indiceGanador]
+      indiceGanador += 1
+    }
+
+    if (!equipoB && indiceGanador < ganadores.length) {
+      equipoB = ganadores[indiceGanador]
+      indiceGanador += 1
+    }
+
+    if (
+      equipoA !== enfrentamiento.equipo_a_id ||
+      equipoB !== enfrentamiento.equipo_b_id
+    ) {
+      actualizaciones.push({
+        equipo_a_id: equipoA,
+        equipo_b_id: equipoB,
+        id: enfrentamiento.id,
+      })
+    }
+  })
+
+  if (!actualizaciones.length) return
+
+  const operaciones = actualizaciones.map((actualizacion) =>
+    supabase
+      .from('enfrentamientos')
+      .update({
+        equipo_a_id: actualizacion.equipo_a_id,
+        equipo_b_id: actualizacion.equipo_b_id,
+      })
+      .eq('id', actualizacion.id),
+  )
+
+  const resultados = await Promise.all(operaciones)
+  const primerError = resultados.find((resultado) => resultado.error)?.error
+
+  if (primerError) {
+    throw new Error('El resultado se guardo, pero no se pudo completar la siguiente ronda.')
+  }
+}
+
 async function generarSiguienteRondaSiCorresponde(partido) {
   const ronda = await listarRondaPorPartido(partido)
   const rondaFinalizada = ronda.length > 0 && ronda.every((enfrentamiento) =>
@@ -272,13 +335,19 @@ async function generarSiguienteRondaSiCorresponde(partido) {
 
   const siguienteRonda = calcularSiguienteRonda(partido.ronda, ronda.length)
 
-  if (!siguienteRonda || (await existeSiguienteRonda(partido.subcategoria_id, siguienteRonda))) {
+  if (!siguienteRonda) {
     return
   }
 
   const ganadores = ronda
     .sort((a, b) => a.orden - b.orden)
     .map((enfrentamiento) => enfrentamiento.ganador_id)
+
+  if (await existeSiguienteRonda(partido.subcategoria_id, siguienteRonda)) {
+    await completarSiguienteRondaExistente(partido.subcategoria_id, siguienteRonda, ganadores)
+    return
+  }
+
   const nuevosEnfrentamientos = []
 
   for (let indice = 0; indice < ganadores.length; indice += 2) {
