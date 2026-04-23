@@ -109,6 +109,7 @@ export function PantallaGanador({
               equipo={subcampeon}
               icono={<Medal className="h-6 w-6 text-slate-700" />}
               numero="2"
+              ordenClase="order-2 md:order-1"
             />
             <PlataformaPodio
               alturaClase="min-h-[300px] bg-gradient-to-b from-amber-300 to-amber-500"
@@ -118,6 +119,7 @@ export function PantallaGanador({
               equipo={ganador}
               icono={<Trophy className="h-6 w-6 text-amber-200" />}
               numero="1"
+              ordenClase="order-1 md:order-2"
               resaltar
             />
             <PlataformaPodio
@@ -128,6 +130,7 @@ export function PantallaGanador({
               equipo={tercerLugar}
               icono={<Award className="h-6 w-6 text-orange-100" />}
               numero="3"
+              ordenClase="order-3"
             />
           </div>
 
