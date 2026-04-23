@@ -2,7 +2,7 @@ import { Award, Medal, Trophy } from 'lucide-react'
 import { obtenerResumenPodio } from '../utils/resumenPodio'
 
 function PlataformaPodio({
-  alturaClase,
+  alturaPx,
   badge,
   colorBase,
   descripcion,
@@ -13,7 +13,7 @@ function PlataformaPodio({
   resaltar = false,
 }) {
   return (
-    <article className={`flex h-full flex-col items-center text-center ${ordenClase}`.trim()}>
+    <article className={`flex flex-col items-center text-center ${ordenClase}`.trim()}>
       <div className="mb-4 min-h-20 flex items-end justify-center">
         {resaltar ? (
           <div className="flex flex-col items-center gap-3">
@@ -39,7 +39,8 @@ function PlataformaPodio({
       </div>
 
       <div
-        className={`flex w-full max-w-[260px] flex-1 flex-col justify-between rounded-t-[2rem] border border-white/15 px-5 pb-6 pt-5 shadow-2xl ${colorBase} ${alturaClase}`}
+        className={`flex w-full max-w-[260px] flex-col justify-between rounded-t-[2rem] border border-white/15 px-5 pb-6 pt-5 shadow-2xl ${colorBase}`}
+        style={{ height: alturaPx }}
       >
         <div className="text-4xl font-black text-white/90 sm:text-5xl">
           {numero}
@@ -100,11 +101,14 @@ export function PantallaGanador({
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid items-end gap-5 md:grid-cols-[1fr_1.25fr_1fr] md:items-end">
+          <div
+            className="flex flex-col gap-5 md:flex-row md:justify-center"
+            style={{ alignItems: 'flex-end' }}
+          >
             <PlataformaPodio
-              alturaClase="h-40 bg-gradient-to-b from-slate-200 to-slate-400"
+              alturaPx="160px"
               badge="SEGUNDO LUGAR"
-              colorBase=""
+              colorBase="bg-gradient-to-b from-slate-200 to-slate-400"
               descripcion="Institucion por confirmar"
               equipo={subcampeon}
               icono={<Medal className="h-6 w-6 text-slate-700" />}
@@ -112,9 +116,9 @@ export function PantallaGanador({
               ordenClase="order-2 md:order-1"
             />
             <PlataformaPodio
-              alturaClase="h-52 bg-gradient-to-b from-amber-300 to-amber-500"
+              alturaPx="220px"
               badge="CAMPEON"
-              colorBase=""
+              colorBase="bg-gradient-to-b from-amber-300 to-amber-500"
               descripcion="Institucion por confirmar"
               equipo={ganador}
               icono={<Trophy className="h-6 w-6 text-amber-200" />}
@@ -123,9 +127,9 @@ export function PantallaGanador({
               resaltar
             />
             <PlataformaPodio
-              alturaClase="h-32 bg-gradient-to-b from-orange-300 to-orange-500"
+              alturaPx="120px"
               badge={tercerLugar ? 'TERCER LUGAR' : 'POR DEFINIR'}
-              colorBase=""
+              colorBase="bg-gradient-to-b from-orange-300 to-orange-500"
               descripcion="Institucion por confirmar"
               equipo={tercerLugar}
               icono={<Award className="h-6 w-6 text-orange-100" />}
