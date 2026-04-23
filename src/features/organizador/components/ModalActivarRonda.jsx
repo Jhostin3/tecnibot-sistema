@@ -33,6 +33,8 @@ export function ModalActivarRonda({
 
   if (!partidos?.length) return null
 
+  const tituloRonda = obtenerTituloRonda(partidos)
+
   function cambiarCancha(partidoId, cancha) {
     setAsignaciones((actuales) => ({
       ...actuales,
@@ -65,8 +67,11 @@ export function ModalActivarRonda({
               Activar ronda
             </p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">
-              Activar ronda - {obtenerTituloRonda(partidos)}
+              Activar ronda - {tituloRonda}
             </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              ¿Activar {partidos.length} partidos de {tituloRonda}?
+            </p>
           </div>
           <button
             className="min-h-10 rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
@@ -129,7 +134,7 @@ export function ModalActivarRonda({
             onClick={confirmarRonda}
             type="button"
           >
-            {guardando ? 'Activando...' : 'Confirmar y activar todos'}
+            {guardando ? 'Activando...' : 'Activar ronda completa'}
           </button>
         </div>
       </div>

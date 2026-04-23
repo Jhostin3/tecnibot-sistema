@@ -23,6 +23,35 @@ const etiquetasRonda = {
   tercer_lugar: 'Tercer lugar',
 }
 
+const ordenRondas = {
+  treintaidosavos: 1,
+  dieciseisavos: 2,
+  octavos: 3,
+  cuartos: 4,
+  semifinal: 5,
+  tercer_lugar: 6,
+  final: 6,
+}
+
+function compararEnfrentamientos(a, b) {
+  const ordenRondaA = ordenRondas[a.ronda] || 999
+  const ordenRondaB = ordenRondas[b.ronda] || 999
+
+  if (ordenRondaA !== ordenRondaB) {
+    return ordenRondaA - ordenRondaB
+  }
+
+  if (a.subcategoria_id !== b.subcategoria_id) {
+    return `${a.subcategoria_id}`.localeCompare(`${b.subcategoria_id}`)
+  }
+
+  return (a.orden || 0) - (b.orden || 0)
+}
+
+function obtenerClaveRonda(enfrentamiento) {
+  return `${enfrentamiento.subcategoria_id}-${enfrentamiento.ronda}`
+}
+
 async function listarEquiposPorIds(idsEquipos) {
   try {
     const ids = Array.from(new Set(idsEquipos.filter(Boolean))).slice(0, 500)
@@ -125,6 +154,40 @@ async function adjuntarDatosEnfrentamientos(enfrentamientos) {
   }))
 }
 
+async function listarEnfrentamientosActivos() {
+  const { data, error } = await supabase
+    .from('enfrentamientos')
+    .select(seleccionEnfrentamientos)
+    .eq('estado', 'activo')
+    .limit(500)
+
+  if (error) {
+    throw new Error('No se pudo verificar si ya existe una ronda activa.')
+  }
+
+  return data || []
+}
+
+async function asegurarSinOtraRondaActiva(enfrentamientosObjetivo) {
+  const enfrentamientosActivos = await listarEnfrentamientosActivos()
+
+  if (!enfrentamientosActivos.length) return
+
+  const clavesObjetivo = new Set(enfrentamientosObjetivo.map(obtenerClaveRonda))
+  const hayOtraRondaActiva = enfrentamientosActivos.some(
+    (enfrentamiento) => !clavesObjetivo.has(obtenerClaveRonda(enfrentamiento)),
+  )
+
+  if (!hayOtraRondaActiva) return
+
+  const rondaActiva = enfrentamientosActivos[0]
+  const etiquetaRonda = etiquetasRonda[rondaActiva.ronda] || rondaActiva.ronda
+
+  throw new Error(
+    `Ya hay partidos activos en ${etiquetaRonda}. Finaliza esa ronda antes de activar otra.`,
+  )
+}
+
 export async function listarEnfrentamientosPorEstado(estado) {
   try {
     const { data, error } = await supabase
@@ -139,7 +202,9 @@ export async function listarEnfrentamientosPorEstado(estado) {
       throw new Error('No se pudieron cargar los enfrentamientos.')
     }
 
-    return adjuntarDatosEnfrentamientos(data || [])
+    const enfrentamientos = await adjuntarDatosEnfrentamientos(data || [])
+
+    return enfrentamientos.sort(compararEnfrentamientos)
   } catch (error) {
     throw new Error(error.message || 'No se pudieron cargar los enfrentamientos.')
   }
@@ -160,6 +225,19 @@ export async function activarEnfrentamiento(id, cancha) {
     if (!id || !cancha?.trim()) {
       throw new Error('Selecciona una cancha para activar el partido.')
     }
+
+    const { data: enfrentamiento, error: errorEnfrentamiento } = await supabase
+      .from('enfrentamientos')
+      .select(seleccionEnfrentamientos)
+      .eq('id', id)
+      .limit(1)
+      .single()
+
+    if (errorEnfrentamiento || !enfrentamiento) {
+      throw new Error('No se pudo identificar el partido que intentas activar.')
+    }
+
+    await asegurarSinOtraRondaActiva([enfrentamiento])
 
     const { error } = await supabase
       .from('enfrentamientos')
@@ -182,6 +260,24 @@ export async function activarRondaCompleta(enfrentamientos) {
     if (!Array.isArray(enfrentamientos) || !enfrentamientos.length) {
       throw new Error('No hay partidos para activar en esta ronda.')
     }
+
+    const ids = enfrentamientos.map((enfrentamiento) => enfrentamiento.id).filter(Boolean)
+
+    if (ids.length !== enfrentamientos.length) {
+      throw new Error('No se pudo identificar un partido de la ronda.')
+    }
+
+    const { data: enfrentamientosObjetivo, error: errorObjetivo } = await supabase
+      .from('enfrentamientos')
+      .select(seleccionEnfrentamientos)
+      .in('id', ids)
+      .limit(500)
+
+    if (errorObjetivo) {
+      throw new Error('No se pudo verificar la ronda que intentas activar.')
+    }
+
+    await asegurarSinOtraRondaActiva(enfrentamientosObjetivo || [])
 
     await Promise.all(
       enfrentamientos.map(async (enfrentamiento) => {
