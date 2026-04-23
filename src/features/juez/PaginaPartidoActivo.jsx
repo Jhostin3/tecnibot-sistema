@@ -105,10 +105,10 @@ export function PaginaPartidoActivo() {
   }
 
   return (
-    <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(29,78,216,0.18),_transparent_28%),linear-gradient(180deg,_#eef4ff_0%,_#dff4f7_100%)] px-3 py-4 sm:px-5 sm:py-6">
+    <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_20%),radial-gradient(circle_at_20%_0%,_rgba(250,204,21,0.08),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0f172a_24%,_#111827_100%)] px-4 py-4 sm:px-5 sm:py-6">
       <div className="mx-auto w-full max-w-5xl space-y-4 sm:space-y-5">
         <button
-          className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-blue-200 bg-white/85 px-4 py-2 text-sm font-semibold text-blue-800 shadow-lg shadow-blue-950/10 backdrop-blur transition hover:border-cyan-400 hover:text-cyan-700"
+          className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 px-4 py-2 text-base font-semibold text-slate-100 shadow-lg shadow-black/20 backdrop-blur transition active:border-cyan-400 active:text-cyan-200"
           onClick={() => navigate('/juez')}
           type="button"
         >
@@ -117,19 +117,19 @@ export function PaginaPartidoActivo() {
         </button>
 
         {mensaje ? (
-          <p className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4 text-sm font-semibold text-cyan-800 sm:text-base">
+          <p className="rounded-2xl border border-cyan-400/25 bg-cyan-500/10 p-4 text-base font-semibold text-cyan-100">
             {mensaje}
           </p>
         ) : null}
 
         {error ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700 sm:text-base">
+          <p className="rounded-2xl border border-red-400/25 bg-red-500/10 p-4 text-base font-semibold text-red-200">
             {error}
           </p>
         ) : null}
 
         {cargando ? (
-          <p className="rounded-3xl border border-blue-100 bg-white/90 p-6 text-center text-base font-semibold text-slate-700 shadow-lg shadow-blue-950/10 sm:text-lg">
+          <p className="rounded-3xl border border-slate-700 bg-slate-900/95 p-6 text-center text-base font-semibold text-slate-200 shadow-lg shadow-black/20 sm:text-lg">
             Cargando partido...
           </p>
         ) : null}
@@ -150,13 +150,13 @@ export function PaginaPartidoActivo() {
         ) : null}
 
         {!cargando && !partido && !partidoFinalizado ? (
-          <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 text-center shadow-2xl shadow-blue-950/10">
-            <h1 className="text-2xl font-bold text-slate-900">Partido no disponible</h1>
-            <p className="mt-3 text-sm leading-7 text-slate-500 sm:text-base">
+          <div className="rounded-3xl border border-slate-700 bg-slate-900/95 p-6 text-center shadow-2xl shadow-black/25">
+            <h1 className="text-2xl font-bold text-white">Partido no disponible</h1>
+            <p className="mt-3 text-sm leading-7 text-slate-400 sm:text-base">
               Este enfrentamiento no esta activo o ya fue finalizado.
             </p>
             <button
-              className="mt-6 min-h-12 rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-500 px-5 py-3 font-bold text-white transition hover:from-blue-800 hover:to-cyan-600"
+              className="mt-6 min-h-12 rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-3 font-bold text-slate-950 transition hover:from-cyan-400 hover:to-sky-300"
               onClick={cargarPartido}
               type="button"
             >
