@@ -31,7 +31,7 @@ async function listarEquiposPorIds(idsEquipos) {
 
     const { data, error } = await supabase
       .from('equipos')
-      .select('id, nombre_equipo, nombre_robot')
+      .select('id, nombre_equipo, nombre_robot, institucion')
       .in('id', ids)
       .limit(500)
 
