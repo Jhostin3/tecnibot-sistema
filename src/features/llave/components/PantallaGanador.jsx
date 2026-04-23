@@ -23,7 +23,7 @@ function PlataformaPodio({
           <div className="flex flex-col items-center gap-3">
             <span
               className="animate-pulse drop-shadow-[0_0_16px_rgba(252,211,77,0.5)]"
-              style={{ fontSize: '48px' }}
+              style={{ alignSelf: 'center', fontSize: '48px' }}
             >
               {emoji}
             </span>
@@ -40,12 +40,27 @@ function PlataformaPodio({
 
       <div className="mb-3 w-full space-y-1">
         <p
-          className="overflow-hidden text-ellipsis text-center font-black text-white"
-          style={{ fontSize: tamanoNombre, whiteSpace: 'nowrap' }}
+          className="text-center font-black text-white"
+          style={{
+            fontSize: tamanoNombre,
+            lineHeight: '1.3',
+            marginInline: 'auto',
+            maxWidth: '160px',
+            textAlign: 'center',
+          }}
         >
           {equipo?.nombre_equipo || 'Por definir'}
         </p>
-        <p className="text-center text-sm text-gray-400">
+        <p
+          className="text-gray-400"
+          style={{
+            fontSize: '11px',
+            lineHeight: '1.3',
+            marginInline: 'auto',
+            maxWidth: '160px',
+            textAlign: 'center',
+          }}
+        >
           {equipo?.institucion || descripcion}
         </p>
       </div>
