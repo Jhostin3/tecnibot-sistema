@@ -1,39 +1,48 @@
-import { Award, Medal, Trophy } from 'lucide-react'
 import { obtenerResumenPodio } from '../utils/resumenPodio'
 
 function PlataformaPodio({
   alturaPx,
   badge,
   colorBase,
+  emoji,
   descripcion,
   equipo,
-  icono,
   numero,
   ordenClase = '',
   resaltar = false,
+  tamanoNombre = '16px',
+  tamanoPlataforma = '160px',
 }) {
   return (
     <article
       className={`flex flex-col items-center text-center ${ordenClase}`.trim()}
-      style={{ width: '140px' }}
+      style={{ width: resaltar ? '200px' : '180px' }}
     >
       <div className="mb-4 min-h-20 flex items-end justify-center">
         {resaltar ? (
           <div className="flex flex-col items-center gap-3">
-            <Trophy className="h-14 w-14 animate-pulse text-amber-300 drop-shadow-[0_0_16px_rgba(252,211,77,0.5)]" />
+            <span
+              className="animate-pulse drop-shadow-[0_0_16px_rgba(252,211,77,0.5)]"
+              style={{ fontSize: '48px' }}
+            >
+              {emoji}
+            </span>
             <span className="rounded-full bg-amber-900/80 px-4 py-1 text-xs font-black tracking-[0.24em] text-amber-200">
               {badge}
             </span>
           </div>
         ) : (
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900/60 text-white shadow-lg">
-            {icono}
+          <span style={{ fontSize: '32px' }}>
+            {emoji}
           </span>
         )}
       </div>
 
       <div className="mb-3 w-full space-y-1">
-        <p className="text-center text-2xl font-black text-white sm:text-3xl">
+        <p
+          className="overflow-hidden text-ellipsis text-center font-black text-white"
+          style={{ fontSize: tamanoNombre, whiteSpace: 'nowrap' }}
+        >
           {equipo?.nombre_equipo || 'Por definir'}
         </p>
         <p className="text-center text-sm text-gray-400">
@@ -43,7 +52,7 @@ function PlataformaPodio({
 
       <div
         className={`flex w-full flex-col justify-between rounded-t-[2rem] border border-white/15 px-5 pb-6 pt-5 shadow-2xl ${colorBase}`}
-        style={{ height: alturaPx }}
+        style={{ height: alturaPx, width: tamanoPlataforma }}
       >
         <div className="text-4xl font-black text-white/90 sm:text-5xl">
           {numero}
@@ -93,7 +102,7 @@ export function PantallaGanador({
 
       {esWalkover ? (
         <div className="mx-auto max-w-xl rounded-[2rem] border border-amber-500/30 bg-amber-500/10 p-8">
-          <Trophy className="mx-auto h-16 w-16 animate-pulse text-amber-300" />
+          <div className="mx-auto animate-pulse text-6xl">🏆</div>
           <p className="mt-4 text-3xl font-black text-white">{ganador.nombre_equipo}</p>
           <p className="mt-2 text-sm text-amber-100/80">
             {ganador.institucion || 'Unico equipo inscrito en esta categoria'}
@@ -106,38 +115,44 @@ export function PantallaGanador({
         <div className="space-y-6">
           <div
             className="flex flex-col gap-5 md:flex-row md:justify-center"
-            style={{ alignItems: 'flex-end' }}
+            style={{ alignItems: 'flex-end', gap: '24px' }}
           >
             <PlataformaPodio
-              alturaPx="160px"
+              alturaPx="140px"
               badge="SEGUNDO LUGAR"
               colorBase="bg-gradient-to-b from-slate-200 to-slate-400"
               descripcion="Institucion por confirmar"
               equipo={subcampeon}
-              icono={<Medal className="h-6 w-6 text-slate-700" />}
+              emoji="🥈"
               numero="2"
               ordenClase="order-2 md:order-1"
+              tamanoNombre="16px"
+              tamanoPlataforma="160px"
             />
             <PlataformaPodio
-              alturaPx="220px"
+              alturaPx="200px"
               badge="CAMPEON"
               colorBase="bg-gradient-to-b from-amber-300 to-amber-500"
               descripcion="Institucion por confirmar"
               equipo={ganador}
-              icono={<Trophy className="h-6 w-6 text-amber-200" />}
+              emoji="🏆"
               numero="1"
               ordenClase="order-1 md:order-2"
               resaltar
+              tamanoNombre="20px"
+              tamanoPlataforma="180px"
             />
             <PlataformaPodio
-              alturaPx="120px"
+              alturaPx="100px"
               badge={tercerLugar ? 'TERCER LUGAR' : 'POR DEFINIR'}
               colorBase="bg-gradient-to-b from-orange-300 to-orange-500"
               descripcion="Institucion por confirmar"
               equipo={tercerLugar}
-              icono={<Award className="h-6 w-6 text-orange-100" />}
+              emoji="🥉"
               numero="3"
               ordenClase="order-3"
+              tamanoNombre="16px"
+              tamanoPlataforma="160px"
             />
           </div>
 
