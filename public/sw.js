@@ -1,12 +1,13 @@
 const CACHE_NAME = 'tecnibot-shell-v1'
+const BASE_PATH = new URL(self.registration.scope).pathname
 const APP_SHELL = [
-  '/',
-  '/login',
-  '/manifest.webmanifest',
-  '/pwa-192.png',
-  '/pwa-512.png',
-  '/assets/icono_cuy.png',
-  '/assets/cuy.png',
+  `${BASE_PATH}`,
+  `${BASE_PATH}login`,
+  `${BASE_PATH}manifest.webmanifest`,
+  `${BASE_PATH}pwa-192.png`,
+  `${BASE_PATH}pwa-512.png`,
+  `${BASE_PATH}assets/icono_cuy.png`,
+  `${BASE_PATH}assets/cuy.png`,
 ]
 
 self.addEventListener('install', (event) => {
@@ -36,7 +37,7 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/login')),
+      fetch(request).catch(() => caches.match(`${BASE_PATH}login`)),
     )
     return
   }

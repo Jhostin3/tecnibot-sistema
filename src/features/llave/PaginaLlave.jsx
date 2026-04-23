@@ -8,6 +8,7 @@ import { SelectorSubcategoria } from './components/SelectorSubcategoria'
 import { useLlave } from './usarLlave'
 
 export function PaginaLlave() {
+  const iconoTecniBot = `${import.meta.env.BASE_URL}assets/icono_cuy.png`
   const navigate = useNavigate()
   const {
     cargando,
@@ -43,7 +44,7 @@ export function PaginaLlave() {
               <img
                 alt="TecniBot"
                 className="h-10 w-10 object-contain"
-                src="/assets/icono_cuy.png"
+                src={iconoTecniBot}
               />
             </span>
             <div>

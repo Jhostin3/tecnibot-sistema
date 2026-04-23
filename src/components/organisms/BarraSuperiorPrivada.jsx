@@ -2,6 +2,7 @@ import { useModoSorteo } from '../../features/sorteo/hooks/useModoSorteo'
 import { modosSorteo } from '../../features/sorteo/utils/modoSorteo'
 
 export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
+  const iconoTecniBot = `${import.meta.env.BASE_URL}assets/icono_cuy.png`
   const modoSorteo = useModoSorteo()
   const badgeModo =
     modoSorteo === modosSorteo.presencial
@@ -21,7 +22,7 @@ export function BarraSuperiorPrivada({ alCerrarSesion, perfil, usuario }) {
           <img
             alt="TecniBot"
             className="h-12 w-12 object-contain"
-            src="/assets/icono_cuy.png"
+            src={iconoTecniBot}
           />
           <div>
             <p className="text-xl font-black tracking-normal text-white">TECNIBOT</p>

@@ -7,6 +7,7 @@ import { FormularioInicioSesion } from '../components/FormularioInicioSesion'
 import { useAutenticacion } from '../hooks/useAutenticacion'
 
 export function PaginaLogin() {
+  const mascotaTecniBot = `${import.meta.env.BASE_URL}assets/cuy.png`
   const location = useLocation()
   const navigate = useNavigate()
   const { cargandoSesion, iniciarSesion, usuarioAutenticado } = useAutenticacion()
@@ -67,7 +68,7 @@ export function PaginaLogin() {
           <img
             alt="TecniBot mascota"
             className="mx-auto h-56 w-56 object-contain mix-blend-screen drop-shadow-2xl md:h-72 md:w-72"
-            src="/assets/cuy.png"
+            src={mascotaTecniBot}
           />
           <h1 className="inline-flex items-center justify-center gap-3 text-5xl font-black tracking-normal text-cyan-400">
             <Zap className="inline h-8 w-8 text-cyan-400" />
