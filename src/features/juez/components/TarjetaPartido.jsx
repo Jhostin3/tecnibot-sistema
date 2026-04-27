@@ -435,14 +435,16 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         ) : null}
       </div>
 
-      <button
-        className="mt-auto h-14 w-full rounded-2xl bg-emerald-500 px-4 text-base font-black text-slate-950 transition active:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-500"
-        disabled={guardando || hayEmpate}
-        onClick={registrarResultado}
-        type="button"
-      >
-        {guardando ? 'Guardando...' : 'Registrar resultado'}
-      </button>
+      <div className="mt-auto border-t border-slate-800 pt-3">
+        <button
+          className="h-14 w-full rounded-2xl bg-emerald-500 px-4 text-base font-black text-slate-950 transition active:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-500"
+          disabled={guardando || hayEmpate}
+          onClick={registrarResultado}
+          type="button"
+        >
+          {guardando ? 'Guardando...' : 'Registrar resultado'}
+        </button>
+      </div>
     </article>
   )
 }
