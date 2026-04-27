@@ -214,9 +214,7 @@ export function useJuez() {
     }
   }
 
-  const rondaActual = estadoPanel.partidos.length
-    ? estadoPanel.partidos[0]
-    : estadoPanel.partidosPendientes[0] || null
+  const rondaActual = estadoPanel.partidos.length ? estadoPanel.partidos[0] : null
 
   return {
     cargando: estadoPanel.cargando,
