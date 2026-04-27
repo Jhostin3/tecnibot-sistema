@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { supabase } from '../../../lib/supabaseCliente'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
-import { verificarYAvanzarRonda } from '../../organizador/servicioOrganizador'
+import {
+  reanudarTorneosEnCurso,
+  verificarYAvanzarRonda,
+} from '../../organizador/servicioOrganizador'
 import {
   listarPartidosActivos,
   listarPartidosPendientesJuez,
@@ -55,6 +58,8 @@ export function useJuez() {
     }))
 
     try {
+      await reanudarTorneosEnCurso()
+
       const [partidosActivos, partidosPendientes] = await Promise.all([
         listarPartidosActivos(),
         listarPartidosPendientesJuez(),

@@ -275,6 +275,22 @@ function obtenerPrimeraRondaPendiente(enfrentamientos = []) {
   return pendientes[0]?.ronda || null
 }
 
+function obtenerRondasActivablesDesdePendientes(enfrentamientos = []) {
+  const pendientes = enfrentamientos
+    .filter((enfrentamiento) => enfrentamiento.estado === 'pendiente' && !enfrentamiento.bye)
+    .sort(compararEnfrentamientos)
+
+  if (!pendientes.length) {
+    return []
+  }
+
+  const siguienteOrden = obtenerOrdenRonda(pendientes[0].ronda)
+
+  return obtenerGrupoRondasPorOrden(siguienteOrden).filter((ronda) =>
+    pendientes.some((enfrentamiento) => enfrentamiento.ronda === ronda),
+  )
+}
+
 async function activarRondasPendientes(subcategoriaId, rondas = []) {
   if (!subcategoriaId || !rondas.length) {
     return 0
@@ -293,6 +309,102 @@ async function activarRondasPendientes(subcategoriaId, rondas = []) {
   }
 
   return data?.length || 0
+}
+
+export async function reanudarTorneoSiCorresponde(subcategoriaId) {
+  try {
+    if (!subcategoriaId) {
+      return {
+        nuevaRonda: null,
+        reanudo: false,
+        torneoFinalizado: false,
+      }
+    }
+
+    await reconciliarRondasFaltantes(subcategoriaId)
+
+    const enfrentamientosSubcategoria = await listarEnfrentamientosPorSubcategoria(subcategoriaId)
+
+    if (!enfrentamientosSubcategoria.length) {
+      return {
+        nuevaRonda: null,
+        reanudo: false,
+        torneoFinalizado: false,
+      }
+    }
+
+    const activos = enfrentamientosSubcategoria.filter((enfrentamiento) => enfrentamiento.estado === 'activo')
+
+    if (activos.length) {
+      return {
+        nuevaRonda: activos[0].ronda,
+        reanudo: false,
+        torneoFinalizado: false,
+      }
+    }
+
+    const finalizados = enfrentamientosSubcategoria.filter(
+      (enfrentamiento) => enfrentamiento.estado === 'finalizado',
+    )
+    const rondasActivables = obtenerRondasActivablesDesdePendientes(enfrentamientosSubcategoria)
+
+    if (!rondasActivables.length) {
+      return {
+        nuevaRonda: null,
+        reanudo: false,
+        torneoFinalizado: enfrentamientosSubcategoria.length > 0,
+      }
+    }
+
+    if (!finalizados.length) {
+      return {
+        nuevaRonda: null,
+        reanudo: false,
+        torneoFinalizado: false,
+      }
+    }
+
+    await activarRondasPendientes(subcategoriaId, rondasActivables)
+
+    return {
+      nuevaRonda: rondasActivables[0],
+      reanudo: true,
+      torneoFinalizado: false,
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo reanudar el torneo en curso.')
+  }
+}
+
+export async function reanudarTorneosEnCurso() {
+  try {
+    const { data, error } = await supabase
+      .from('enfrentamientos')
+      .select('subcategoria_id')
+      .limit(500)
+
+    if (error) {
+      throw new Error('No se pudieron revisar los torneos en curso.')
+    }
+
+    const subcategoriasIds = Array.from(
+      new Set(
+        (data || [])
+          .map((enfrentamiento) => enfrentamiento.subcategoria_id)
+          .filter(Boolean),
+      ),
+    )
+
+    const resultados = []
+
+    for (const subcategoriaId of subcategoriasIds) {
+      resultados.push(await reanudarTorneoSiCorresponde(subcategoriaId))
+    }
+
+    return resultados
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron reanudar los torneos en curso.')
+  }
 }
 
 async function listarEquiposPorIds(idsEquipos) {
@@ -532,10 +644,7 @@ export async function verificarYAvanzarRonda(subcategoriaId, rondaActual) {
       }
     }
 
-    const siguienteOrden = obtenerOrdenRonda(pendientesSiguientes[0].ronda)
-    const rondasActivables = obtenerGrupoRondasPorOrden(siguienteOrden).filter((ronda) =>
-      pendientesSiguientes.some((enfrentamiento) => enfrentamiento.ronda === ronda),
-    )
+    const rondasActivables = obtenerRondasActivablesDesdePendientes(pendientesSiguientes)
 
     if (!rondasActivables.length) {
       return {
