@@ -99,10 +99,10 @@ function obtenerEstadoSubcategoriaSeleccionada({
 
   if (pendientesSubcategoria.length) {
     return {
-      descripcion: `La primera ronda disponible se activara solo para ${nombreSubcategoria}.`,
+      descripcion: `Se activara la primera ronda de ${nombreSubcategoria} y el resto del torneo avanzara automaticamente cada 5 segundos hasta la final y el tercer lugar.`,
       habilitado: true,
       titulo: `Subcategoria seleccionada: ${nombreSubcategoria}`,
-      textoBoton: `Iniciar partidos de ${nombreSubcategoria}`,
+      textoBoton: `Iniciar todas las rondas de ${nombreSubcategoria}`,
     }
   }
 
@@ -282,7 +282,7 @@ export function PaginaPartidos() {
     }
 
     const confirmarInicio = window.confirm(
-      `¿Iniciar solo los partidos de la subcategoria ${subcategoriaSeleccionada.nombre}?`,
+      `¿Iniciar todas las rondas de la subcategoria ${subcategoriaSeleccionada.nombre}?`,
     )
 
     if (!confirmarInicio) {
@@ -417,7 +417,7 @@ export function PaginaPartidos() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
-              Inicio por subcategoria
+              Inicio completo del torneo
             </p>
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
               {estadoSubcategoria.titulo}
@@ -427,7 +427,7 @@ export function PaginaPartidos() {
             </p>
             {subcategoriaSeleccionada ? (
               <p className="mt-2 text-xs font-semibold uppercase tracking-normal text-slate-500">
-                Solo se activaran partidos de {subcategoriaSeleccionada.nombre}
+                El torneo de {subcategoriaSeleccionada.nombre} avanzara automaticamente hasta final y tercer lugar
               </p>
             ) : null}
             {rondaActual ? (
