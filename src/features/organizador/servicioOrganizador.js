@@ -231,24 +231,27 @@ export async function reconciliarRondasFaltantes(subcategoriaId) {
             ronda: 'final',
             equipo_a_id: semifinalA.ganador_id,
             equipo_b_id: semifinalB.ganador_id,
-            ganador_id: null,
-            estado: 'pendiente',
+            ganador_id: !semifinalB.ganador_id ? semifinalA.ganador_id : null,
+            estado: !semifinalB.ganador_id ? 'finalizado' : 'pendiente',
             orden: 1,
-            bye: false,
+            bye: !semifinalB.ganador_id,
             cancha: null,
           },
         ]
 
-        if (perdedorSemifinalA && perdedorSemifinalB) {
+        if (perdedorSemifinalA || perdedorSemifinalB) {
+          const tercerLugarEsBye = Boolean(perdedorSemifinalA) !== Boolean(perdedorSemifinalB)
+          const ganadorTercerLugar = perdedorSemifinalA || perdedorSemifinalB || null
+
           nuevosFinales.push({
             subcategoria_id: subcategoriaId,
             ronda: 'tercer_lugar',
-            equipo_a_id: perdedorSemifinalA,
-            equipo_b_id: perdedorSemifinalB,
-            ganador_id: null,
-            estado: 'pendiente',
+            equipo_a_id: perdedorSemifinalA || null,
+            equipo_b_id: perdedorSemifinalB || null,
+            ganador_id: tercerLugarEsBye ? ganadorTercerLugar : null,
+            estado: tercerLugarEsBye ? 'finalizado' : 'pendiente',
             orden: 1,
-            bye: false,
+            bye: tercerLugarEsBye,
             cancha: null,
           })
         }

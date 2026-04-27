@@ -385,23 +385,26 @@ async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
       ronda: 'final',
       equipo_a_id: ganadorSemifinalA,
       equipo_b_id: ganadorSemifinalB || null,
-      ganador_id: null,
-      estado: 'pendiente',
+      ganador_id: !ganadorSemifinalB ? ganadorSemifinalA : null,
+      estado: !ganadorSemifinalB ? 'finalizado' : 'pendiente',
       orden: 1,
-      bye: false,
+      bye: !ganadorSemifinalB,
     },
   ]
 
   if (perdedorSemifinalA || perdedorSemifinalB) {
+    const tercerLugarEsBye = Boolean(perdedorSemifinalA) !== Boolean(perdedorSemifinalB)
+    const ganadorTercerLugar = perdedorSemifinalA || perdedorSemifinalB || null
+
     nuevosEnfrentamientos.push({
       subcategoria_id: subcategoriaId,
       ronda: 'tercer_lugar',
       equipo_a_id: perdedorSemifinalA || null,
       equipo_b_id: perdedorSemifinalB || null,
-      ganador_id: null,
-      estado: 'pendiente',
+      ganador_id: tercerLugarEsBye ? ganadorTercerLugar : null,
+      estado: tercerLugarEsBye ? 'finalizado' : 'pendiente',
       orden: 1,
-      bye: false,
+      bye: tercerLugarEsBye,
     })
   }
 
