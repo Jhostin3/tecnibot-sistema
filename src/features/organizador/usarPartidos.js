@@ -228,11 +228,21 @@ export function usePartidos(subcategoriaIdSeleccionada = '') {
 
     cargarInicial()
 
+    const configuracionEnfrentamientos = {
+      event: '*',
+      schema: 'public',
+      table: 'enfrentamientos',
+    }
+
+    if (subcategoriaIdSeleccionada) {
+      configuracionEnfrentamientos.filter = `subcategoria_id=eq.${subcategoriaIdSeleccionada}`
+    }
+
     const canal = supabase
-      .channel('partidos-organizador')
+      .channel(`tecnibot-partidos-live-${subcategoriaIdSeleccionada || 'general'}-${Date.now()}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'enfrentamientos' },
+        configuracionEnfrentamientos,
         () => {
           if (componenteActivo) {
             cargarPartidos({ mostrarCarga: false })
@@ -246,7 +256,7 @@ export function usePartidos(subcategoriaIdSeleccionada = '') {
       limpiarTemporizadores()
       supabase.removeChannel(canal)
     }
-  }, [cargarPartidos, limpiarTemporizadores])
+  }, [cargarPartidos, limpiarTemporizadores, subcategoriaIdSeleccionada])
 
   useEffect(() => {
     const temporizador = window.setTimeout(() => {
