@@ -485,6 +485,14 @@ async function generarSiguienteRondaSiCorresponde(partido) {
 
     if (!nuevosEnfrentamientos.length) return
 
+    console.log('Ganadores extraídos:', [
+      ganadorSemifinalA,
+      ganadorSemifinalB,
+      perdedorSemifinalA,
+      perdedorSemifinalB,
+    ])
+    console.log('Enfrentamientos a insertar:', nuevosEnfrentamientos)
+
     const { error } = await supabase.from('enfrentamientos').insert(nuevosEnfrentamientos)
 
     if (error) {
@@ -530,6 +538,9 @@ async function generarSiguienteRondaSiCorresponde(partido) {
   }
 
   if (!nuevosEnfrentamientos.length) return
+
+  console.log('Ganadores extraídos:', ganadores)
+  console.log('Enfrentamientos a insertar:', nuevosEnfrentamientos)
 
   const { error } = await supabase.from('enfrentamientos').insert(nuevosEnfrentamientos)
 
