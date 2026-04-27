@@ -336,15 +336,15 @@ export function usePartidos(subcategoriaIdSeleccionada = '') {
 
   return {
     activarPartido,
-    activos,
+    activos: filtrarPorSubcategoria(activos),
     cargando,
     desactivarPartido,
     error,
-    finalizados,
+    finalizados: filtrarPorSubcategoria(finalizados),
     guardando,
     iniciarTorneo: iniciarTorneoCompleto,
     mensaje,
-    pendientes,
+    pendientes: filtrarPorSubcategoria(pendientes),
     recargar: cargarPartidos,
     rondaActual,
     setMensaje,
