@@ -123,13 +123,13 @@ export function usePartidos() {
     }
   }
 
-  async function iniciarTorneoCompleto() {
+  async function iniciarTorneoCompleto(subcategoriaId) {
     setGuardando(true)
     setError(null)
     setMensaje('')
 
     try {
-      const cantidadPartidos = await iniciarTorneo()
+      const cantidadPartidos = await iniciarTorneo(subcategoriaId)
       await cargarPartidos({ mostrarCarga: false })
       setMensaje(`Torneo iniciado. ${cantidadPartidos} partidos quedaron activos.`)
     } catch (error) {

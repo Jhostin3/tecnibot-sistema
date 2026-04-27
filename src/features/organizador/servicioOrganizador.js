@@ -154,12 +154,18 @@ async function adjuntarDatosEnfrentamientos(enfrentamientos) {
   }))
 }
 
-async function listarEnfrentamientosActivos() {
-  const { data, error } = await supabase
+async function listarEnfrentamientosActivos(subcategoriaId) {
+  let consulta = supabase
     .from('enfrentamientos')
     .select(seleccionEnfrentamientos)
     .eq('estado', 'activo')
     .limit(500)
+
+  if (subcategoriaId) {
+    consulta = consulta.eq('subcategoria_id', subcategoriaId)
+  }
+
+  const { data, error } = await consulta
 
   if (error) {
     throw new Error('No se pudo verificar si ya existe una ronda activa.')
@@ -169,7 +175,8 @@ async function listarEnfrentamientosActivos() {
 }
 
 async function asegurarSinOtraRondaActiva(enfrentamientosObjetivo) {
-  const enfrentamientosActivos = await listarEnfrentamientosActivos()
+  const subcategoriaId = enfrentamientosObjetivo[0]?.subcategoria_id
+  const enfrentamientosActivos = await listarEnfrentamientosActivos(subcategoriaId)
 
   if (!enfrentamientosActivos.length) return
 
@@ -188,19 +195,25 @@ async function asegurarSinOtraRondaActiva(enfrentamientosObjetivo) {
   )
 }
 
-export async function iniciarTorneo() {
+export async function iniciarTorneo(subcategoriaId) {
   try {
-    const enfrentamientosActivos = await listarEnfrentamientosActivos()
+    if (!subcategoriaId) {
+      throw new Error('Selecciona una subcategoria para iniciar el torneo.')
+    }
+
+    const enfrentamientosActivos = await listarEnfrentamientosActivos(subcategoriaId)
 
     if (enfrentamientosActivos.length) {
-      throw new Error('El torneo ya tiene partidos activos en este momento.')
+      throw new Error('La subcategoria seleccionada ya tiene partidos activos.')
     }
 
     const { data: enfrentamientosPendientes, error } = await supabase
       .from('enfrentamientos')
       .select(seleccionEnfrentamientos)
+      .eq('subcategoria_id', subcategoriaId)
       .eq('estado', 'pendiente')
       .eq('bye', false)
+      .order('orden', { ascending: true })
       .limit(500)
 
     if (error) {
@@ -225,6 +238,9 @@ export async function iniciarTorneo() {
     const { error: errorActivacion } = await supabase
       .from('enfrentamientos')
       .update({ estado: 'activo' })
+      .eq('subcategoria_id', subcategoriaId)
+      .eq('ronda', primeraRonda)
+      .eq('estado', 'pendiente')
       .in('id', ids)
 
     if (errorActivacion) {

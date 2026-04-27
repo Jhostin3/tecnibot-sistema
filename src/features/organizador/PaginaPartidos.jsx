@@ -302,7 +302,7 @@ export function PaginaPartidos() {
             <button
               className="min-h-10 rounded-md bg-cyan-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
               disabled={guardando}
-              onClick={() => iniciarTorneo()}
+              onClick={() => iniciarTorneo(subcategoriaIdSeleccionada)}
               type="button"
             >
               {guardando ? 'Iniciando...' : 'Iniciar torneo'}
