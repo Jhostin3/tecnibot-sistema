@@ -23,8 +23,12 @@ function crearSlotsBracket(ordenSorteo, tamanoBracket) {
   return [...slotsEquipos, ...slotsBye]
 }
 
+function calcularCantidadEquiposPrimeraRonda(totalEquipos, tamanoBracket) {
+  return Math.max(0, totalEquipos * 2 - tamanoBracket)
+}
+
 function obtenerParejasPrimeraRonda(ordenSorteo, tamanoBracket, cantidadByes) {
-  const slots = crearSlotsBracket(ordenSorteo, tamanoBracket)
+  const slots = crearSlotsBracket(ordenSorteo, tamanoBracket).filter((slot) => slot.tipo === 'equipo')
 
   if (!cantidadByes) {
     return Array.from({ length: slots.length / 2 }).map((_, indice) => ({
@@ -34,9 +38,15 @@ function obtenerParejasPrimeraRonda(ordenSorteo, tamanoBracket, cantidadByes) {
     }))
   }
 
-  return Array.from({ length: slots.length / 2 }).map((_, indice) => ({
-    equipoA: slots[indice],
-    equipoB: slots[slots.length - 1 - indice],
+  const cantidadEquiposPrimeraRonda = calcularCantidadEquiposPrimeraRonda(
+    slots.length,
+    tamanoBracket,
+  )
+  const equiposPrimeraRonda = slots.slice(slots.length - cantidadEquiposPrimeraRonda)
+
+  return Array.from({ length: equiposPrimeraRonda.length / 2 }).map((_, indice) => ({
+    equipoA: equiposPrimeraRonda[indice * 2],
+    equipoB: equiposPrimeraRonda[indice * 2 + 1],
     orden: indice + 1,
   }))
 }

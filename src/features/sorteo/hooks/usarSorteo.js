@@ -30,6 +30,10 @@ function calcularSiguientePotenciaDeDos(cantidad) {
   return potencia
 }
 
+function calcularCantidadEquiposPrimeraRonda(totalEquipos, tamanoBracket) {
+  return Math.max(0, totalEquipos * 2 - tamanoBracket)
+}
+
 export function useSorteo() {
   const { perfil } = useAutenticacion()
   const temporizadorGiro = useRef(null)
@@ -54,7 +58,11 @@ export function useSorteo() {
     [equipos.length],
   )
   const cantidadByes = Math.max(0, tamanoBracket - equipos.length)
-  const partidosPrimeraRonda = tamanoBracket / 2
+  const equiposPrimeraRonda = calcularCantidadEquiposPrimeraRonda(
+    equipos.length,
+    tamanoBracket,
+  )
+  const partidosPrimeraRonda = equiposPrimeraRonda / 2
   const nombrePrimeraRonda = obtenerNombreRonda(tamanoBracket)
   const subcategoriaSeleccionada = subcategorias.find(
     (subcategoria) => subcategoria.id === subcategoriaId,

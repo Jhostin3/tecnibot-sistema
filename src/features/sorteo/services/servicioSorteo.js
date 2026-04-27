@@ -448,8 +448,12 @@ function crearParticipanteDesdeGanador(ordenPartido) {
   }
 }
 
-function crearEnfrentamientosDesdeParticipantes(subcategoriaId, participantes) {
-  const ronda = obtenerNombreRonda(participantes.length)
+function calcularCantidadEquiposPrimeraRonda(totalEquipos, tamanoBracket) {
+  return Math.max(0, totalEquipos * 2 - tamanoBracket)
+}
+
+function crearEnfrentamientosDesdeParticipantes(subcategoriaId, participantes, ronda) {
+  const rondaCalculada = ronda || obtenerNombreRonda(participantes.length)
 
   return Array.from({ length: participantes.length / 2 }).map((_, indice) => {
     const participanteA = participantes[indice * 2]
@@ -464,7 +468,7 @@ function crearEnfrentamientosDesdeParticipantes(subcategoriaId, participantes) {
       estado: 'pendiente',
       ganador_id: null,
       orden: indice + 1,
-      ronda,
+      ronda: rondaCalculada,
       subcategoria_id: subcategoriaId,
     }
   })
@@ -474,19 +478,26 @@ function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
   const tamanoBracket = calcularSiguientePotenciaDeDos(asignaciones.length)
   const cantidadByes = tamanoBracket - asignaciones.length
   const slots = crearSlotsBracket(asignaciones, tamanoBracket).filter((slot) => slot.tipo === 'equipo')
+  const cantidadEquiposPrimeraRonda = calcularCantidadEquiposPrimeraRonda(
+    slots.length,
+    tamanoBracket,
+  )
+  const cantidadEquiposConBye = slots.length - cantidadEquiposPrimeraRonda
 
   if (!cantidadByes) {
     return crearEnfrentamientosDesdeParticipantes(
       subcategoriaId,
       slots.map(crearParticipanteDesdeAsignacion),
+      obtenerNombreRonda(tamanoBracket),
     )
   }
 
-  const equiposConBye = slots.slice(0, cantidadByes)
-  const equiposPrimeraRonda = slots.slice(cantidadByes)
+  const equiposConBye = slots.slice(0, cantidadEquiposConBye)
+  const equiposPrimeraRonda = slots.slice(cantidadEquiposConBye)
   const enfrentamientosPrimeraRonda = crearEnfrentamientosDesdeParticipantes(
     subcategoriaId,
     equiposPrimeraRonda.map(crearParticipanteDesdeAsignacion),
+    obtenerNombreRonda(tamanoBracket),
   )
   const participantesSiguienteRonda = []
   const ganadoresPrimeraRonda = enfrentamientosPrimeraRonda.map((partido) =>
@@ -510,6 +521,7 @@ function crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones) {
   const enfrentamientosSiguienteRonda = crearEnfrentamientosDesdeParticipantes(
     subcategoriaId,
     participantesSiguienteRonda,
+    obtenerNombreRonda(tamanoBracket / 2),
   )
 
   return [...enfrentamientosPrimeraRonda, ...enfrentamientosSiguienteRonda]
