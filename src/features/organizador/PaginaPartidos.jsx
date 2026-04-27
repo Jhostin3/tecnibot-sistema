@@ -56,17 +56,18 @@ function agruparPartidos(partidos) {
 
 function obtenerEstadoSubcategoriaSeleccionada({
   activos = [],
+  categoriaSeleccionada = false,
   finalizados = [],
   nombreSubcategoria,
   pendientes = [],
   subcategoriaId,
 }) {
-  if (!subcategoriaId) {
+  if (!categoriaSeleccionada || !subcategoriaId) {
     return {
-      descripcion: 'Selecciona una subcategoria para revisar su torneo.',
+      descripcion: 'Selecciona una categoria y subcategoria para iniciar el torneo.',
       habilitado: false,
-      titulo: 'Selecciona una subcategoria',
-      textoBoton: 'Selecciona una subcategoria',
+      titulo: 'Seleccion obligatoria',
+      textoBoton: 'Selecciona categoria y subcategoria',
     }
   }
 
@@ -92,7 +93,7 @@ function obtenerEstadoSubcategoriaSeleccionada({
       descripcion: `El torneo de ${nombreSubcategoria} ya tiene partidos en juego.`,
       habilitado: false,
       titulo: `Subcategoria seleccionada: ${nombreSubcategoria}`,
-      textoBoton: 'Torneo en curso',
+      textoBoton: `Ronda en curso en ${nombreSubcategoria}`,
     }
   }
 
@@ -101,7 +102,7 @@ function obtenerEstadoSubcategoriaSeleccionada({
       descripcion: `La primera ronda disponible se activara solo para ${nombreSubcategoria}.`,
       habilitado: true,
       titulo: `Subcategoria seleccionada: ${nombreSubcategoria}`,
-      textoBoton: `Iniciar torneo de ${nombreSubcategoria}`,
+      textoBoton: `Iniciar partidos de ${nombreSubcategoria}`,
     }
   }
 
@@ -201,7 +202,7 @@ export function PaginaPartidos() {
   }, [subcategorias])
 
   const subcategoriasFiltradas = useMemo(() => {
-    if (!categoriaId) return subcategorias
+    if (!categoriaId) return []
 
     return subcategorias.filter((subcategoria) => subcategoria.categoria_id === categoriaId)
   }, [categoriaId, subcategorias])
@@ -222,6 +223,7 @@ export function PaginaPartidos() {
         : [],
     [subcategoriaIdSeleccionada],
   )
+  const requiereSeleccionCompleta = !categoriaId || !subcategoriaIdSeleccionada
 
   const partidosPorPestana = {
     activos: filtrarPartidos(activos),
@@ -230,6 +232,7 @@ export function PaginaPartidos() {
   }
   const estadoSubcategoria = obtenerEstadoSubcategoriaSeleccionada({
     activos,
+    categoriaSeleccionada: Boolean(categoriaId),
     finalizados,
     nombreSubcategoria: subcategoriaSeleccionada?.nombre || 'la subcategoria seleccionada',
     pendientes,
@@ -271,6 +274,22 @@ export function PaginaPartidos() {
 
   function eliminarCancha(canchaAEliminar) {
     setCanchas((actuales) => actuales.filter((cancha) => cancha !== canchaAEliminar))
+  }
+
+  function confirmarEIniciarTorneo() {
+    if (!subcategoriaIdSeleccionada || !subcategoriaSeleccionada) {
+      return
+    }
+
+    const confirmarInicio = window.confirm(
+      `¿Iniciar solo los partidos de la subcategoria ${subcategoriaSeleccionada.nombre}?`,
+    )
+
+    if (!confirmarInicio) {
+      return
+    }
+
+    iniciarTorneo(subcategoriaIdSeleccionada)
   }
 
   const contenido = (
@@ -366,7 +385,7 @@ export function PaginaPartidos() {
               }}
               value={categoriaId}
             >
-              <option value="">Todas las categorias</option>
+              <option value="">Selecciona una categoria</option>
               {categorias.map((categoria) => (
                 <option key={categoria.id} value={categoria.id}>
                   {categoria.nombre}
@@ -379,10 +398,11 @@ export function PaginaPartidos() {
             <CampoSeleccion
               id="subcategoriaPartidos"
               name="subcategoriaPartidos"
+              disabled={!categoriaId}
               onChange={(evento) => setSubcategoriaId(evento.target.value)}
               value={subcategoriaIdSeleccionada}
             >
-              <option value="">Todas las especialidades</option>
+              <option value="">Selecciona una subcategoria</option>
               {subcategoriasFiltradas.map((subcategoria) => (
                 <option key={subcategoria.id} value={subcategoria.id}>
                   {subcategoria.nombre}
@@ -414,7 +434,7 @@ export function PaginaPartidos() {
           <button
             className="min-h-10 rounded-md bg-cyan-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             disabled={guardando || !estadoSubcategoria.habilitado}
-            onClick={() => iniciarTorneo(subcategoriaIdSeleccionada)}
+            onClick={confirmarEIniciarTorneo}
             type="button"
           >
             {guardando ? 'Iniciando...' : estadoSubcategoria.textoBoton}
@@ -447,32 +467,42 @@ export function PaginaPartidos() {
         </section>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        {pestanas.map((pestana) => (
-          <button
-            className={`min-h-10 rounded-md px-4 py-2 text-sm font-semibold transition ${
-              pestanaActiva === pestana.valor
-                ? 'bg-cyan-700 text-white'
-                : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
-            key={pestana.valor}
-            onClick={() => setPestanaActiva(pestana.valor)}
-            type="button"
-          >
-            {pestana.etiqueta}
-          </button>
-        ))}
-      </div>
-
-      {cargando ? (
-        <div className="rounded-md border border-slate-200 bg-white p-6 text-center shadow-sm">
-          <p className="text-base font-semibold text-slate-600">Cargando partidos...</p>
-        </div>
+      {requiereSeleccionCompleta ? (
+        <section className="rounded-md border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <p className="text-base font-semibold text-slate-700">
+            Selecciona una categoria y subcategoria para ver e iniciar solo sus partidos.
+          </p>
+        </section>
       ) : (
-        <ListaPartidos
-          mensajeVacio={mensajesVacios[pestanaActiva]}
-          partidos={partidosPorPestana[pestanaActiva]}
-        />
+        <>
+          <div className="flex flex-wrap gap-2">
+            {pestanas.map((pestana) => (
+              <button
+                className={`min-h-10 rounded-md px-4 py-2 text-sm font-semibold transition ${
+                  pestanaActiva === pestana.valor
+                    ? 'bg-cyan-700 text-white'
+                    : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+                key={pestana.valor}
+                onClick={() => setPestanaActiva(pestana.valor)}
+                type="button"
+              >
+                {pestana.etiqueta}
+              </button>
+            ))}
+          </div>
+
+          {cargando ? (
+            <div className="rounded-md border border-slate-200 bg-white p-6 text-center shadow-sm">
+              <p className="text-base font-semibold text-slate-600">Cargando partidos...</p>
+            </div>
+          ) : (
+            <ListaPartidos
+              mensajeVacio={mensajesVacios[pestanaActiva]}
+              partidos={partidosPorPestana[pestanaActiva]}
+            />
+          )}
+        </>
       )}
     </section>
   )
