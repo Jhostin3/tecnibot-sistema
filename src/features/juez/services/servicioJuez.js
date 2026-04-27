@@ -81,6 +81,21 @@ function obtenerSiguienteRonda(rondaActual) {
   return ORDEN_RONDAS_ELIMINATORIAS[indiceActual + 1] || null
 }
 
+function normalizarCruce(equipoAOriginal, equipoBOriginal) {
+  const equipoA = equipoAOriginal || null
+  const equipoB =
+    equipoA && equipoBOriginal && equipoA === equipoBOriginal ? null : (equipoBOriginal || null)
+  const bye = Boolean(equipoA) && !equipoB
+
+  return {
+    bye,
+    equipo_a_id: equipoA,
+    equipo_b_id: equipoB,
+    estado: bye ? 'finalizado' : 'pendiente',
+    ganador_id: bye ? equipoA : null,
+  }
+}
+
 async function listarEquiposPorIds(idsEquipos) {
   try {
     const ids = Array.from(new Set(idsEquipos.filter(Boolean))).slice(0, 500)
@@ -365,19 +380,15 @@ function construirEnfrentamientosDesdeOrigen(subcategoriaId, ronda, enfrentamien
     const origenB = enfrentamientosOrigen[indice * 2 + 1] || null
     const equipoA = origenA?.ganador_id ?? null
     const equipoB = origenB?.ganador_id ?? null
-    const esBye = !origenB && Boolean(equipoA)
+    const cruce = normalizarCruce(equipoA, equipoB)
 
     console.log(`Partido ${indice + 1}: ${equipoA} vs ${equipoB}`)
 
     nuevosEnfrentamientos.push({
       subcategoria_id: subcategoriaId,
       ronda,
-      equipo_a_id: equipoA,
-      equipo_b_id: equipoB,
-      ganador_id: esBye ? equipoA : null,
-      estado: esBye ? 'finalizado' : 'pendiente',
+      ...cruce,
       orden: indice + 1,
-      bye: esBye,
     })
   }
 
@@ -392,15 +403,11 @@ function completarEnfrentamientosExistentes(enfrentamientosDestino, ganadores) {
       enfrentamiento.equipo_a_id || ganadores[indiceGanador++] || null
     const equipoB =
       enfrentamiento.equipo_b_id || ganadores[indiceGanador++] || null
-    const bye = Boolean(equipoA) && !equipoB
+    const cruce = normalizarCruce(equipoA, equipoB)
 
     return {
       ...enfrentamiento,
-      bye,
-      equipo_a_id: equipoA,
-      equipo_b_id: equipoB,
-      ganador_id: bye ? equipoA : null,
-      estado: bye ? 'finalizado' : 'pendiente',
+      ...cruce,
     }
   })
 }
@@ -430,28 +437,17 @@ async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
     {
       subcategoria_id: subcategoriaId,
       ronda: 'final',
-      equipo_a_id: ganadorSemifinalA,
-      equipo_b_id: ganadorSemifinalB || null,
-      ganador_id: !ganadorSemifinalB ? ganadorSemifinalA : null,
-      estado: !ganadorSemifinalB ? 'finalizado' : 'pendiente',
+      ...normalizarCruce(ganadorSemifinalA, ganadorSemifinalB || null),
       orden: 1,
-      bye: !ganadorSemifinalB,
     },
   ]
 
   if (perdedorSemifinalA || perdedorSemifinalB) {
-    const tercerLugarEsBye = Boolean(perdedorSemifinalA) !== Boolean(perdedorSemifinalB)
-    const ganadorTercerLugar = perdedorSemifinalA || perdedorSemifinalB || null
-
     nuevosEnfrentamientos.push({
       subcategoria_id: subcategoriaId,
       ronda: 'tercer_lugar',
-      equipo_a_id: perdedorSemifinalA || null,
-      equipo_b_id: perdedorSemifinalB || null,
-      ganador_id: tercerLugarEsBye ? ganadorTercerLugar : null,
-      estado: tercerLugarEsBye ? 'finalizado' : 'pendiente',
+      ...normalizarCruce(perdedorSemifinalA || null, perdedorSemifinalB || null),
       orden: 1,
-      bye: tercerLugarEsBye,
     })
   }
 

@@ -438,12 +438,18 @@ function validarAsignaciones(asignaciones) {
 
   const numeros = asignaciones.map((asignacion) => Number(asignacion.numero_bola))
   const numerosUnicos = new Set(numeros)
+  const equipos = asignaciones.map((asignacion) => asignacion.equipo_id).filter(Boolean)
+  const equiposUnicos = new Set(equipos)
   const tieneRangoValido = numeros.every(
     (numero) => numero >= 1 && numero <= asignaciones.length,
   )
 
   if (numerosUnicos.size !== asignaciones.length || !tieneRangoValido) {
     throw new Error('Asigna una bola unica para cada equipo.')
+  }
+
+  if (equiposUnicos.size !== equipos.length) {
+    throw new Error('Se detectaron equipos duplicados en las asignaciones del sorteo.')
   }
 }
 
@@ -544,14 +550,18 @@ function crearEnfrentamientosDesdeParticipantes(subcategoriaId, participantes, r
     const participanteA = participantes[indice * 2]
     const participanteB = participantes[indice * 2 + 1]
     const equipoA = participanteA?.equipo_id || null
-    const equipoB = participanteB?.equipo_id || null
+    const equipoBOriginal = participanteB?.equipo_id || null
+    const equipoB = equipoA && equipoA === equipoBOriginal ? null : equipoBOriginal
+    const bye = Boolean(equipoA) && !equipoB
+    const ganadorId = bye ? equipoA : null
+    const estado = bye ? 'finalizado' : 'pendiente'
 
     return {
-      bye: false,
+      bye,
       equipo_a_id: equipoA,
       equipo_b_id: equipoB,
-      estado: 'pendiente',
-      ganador_id: null,
+      estado,
+      ganador_id: ganadorId,
       orden: indice + 1,
       ronda: rondaCalculada,
       subcategoria_id: subcategoriaId,

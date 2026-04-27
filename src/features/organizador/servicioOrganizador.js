@@ -88,6 +88,22 @@ function obtenerSiguienteRondaEliminatoria(rondaActual) {
   return rondas[indice + 1] || null
 }
 
+function normalizarCruce(equipoAOriginal, equipoBOriginal) {
+  const equipoA = equipoAOriginal || null
+  const equipoB =
+    equipoA && equipoBOriginal && equipoA === equipoBOriginal ? null : (equipoBOriginal || null)
+  const bye = Boolean(equipoA) && !equipoB
+
+  return {
+    bye,
+    cancha: null,
+    equipo_a_id: equipoA,
+    equipo_b_id: equipoB,
+    estado: bye ? 'finalizado' : 'pendiente',
+    ganador_id: bye ? equipoA : null,
+  }
+}
+
 function construirSiguienteRondaDesdeOrigen(subcategoriaId, siguienteRonda, origen) {
   const cantidadPartidos = Math.max(1, Math.ceil(origen.length / 2))
 
@@ -96,18 +112,12 @@ function construirSiguienteRondaDesdeOrigen(subcategoriaId, siguienteRonda, orig
     const origenB = origen[indice * 2 + 1] || null
     const equipoA = origenA?.ganador_id ?? null
     const equipoB = origenB?.ganador_id ?? null
-    const bye = !origenB && Boolean(equipoA)
 
     return {
       subcategoria_id: subcategoriaId,
       ronda: siguienteRonda,
-      equipo_a_id: equipoA,
-      equipo_b_id: equipoB,
-      ganador_id: bye ? equipoA : null,
-      estado: bye ? 'finalizado' : 'pendiente',
+      ...normalizarCruce(equipoA, equipoB),
       orden: indice + 1,
-      bye,
-      cancha: null,
     }
   })
 }
@@ -229,30 +239,17 @@ export async function reconciliarRondasFaltantes(subcategoriaId) {
           {
             subcategoria_id: subcategoriaId,
             ronda: 'final',
-            equipo_a_id: semifinalA.ganador_id,
-            equipo_b_id: semifinalB.ganador_id,
-            ganador_id: !semifinalB.ganador_id ? semifinalA.ganador_id : null,
-            estado: !semifinalB.ganador_id ? 'finalizado' : 'pendiente',
+            ...normalizarCruce(semifinalA.ganador_id, semifinalB.ganador_id),
             orden: 1,
-            bye: !semifinalB.ganador_id,
-            cancha: null,
           },
         ]
 
         if (perdedorSemifinalA || perdedorSemifinalB) {
-          const tercerLugarEsBye = Boolean(perdedorSemifinalA) !== Boolean(perdedorSemifinalB)
-          const ganadorTercerLugar = perdedorSemifinalA || perdedorSemifinalB || null
-
           nuevosFinales.push({
             subcategoria_id: subcategoriaId,
             ronda: 'tercer_lugar',
-            equipo_a_id: perdedorSemifinalA || null,
-            equipo_b_id: perdedorSemifinalB || null,
-            ganador_id: tercerLugarEsBye ? ganadorTercerLugar : null,
-            estado: tercerLugarEsBye ? 'finalizado' : 'pendiente',
+            ...normalizarCruce(perdedorSemifinalA || null, perdedorSemifinalB || null),
             orden: 1,
-            bye: tercerLugarEsBye,
-            cancha: null,
           })
         }
 
