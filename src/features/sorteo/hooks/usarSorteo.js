@@ -10,6 +10,7 @@ import {
   MIN_EQUIPOS_PARA_SORTEO,
   obtenerNombreRonda,
   obtenerSorteoPorSubcategoria,
+  regenerarBracketDesdeSorteo,
 } from '../services/servicioSorteo'
 
 const duracionGiro = 3600
@@ -52,6 +53,7 @@ export function useSorteo() {
   const [error, setError] = useState(null)
   const [girando, setGirando] = useState(false)
   const [guardando, setGuardando] = useState(false)
+  const [regenerandoBracketId, setRegenerandoBracketId] = useState('')
   const [mensaje, setMensaje] = useState('')
   const tamanoBracket = useMemo(
     () => calcularSiguientePotenciaDeDos(equipos.length),
@@ -305,6 +307,34 @@ export function useSorteo() {
     }
   }
 
+  async function regenerarBracket(subcategoriaObjetivoId, nombreSubcategoria = 'esta subcategoria') {
+    if (!subcategoriaObjetivoId) {
+      setMensaje('Selecciona una subcategoria valida.')
+      return
+    }
+
+    setRegenerandoBracketId(subcategoriaObjetivoId)
+    setError(null)
+    setMensaje('')
+
+    try {
+      await regenerarBracketDesdeSorteo(subcategoriaObjetivoId)
+
+      if (subcategoriaObjetivoId === subcategoriaId) {
+        await cargarDatosSubcategoria(subcategoriaObjetivoId)
+      }
+
+      await cargarOpciones()
+      setMensaje(`Bracket regenerado correctamente para ${nombreSubcategoria}.`)
+    } catch (error) {
+      setError(error.message)
+      setMensaje(error.message)
+      throw error
+    } finally {
+      setRegenerandoBracketId('')
+    }
+  }
+
   return {
     anguloRuleta,
     asignarUltimoEquipo,
@@ -327,6 +357,8 @@ export function useSorteo() {
     confirmarCampeonAutomatico,
     guardarCampeonAutomatico: confirmarCampeonAutomatico,
     guardando,
+    regenerarBracket,
+    regenerandoBracketId,
     mensaje,
     ordenSorteo,
     partidosPrimeraRonda,

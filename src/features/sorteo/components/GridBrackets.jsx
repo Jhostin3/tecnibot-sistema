@@ -1,7 +1,11 @@
 import { GitBranch } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-export function GridBrackets({ brackets = [] }) {
+export function GridBrackets({
+  brackets = [],
+  onRegenerar,
+  regenerandoId = '',
+}) {
   const navigate = useNavigate()
 
   if (!brackets.length) {
@@ -15,11 +19,9 @@ export function GridBrackets({ brackets = [] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {brackets.map((subcategoria) => (
-        <button
+        <article
           className="group rounded-2xl border border-slate-200 bg-white p-5 text-left transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
           key={subcategoria.id}
-          onClick={() => navigate(`/bracket/${subcategoria.id}`)}
-          type="button"
         >
           <div className="flex items-start gap-4">
             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
@@ -32,16 +34,32 @@ export function GridBrackets({ brackets = [] }) {
                   : 'bg-emerald-100 text-emerald-600'
               }`}
             >
-              {subcategoria.finalizada ? 'Finalizado 🏆' : 'En curso'}
+              {subcategoria.finalizada ? 'Finalizado' : 'En curso'}
             </span>
           </div>
           <h3 className="mt-4 text-lg font-semibold text-slate-800">
             {subcategoria.nombre}
           </h3>
-          <p className="mt-2 text-sm font-semibold text-indigo-500 transition group-hover:text-indigo-600">
-            Ver bracket completo →
-          </p>
-        </button>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              className="text-sm font-semibold text-indigo-500 transition hover:text-indigo-600"
+              onClick={() => navigate(`/bracket/${subcategoria.id}`)}
+              type="button"
+            >
+              Ver bracket completo →
+            </button>
+            {onRegenerar ? (
+              <button
+                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={regenerandoId === subcategoria.id}
+                onClick={() => onRegenerar(subcategoria)}
+                type="button"
+              >
+                {regenerandoId === subcategoria.id ? 'Regenerando...' : 'Regenerar bracket'}
+              </button>
+            ) : null}
+          </div>
+        </article>
       ))}
     </div>
   )

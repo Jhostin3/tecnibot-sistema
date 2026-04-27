@@ -100,7 +100,11 @@ function BotonVerBracket({ onClick }) {
   )
 }
 
-function PanelModoPresencial({ brackets = [] }) {
+function PanelModoPresencial({
+  brackets = [],
+  onRegenerar,
+  regenerandoId = '',
+}) {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-teal-200 bg-teal-50 p-6 text-center text-teal-700">
@@ -110,10 +114,14 @@ function PanelModoPresencial({ brackets = [] }) {
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-slate-900">Brackets generados</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Consulta las llaves que ya completaron el sorteo presencial.
+          Consulta las llaves que ya completaron el sorteo presencial o fuerza una regeneracion si una subcategoria quedo sin enfrentamientos.
         </p>
         <div className="mt-4">
-          <GridBrackets brackets={brackets} />
+          <GridBrackets
+            brackets={brackets}
+            onRegenerar={onRegenerar}
+            regenerandoId={regenerandoId}
+          />
         </div>
       </section>
     </div>
@@ -173,6 +181,23 @@ export function PaginaSorteo() {
     }
   }, [esModoPresencial])
 
+  async function manejarRegeneracionManual(subcategoria) {
+    if (!subcategoria?.id) return
+
+    const confirmar = window.confirm(
+      `¿Regenerar el bracket de ${subcategoria.nombre}? Solo se reconstruira esa subcategoria.`,
+    )
+
+    if (!confirmar) return
+
+    await sorteo.regenerarBracket(subcategoria.id, subcategoria.nombre)
+
+    if (esModoPresencial) {
+      const brackets = await listarSubcategoriasConSorteo()
+      setBracketsPresenciales(brackets)
+    }
+  }
+
   const contenido = (
     <section className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -195,7 +220,11 @@ export function PaginaSorteo() {
         </p>
       </div>
       {esModoPresencial ? (
-        <PanelModoPresencial brackets={bracketsPresenciales} />
+        <PanelModoPresencial
+          brackets={bracketsPresenciales}
+          onRegenerar={manejarRegeneracionManual}
+          regenerandoId={sorteo.regenerandoBracketId}
+        />
       ) : sorteo.subcategorias.length ? (
         <SelectorSubcategoriaSorteo
           categoriaId={sorteo.categoriaId}
@@ -263,7 +292,11 @@ export function PaginaSorteo() {
   const controlesSorteo = (
     <>
       {esModoPresencial ? (
-        <PanelModoPresencial brackets={bracketsPresenciales} />
+        <PanelModoPresencial
+          brackets={bracketsPresenciales}
+          onRegenerar={manejarRegeneracionManual}
+          regenerandoId={sorteo.regenerandoBracketId}
+        />
       ) : sorteo.subcategorias.length ? (
         <SelectorSubcategoriaSorteo
           categoriaId={sorteo.categoriaId}

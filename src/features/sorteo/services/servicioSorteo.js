@@ -438,6 +438,29 @@ function crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignacion) {
   }
 }
 
+function construirEnfrentamientosDesdeSorteo(subcategoriaId, equiposAprobados, sorteoActual) {
+  const bolasPorEquipo = new Map(
+    sorteoActual.map((asignacion) => [asignacion.equipo_id, asignacion]),
+  )
+  const todosConBola = equiposAprobados.every((equipo) => bolasPorEquipo.has(equipo.id))
+
+  if (!todosConBola) {
+    throw new Error('Todavia faltan numeros de bola por registrar en esta subcategoria.')
+  }
+
+  const asignaciones = equiposAprobados
+    .map((equipo) => bolasPorEquipo.get(equipo.id))
+    .sort((a, b) => Number(a.numero_bola) - Number(b.numero_bola))
+    .map((asignacion) => ({
+      equipo_id: asignacion.equipo_id,
+      numero_bola: Number(asignacion.numero_bola),
+    }))
+
+  return asignaciones.length === 1
+    ? [crearEnfrentamientoCampeonAutomatico(subcategoriaId, asignaciones[0])]
+    : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
+}
+
 function calcularSiguientePotenciaDeDos(cantidad) {
   let potencia = 1
 
@@ -714,23 +737,18 @@ async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
 
   if (equiposAprobados.length === 0) return
 
-  const bolasPorEquipo = new Map(
-    sorteoActual.map((asignacion) => [asignacion.equipo_id, asignacion]),
-  )
-  const todosConBola = equiposAprobados.every((equipo) => bolasPorEquipo.has(equipo.id))
+  let enfrentamientos
 
-  if (!todosConBola) return
+  try {
+    enfrentamientos = construirEnfrentamientosDesdeSorteo(
+      subcategoriaNormalizada,
+      equiposAprobados,
+      sorteoActual,
+    )
+  } catch {
+    return
+  }
 
-  const asignaciones = equiposAprobados
-    .map((equipo) => bolasPorEquipo.get(equipo.id))
-    .sort((a, b) => Number(a.numero_bola) - Number(b.numero_bola))
-    .map((asignacion) => ({
-      equipo_id: asignacion.equipo_id,
-      numero_bola: Number(asignacion.numero_bola),
-    }))
-  const enfrentamientos = asignaciones.length === 1
-    ? [crearEnfrentamientoCampeonAutomatico(subcategoriaNormalizada, asignaciones[0])]
-    : crearEnfrentamientosDesdeBolas(subcategoriaNormalizada, asignaciones)
   const { data, error } = await supabase
     .from('enfrentamientos')
     .insert(enfrentamientos)
@@ -743,6 +761,84 @@ async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
 
   if (!data?.length) {
     throw new Error('Supabase no confirmó la inserción del bracket presencial.')
+  }
+}
+
+export async function regenerarBracketDesdeSorteo(subcategoriaId) {
+  try {
+    if (!subcategoriaId || typeof subcategoriaId !== 'string') {
+      throw new Error('Selecciona una subcategoria valida.')
+    }
+
+    const subcategoriaNormalizada = subcategoriaId.trim().replace(/^"+|"+$/g, '')
+
+    if (!subcategoriaNormalizada) {
+      throw new Error('Selecciona una subcategoria valida.')
+    }
+
+    const [equiposSubcategoria, sorteoActual, enfrentamientosActuales] = await Promise.all([
+      listarEquiposPorSubcategoria(subcategoriaNormalizada),
+      obtenerSorteoPorSubcategoria(subcategoriaNormalizada),
+      obtenerEnfrentamientosPorSubcategoria(subcategoriaNormalizada),
+    ])
+
+    const equiposAprobados = equiposSubcategoria.filter(
+      (equipo) => equipo.estado_homologacion === 'aprobado',
+    )
+
+    if (!equiposAprobados.length) {
+      throw new Error('No hay equipos aprobados para generar el bracket.')
+    }
+
+    if (!sorteoActual.length) {
+      throw new Error('Esta subcategoria aun no tiene sorteo registrado.')
+    }
+
+    if (enfrentamientosActuales.length) {
+      const idsEnfrentamientos = enfrentamientosActuales.map((enfrentamiento) => enfrentamiento.id)
+      const resultados = await listarResultadosPorEnfrentamientos(idsEnfrentamientos)
+      const hayPartidosIniciados =
+        resultados.size > 0 ||
+        enfrentamientosActuales.some((enfrentamiento) => enfrentamiento.estado !== 'pendiente')
+
+      if (hayPartidosIniciados) {
+        throw new Error(
+          'No se puede regenerar un bracket que ya tiene partidos iniciados o resultados registrados.',
+        )
+      }
+
+      const { error: errorEliminar } = await supabase
+        .from('enfrentamientos')
+        .delete()
+        .eq('subcategoria_id', subcategoriaNormalizada)
+
+      if (errorEliminar) {
+        throw new Error('No se pudo limpiar el bracket actual de esta subcategoria.')
+      }
+    }
+
+    const enfrentamientos = construirEnfrentamientosDesdeSorteo(
+      subcategoriaNormalizada,
+      equiposAprobados,
+      sorteoActual,
+    )
+
+    const { data, error } = await supabase
+      .from('enfrentamientos')
+      .insert(enfrentamientos)
+      .select('id')
+
+    if (error) {
+      throw new Error('No se pudo regenerar el bracket de esta subcategoria.')
+    }
+
+    if (!data?.length) {
+      throw new Error('Supabase no confirmo la regeneracion del bracket.')
+    }
+
+    return data
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo regenerar el bracket de esta subcategoria.')
   }
 }
 
