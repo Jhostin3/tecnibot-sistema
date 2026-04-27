@@ -417,7 +417,7 @@ export function PaginaPartidos() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
-              Inicio automatico
+              Inicio por subcategoria
             </p>
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
               {estadoSubcategoria.titulo}
@@ -425,6 +425,11 @@ export function PaginaPartidos() {
             <p className="mt-1 text-sm text-slate-600">
               {estadoSubcategoria.descripcion}
             </p>
+            {subcategoriaSeleccionada ? (
+              <p className="mt-2 text-xs font-semibold uppercase tracking-normal text-slate-500">
+                Solo se activaran partidos de {subcategoriaSeleccionada.nombre}
+              </p>
+            ) : null}
             {rondaActual ? (
               <p className="mt-2 text-xs font-semibold uppercase tracking-normal text-cyan-800">
                 Ronda activa: {rondaActual}
