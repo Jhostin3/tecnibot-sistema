@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { supabase } from '../../../lib/supabaseCliente'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
+import { verificarYAvanzarRonda } from '../../organizador/servicioOrganizador'
 import {
   listarPartidosActivos,
   listarPartidosPendientesJuez,
@@ -64,7 +65,11 @@ export function useJuez() {
 
       if (hayActivos) {
         estadoVista = 'ronda_activa'
-        ultimaRondaActivaRef.current = obtenerClaveRonda(partidosActivos[0])
+        ultimaRondaActivaRef.current = {
+          clave: obtenerClaveRonda(partidosActivos[0]),
+          ronda: partidosActivos[0].ronda,
+          subcategoriaId: partidosActivos[0].subcategoria_id,
+        }
         preparandoSiguienteRondaRef.current = false
         setCuentaRegresiva(0)
         setMensaje('')
@@ -135,13 +140,12 @@ export function useJuez() {
 
   useEffect(() => {
     const hayTransicionDeRonda =
-      Boolean(ultimaRondaActivaRef.current) &&
+      Boolean(ultimaRondaActivaRef.current?.clave) &&
       estadoPanel.partidos.length === 0 &&
       estadoPanel.partidosPendientes.length > 0
 
     if (hayTransicionDeRonda) {
       preparandoSiguienteRondaRef.current = true
-      ultimaRondaActivaRef.current = null
       setCuentaRegresiva(CUENTA_REGRESIVA_INICIAL)
       setMensaje('Ronda completada. Preparando siguiente ronda...')
       setEstadoPanel((actual) => ({
@@ -164,8 +168,29 @@ export function useJuez() {
 
     const temporizador = window.setTimeout(async () => {
       if (cuentaRegresiva === 1) {
+        const rondaActivaAnterior = ultimaRondaActivaRef.current
+
         preparandoSiguienteRondaRef.current = false
         setCuentaRegresiva(0)
+
+        if (rondaActivaAnterior?.subcategoriaId && rondaActivaAnterior?.ronda) {
+          try {
+            const resultado = await verificarYAvanzarRonda(
+              rondaActivaAnterior.subcategoriaId,
+              rondaActivaAnterior.ronda,
+            )
+
+            if (resultado?.avanzo && resultado.nuevaRonda) {
+              setMensaje('Siguiente ronda activada automaticamente.')
+            } else if (resultado?.torneoFinalizado) {
+              setMensaje('Torneo finalizado.')
+            }
+          } catch (errorAvance) {
+            setMensaje(errorAvance.message)
+          }
+        }
+
+        ultimaRondaActivaRef.current = null
         await cargarPartidos({ mostrarCarga: false })
         return
       }
