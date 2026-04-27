@@ -381,7 +381,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         </section>
 
         <section className="flex h-24 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 px-2">
-          <div className="flex flex-row items-center justify-center gap-8">
+          <div className="flex w-full flex-row items-center justify-center gap-6">
             <ControlMarcador
               color="azul"
               goles={golesA}
@@ -401,7 +401,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
         <section className="flex h-12 items-center gap-2">
           <button
-            className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border px-2 text-xs font-bold transition ${
+            className={`flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 text-[11px] font-bold transition ${
               reparacionesUsadas.equipoA
                 ? 'border-slate-800 bg-slate-900 text-slate-500 line-through opacity-50'
                 : 'border-blue-400/30 bg-blue-500/10 text-blue-100 active:bg-blue-500/20'
@@ -414,7 +414,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
             {nombreEquipoA}
           </button>
           <button
-            className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border px-2 text-xs font-bold transition ${
+            className={`flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 text-[11px] font-bold transition ${
               reparacionesUsadas.equipoB
                 ? 'border-slate-800 bg-slate-900 text-slate-500 line-through opacity-50'
                 : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100 active:bg-cyan-500/20'
