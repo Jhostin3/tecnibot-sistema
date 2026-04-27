@@ -461,6 +461,15 @@ function construirEnfrentamientosDesdeSorteo(subcategoriaId, equiposAprobados, s
     : crearEnfrentamientosDesdeBolas(subcategoriaId, asignaciones)
 }
 
+function esCampeonAutomaticoRegistrado(enfrentamientos = []) {
+  return (
+    enfrentamientos.length === 1 &&
+    enfrentamientos[0].ronda === 'final' &&
+    enfrentamientos[0].bye === true &&
+    enfrentamientos[0].ganador_id !== null
+  )
+}
+
 function calcularSiguientePotenciaDeDos(cantidad) {
   let potencia = 1
 
@@ -734,8 +743,23 @@ async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
   const equiposAprobados = equiposSubcategoria.filter(
     (equipo) => equipo.estado_homologacion === 'aprobado',
   )
+  const campeonAutomaticoPrematuro =
+    equiposAprobados.length > 1 && esCampeonAutomaticoRegistrado(enfrentamientosActuales)
 
-  if (equiposAprobados.length === 0) return
+  if (campeonAutomaticoPrematuro) {
+    const { error: errorEliminar } = await supabase
+      .from('enfrentamientos')
+      .delete()
+      .eq('subcategoria_id', subcategoriaNormalizada)
+
+    if (errorEliminar) {
+      throw new Error('No se pudo limpiar el campeon automatico temporal de la subcategoria.')
+    }
+  } else if (enfrentamientosActuales.length) {
+    return
+  }
+
+  if (equiposAprobados.length < MIN_EQUIPOS_PARA_SORTEO) return
 
   let enfrentamientos
 
