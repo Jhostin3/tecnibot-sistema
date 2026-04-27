@@ -57,6 +57,7 @@ function agruparPartidos(partidos) {
 function obtenerEstadoSubcategoriaSeleccionada({
   activos = [],
   finalizados = [],
+  nombreSubcategoria,
   pendientes = [],
   subcategoriaId,
 }) {
@@ -64,6 +65,7 @@ function obtenerEstadoSubcategoriaSeleccionada({
     return {
       descripcion: 'Selecciona una subcategoria para revisar su torneo.',
       habilitado: false,
+      titulo: 'Selecciona una subcategoria',
       textoBoton: 'Selecciona una subcategoria',
     }
   }
@@ -78,31 +80,35 @@ function obtenerEstadoSubcategoriaSeleccionada({
 
   if (!totalPartidos) {
     return {
-      descripcion: 'Todavia no hay enfrentamientos registrados para esta subcategoria.',
+      descripcion: `Todavia no hay enfrentamientos registrados para ${nombreSubcategoria}.`,
       habilitado: false,
+      titulo: `Subcategoria seleccionada: ${nombreSubcategoria}`,
       textoBoton: 'Sin sorteo registrado',
     }
   }
 
   if (activosSubcategoria.length) {
     return {
-      descripcion: 'La subcategoria seleccionada ya tiene partidos en juego.',
+      descripcion: `El torneo de ${nombreSubcategoria} ya tiene partidos en juego.`,
       habilitado: false,
+      titulo: `Subcategoria seleccionada: ${nombreSubcategoria}`,
       textoBoton: 'Torneo en curso',
     }
   }
 
   if (pendientesSubcategoria.length) {
     return {
-      descripcion: 'La primera ronda disponible se activara solo para esta subcategoria.',
+      descripcion: `La primera ronda disponible se activara solo para ${nombreSubcategoria}.`,
       habilitado: true,
-      textoBoton: 'Iniciar torneo',
+      titulo: `Subcategoria seleccionada: ${nombreSubcategoria}`,
+      textoBoton: `Iniciar torneo de ${nombreSubcategoria}`,
     }
   }
 
   return {
-    descripcion: 'Todos los partidos de esta subcategoria ya finalizaron.',
+    descripcion: `Todos los partidos de ${nombreSubcategoria} ya finalizaron.`,
     habilitado: false,
+    titulo: `Subcategoria seleccionada: ${nombreSubcategoria}`,
     textoBoton: 'Torneo finalizado',
   }
 }
@@ -202,6 +208,9 @@ export function PaginaPartidos() {
   )
     ? subcategoriaId
     : ''
+  const subcategoriaSeleccionada = subcategorias.find(
+    (subcategoria) => subcategoria.id === subcategoriaIdSeleccionada,
+  )
 
   const filtrarPartidos = useMemo(
     () => (partidos = []) =>
@@ -219,6 +228,7 @@ export function PaginaPartidos() {
   const estadoSubcategoria = obtenerEstadoSubcategoriaSeleccionada({
     activos,
     finalizados,
+    nombreSubcategoria: subcategoriaSeleccionada?.nombre || 'la subcategoria seleccionada',
     pendientes,
     subcategoriaId: subcategoriaIdSeleccionada,
   })
@@ -384,7 +394,7 @@ export function PaginaPartidos() {
               Inicio automatico
             </p>
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
-              Estado del torneo por subcategoria
+              {estadoSubcategoria.titulo}
             </h2>
             <p className="mt-1 text-sm text-slate-600">
               {estadoSubcategoria.descripcion}
