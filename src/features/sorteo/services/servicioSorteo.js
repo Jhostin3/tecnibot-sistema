@@ -29,7 +29,23 @@ const seleccionEnfrentamientos = `
   estado,
   orden,
   bye,
-  created_at
+  created_at,
+  cancha,
+  equipo_a:equipos!enfrentamientos_equipo_a_id_fkey(
+    id,
+    nombre_equipo,
+    nombre_robot
+  ),
+  equipo_b:equipos!enfrentamientos_equipo_b_id_fkey(
+    id,
+    nombre_equipo,
+    nombre_robot
+  ),
+  ganador:equipos!enfrentamientos_ganador_id_fkey(
+    id,
+    nombre_equipo,
+    nombre_robot
+  )
 `
 
 const MAX_EQUIPOS_POR_SUBCATEGORIA = 64
@@ -323,8 +339,9 @@ async function listarResultadosPorEnfrentamientos(idsEnfrentamientos) {
 function adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bolasPorEquipo) {
   return enfrentamientos.map((enfrentamiento) => ({
     ...enfrentamiento,
-    equipo_a: equiposPorId.get(enfrentamiento.equipo_a_id) || null,
-    equipo_b: equiposPorId.get(enfrentamiento.equipo_b_id) || null,
+    equipo_a: enfrentamiento.equipo_a || equiposPorId.get(enfrentamiento.equipo_a_id) || null,
+    equipo_b: enfrentamiento.equipo_b || equiposPorId.get(enfrentamiento.equipo_b_id) || null,
+    ganador: enfrentamiento.ganador || equiposPorId.get(enfrentamiento.ganador_id) || null,
     resultado: resultadosPorId.get(enfrentamiento.id) || null,
     bola_a: bolasPorEquipo.get(enfrentamiento.equipo_a_id) || null,
     bola_b: bolasPorEquipo.get(enfrentamiento.equipo_b_id) || null,
