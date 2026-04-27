@@ -108,6 +108,16 @@ function validarEquiposUnicosEnRonda(enfrentamientos = [], mensajeBase) {
   const equiposRonda = new Set()
 
   enfrentamientos.forEach((enfrentamiento) => {
+    if (
+      enfrentamiento.equipo_a_id &&
+      enfrentamiento.equipo_b_id &&
+      enfrentamiento.equipo_a_id === enfrentamiento.equipo_b_id
+    ) {
+      throw new Error(
+        mensajeBase || 'Se detecto un enfrentamiento con el mismo equipo en ambos lados.',
+      )
+    }
+
     ;[enfrentamiento.equipo_a_id, enfrentamiento.equipo_b_id]
       .filter(Boolean)
       .forEach((equipoId) => {
@@ -690,6 +700,60 @@ export async function verificarYAvanzarRonda(subcategoriaId, rondaActual) {
     }
   } catch (error) {
     throw new Error(error.message || 'No se pudo verificar y avanzar la ronda.')
+  }
+}
+
+export async function reconstruirSubcategoriaCorrupta(subcategoriaId) {
+  try {
+    if (!subcategoriaId) {
+      throw new Error('Selecciona una subcategoria valida para reconstruir.')
+    }
+
+    const { data: sorteo, error: errorSorteo } = await supabase
+      .from('sorteo')
+      .select('id')
+      .eq('subcategoria_id', subcategoriaId)
+      .limit(1)
+
+    if (errorSorteo) {
+      throw new Error('No se pudo verificar el sorteo de la subcategoria.')
+    }
+
+    if (!sorteo?.length) {
+      throw new Error('La subcategoria no tiene sorteo registrado. No se puede reconstruir.')
+    }
+
+    const enfrentamientos = await listarEnfrentamientosPorSubcategoria(subcategoriaId)
+    const idsEnfrentamientos = enfrentamientos.map((enfrentamiento) => enfrentamiento.id)
+
+    if (idsEnfrentamientos.length) {
+      const { error: errorResultados } = await supabase
+        .from('resultados')
+        .delete()
+        .in('enfrentamiento_id', idsEnfrentamientos)
+
+      if (errorResultados) {
+        throw new Error('No se pudieron eliminar los resultados de la subcategoria.')
+      }
+    }
+
+    const { error: errorEnfrentamientos } = await supabase
+      .from('enfrentamientos')
+      .delete()
+      .eq('subcategoria_id', subcategoriaId)
+
+    if (errorEnfrentamientos) {
+      throw new Error('No se pudieron eliminar los enfrentamientos de la subcategoria.')
+    }
+
+    const moduloSorteo = await import('../sorteo/services/servicioSorteo')
+    await moduloSorteo.regenerarBracketDesdeSorteo(subcategoriaId)
+
+    return {
+      reconstruido: true,
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo reconstruir la subcategoria.')
   }
 }
 

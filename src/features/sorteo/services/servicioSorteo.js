@@ -639,6 +639,16 @@ function validarEquiposUnicosPorRonda(enfrentamientos = [], mensajeBase) {
     const claveRonda = `${enfrentamiento.subcategoria_id}-${enfrentamiento.ronda}`
     const equiposRonda = rondas.get(claveRonda) || new Set()
 
+    if (
+      enfrentamiento.equipo_a_id &&
+      enfrentamiento.equipo_b_id &&
+      enfrentamiento.equipo_a_id === enfrentamiento.equipo_b_id
+    ) {
+      throw new Error(
+        mensajeBase || 'Se detecto un enfrentamiento con el mismo equipo en ambos lados.',
+      )
+    }
+
     ;[enfrentamiento.equipo_a_id, enfrentamiento.equipo_b_id]
       .filter(Boolean)
       .forEach((equipoId) => {

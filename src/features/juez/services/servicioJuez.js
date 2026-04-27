@@ -100,6 +100,16 @@ function validarEquiposUnicosEnRonda(enfrentamientos = [], mensajeBase) {
   const equiposRonda = new Set()
 
   enfrentamientos.forEach((enfrentamiento) => {
+    if (
+      enfrentamiento.equipo_a_id &&
+      enfrentamiento.equipo_b_id &&
+      enfrentamiento.equipo_a_id === enfrentamiento.equipo_b_id
+    ) {
+      throw new Error(
+        mensajeBase || 'Se detecto un enfrentamiento con el mismo equipo en ambos lados.',
+      )
+    }
+
     ;[enfrentamiento.equipo_a_id, enfrentamiento.equipo_b_id]
       .filter(Boolean)
       .forEach((equipoId) => {
@@ -344,32 +354,6 @@ async function listarEnfrentamientosRonda(subcategoriaId, ronda) {
   return data || []
 }
 
-async function guardarEnfrentamientosRondaExistente(enfrentamientos = []) {
-  if (!enfrentamientos.length) {
-    return
-  }
-
-  const operaciones = enfrentamientos.map((enfrentamiento) =>
-    supabase
-      .from('enfrentamientos')
-      .update({
-        equipo_a_id: enfrentamiento.equipo_a_id,
-        equipo_b_id: enfrentamiento.equipo_b_id,
-        ganador_id: enfrentamiento.ganador_id,
-        estado: enfrentamiento.estado,
-        bye: enfrentamiento.bye,
-      })
-      .eq('id', enfrentamiento.id),
-  )
-
-  const resultados = await Promise.all(operaciones)
-  const primerError = resultados.find((resultado) => resultado.error)?.error
-
-  if (primerError) {
-    throw new Error('El resultado se guardo, pero no se pudo completar la siguiente ronda.')
-  }
-}
-
 async function eliminarRonda(subcategoriaId, ronda) {
   const { data, error } = await supabase
     .from('enfrentamientos')
@@ -409,23 +393,6 @@ function construirEnfrentamientosDesdeOrigen(subcategoriaId, ronda, enfrentamien
   }
 
   return nuevosEnfrentamientos
-}
-
-function completarEnfrentamientosExistentes(enfrentamientosDestino, ganadores) {
-  let indiceGanador = 0
-
-  return enfrentamientosDestino.map((enfrentamiento) => {
-    const equipoA =
-      enfrentamiento.equipo_a_id || ganadores[indiceGanador++] || null
-    const equipoB =
-      enfrentamiento.equipo_b_id || ganadores[indiceGanador++] || null
-    const cruce = normalizarCruce(equipoA, equipoB)
-
-    return {
-      ...enfrentamiento,
-      ...cruce,
-    }
-  })
 }
 
 async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
@@ -510,27 +477,6 @@ async function generarSiguienteRonda(subcategoriaId, rondaFinalizada) {
 
   if (!siguienteRonda) {
     return
-  }
-
-  const enfrentamientosExistentes = await listarEnfrentamientosRonda(subcategoriaId, siguienteRonda)
-
-  if (enfrentamientosExistentes.length) {
-    const cantidadEsperada = Math.max(1, Math.ceil(enfrentamientos.length / 2))
-
-    if (enfrentamientosExistentes.length >= cantidadEsperada) {
-      const actualizados = completarEnfrentamientosExistentes(
-        enfrentamientosExistentes,
-        ganadores,
-      )
-
-      validarEquiposUnicosEnRonda(
-        actualizados,
-        'No se pudo completar la siguiente ronda porque un equipo quedo repetido en la misma ronda.',
-      )
-      console.log('ACTUALIZANDO RONDA EXISTENTE:', actualizados)
-      await guardarEnfrentamientosRondaExistente(actualizados)
-      return
-    }
   }
 
   await eliminarRonda(subcategoriaId, siguienteRonda)
