@@ -103,7 +103,7 @@ export function useJuez() {
     cargarPartidosIniciales()
 
     const canal = supabase
-      .channel('tecnibot-juez-enfrentamientos')
+      .channel(`tecnibot-juez-live-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'enfrentamientos' },
