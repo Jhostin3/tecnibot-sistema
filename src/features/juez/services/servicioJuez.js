@@ -136,9 +136,21 @@ export async function listarPartidosActivos() {
   try {
     const { data, error } = await supabase
       .from('enfrentamientos')
-      .select(seleccionEnfrentamientos)
+      .select(`
+        id,
+        ronda,
+        orden,
+        estado,
+        bye,
+        equipo_a_id,
+        equipo_b_id,
+        ganador_id,
+        subcategoria_id,
+        cancha
+      `)
       .eq('estado', 'activo')
       .eq('bye', false)
+      .order('ronda', { ascending: true })
       .order('orden', { ascending: true })
       .limit(500)
 
@@ -164,6 +176,53 @@ export async function listarPartidosActivos() {
       )
   } catch (error) {
     throw new Error(error.message || 'No se pudieron cargar los partidos activos.')
+  }
+}
+
+export async function listarPartidosPendientesJuez() {
+  try {
+    const { data, error } = await supabase
+      .from('enfrentamientos')
+      .select(`
+        id,
+        ronda,
+        orden,
+        estado,
+        bye,
+        equipo_a_id,
+        equipo_b_id,
+        ganador_id,
+        subcategoria_id,
+        cancha
+      `)
+      .eq('estado', 'pendiente')
+      .eq('bye', false)
+      .order('ronda', { ascending: true })
+      .order('orden', { ascending: true })
+      .limit(500)
+
+    if (error) {
+      throw new Error('No se pudieron cargar los partidos pendientes del juez.')
+    }
+
+    const enfrentamientos = data || []
+    const idsEquipos = enfrentamientos.flatMap((partido) => [
+      partido.equipo_a_id,
+      partido.equipo_b_id,
+    ])
+    const idsSubcategorias = enfrentamientos.map((partido) => partido.subcategoria_id)
+    const [equiposPorId, subcategoriasPorId] = await Promise.all([
+      listarEquiposPorIds(idsEquipos),
+      listarSubcategoriasPorIds(idsSubcategorias),
+    ])
+
+    return enfrentamientos
+      .sort(compararPorRondaYOrden)
+      .map((partido) =>
+        adjuntarDatosPartido(partido, equiposPorId, subcategoriasPorId),
+      )
+  } catch (error) {
+    throw new Error(error.message || 'No se pudieron cargar los partidos pendientes del juez.')
   }
 }
 

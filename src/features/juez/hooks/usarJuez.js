@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabaseCliente'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import {
-  listarPanelJuez,
+  listarPartidosActivos,
+  listarPartidosPendientesJuez,
   registrarResultadoPartido,
 } from '../services/servicioJuez'
 
@@ -22,6 +23,10 @@ function construirEstadoInicial() {
     partidos: [],
     partidosPendientes: [],
   }
+}
+
+function obtenerClaveRonda(partido) {
+  return partido ? `${partido.subcategoria_id}-${partido.ronda}` : null
 }
 
 export function useJuez() {
@@ -49,14 +54,17 @@ export function useJuez() {
     }))
 
     try {
-      const panel = await listarPanelJuez()
-      const hayActivos = panel.partidosActivos.length > 0
-      const hayPendientes = panel.partidosPendientes.length > 0
+      const [partidosActivos, partidosPendientes] = await Promise.all([
+        listarPartidosActivos(),
+        listarPartidosPendientesJuez(),
+      ])
+      const hayActivos = partidosActivos.length > 0
+      const hayPendientes = partidosPendientes.length > 0
       let estadoVista = 'sin_partidos'
 
       if (hayActivos) {
         estadoVista = 'ronda_activa'
-        ultimaRondaActivaRef.current = panel.claveActiva
+        ultimaRondaActivaRef.current = obtenerClaveRonda(partidosActivos[0])
         preparandoSiguienteRondaRef.current = false
         setCuentaRegresiva(0)
         setMensaje('')
@@ -68,12 +76,12 @@ export function useJuez() {
 
       setEstadoPanel({
         cargando: false,
-        claveRondaActiva: panel.claveActiva,
-        claveRondaPendiente: panel.clavePendiente,
+        claveRondaActiva: obtenerClaveRonda(partidosActivos[0]),
+        claveRondaPendiente: obtenerClaveRonda(partidosPendientes[0]),
         error: null,
         estadoVista,
-        partidos: panel.partidosActivos,
-        partidosPendientes: panel.partidosPendientes,
+        partidos: partidosActivos,
+        partidosPendientes: partidosPendientes,
       })
     } catch (error) {
       setEstadoPanel((actual) => ({
