@@ -104,6 +104,22 @@ function normalizarCruce(equipoAOriginal, equipoBOriginal) {
   }
 }
 
+function validarEquiposUnicosEnRonda(enfrentamientos = [], mensajeBase) {
+  const equiposRonda = new Set()
+
+  enfrentamientos.forEach((enfrentamiento) => {
+    ;[enfrentamiento.equipo_a_id, enfrentamiento.equipo_b_id]
+      .filter(Boolean)
+      .forEach((equipoId) => {
+        if (equiposRonda.has(equipoId)) {
+          throw new Error(mensajeBase || 'Se detecto un equipo repetido en la ronda reconstruida.')
+        }
+
+        equiposRonda.add(equipoId)
+      })
+  })
+}
+
 function construirSiguienteRondaDesdeOrigen(subcategoriaId, siguienteRonda, origen) {
   const cantidadPartidos = Math.max(1, Math.ceil(origen.length / 2))
 
@@ -208,6 +224,10 @@ export async function reconciliarRondasFaltantes(subcategoriaId) {
       origen,
     )
 
+    validarEquiposUnicosEnRonda(
+      nuevosEnfrentamientos,
+      'No se pudo reconstruir la siguiente ronda porque un equipo quedo repetido en la misma ronda.',
+    )
     await reemplazarRonda(subcategoriaId, siguienteRonda, nuevosEnfrentamientos)
     return true
   }
@@ -253,6 +273,14 @@ export async function reconciliarRondasFaltantes(subcategoriaId) {
           })
         }
 
+        validarEquiposUnicosEnRonda(
+          nuevosFinales.filter((fila) => fila.ronda === 'final'),
+          'No se pudo reconstruir la final porque un equipo quedo repetido en la misma ronda.',
+        )
+        validarEquiposUnicosEnRonda(
+          nuevosFinales.filter((fila) => fila.ronda === 'tercer_lugar'),
+          'No se pudo reconstruir el tercer lugar porque un equipo quedo repetido en la misma ronda.',
+        )
         await reemplazarRonda(subcategoriaId, 'final', nuevosFinales.filter((fila) => fila.ronda === 'final'))
         await reemplazarRonda(
           subcategoriaId,

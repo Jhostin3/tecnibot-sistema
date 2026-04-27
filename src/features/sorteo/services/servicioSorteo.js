@@ -632,6 +632,27 @@ function construirMensajeErrorSupabase(error, mensajeBase) {
   return detalle ? `${mensajeBase} ${detalle}` : mensajeBase
 }
 
+function validarEquiposUnicosPorRonda(enfrentamientos = [], mensajeBase) {
+  const rondas = new Map()
+
+  enfrentamientos.forEach((enfrentamiento) => {
+    const claveRonda = `${enfrentamiento.subcategoria_id}-${enfrentamiento.ronda}`
+    const equiposRonda = rondas.get(claveRonda) || new Set()
+
+    ;[enfrentamiento.equipo_a_id, enfrentamiento.equipo_b_id]
+      .filter(Boolean)
+      .forEach((equipoId) => {
+        if (equiposRonda.has(equipoId)) {
+          throw new Error(mensajeBase || 'Se detecto un equipo repetido dentro de la misma ronda.')
+        }
+
+        equiposRonda.add(equipoId)
+      })
+
+    rondas.set(claveRonda, equiposRonda)
+  })
+}
+
 function validarEnfrentamientosAntesDeInsertar(enfrentamientos = []) {
   if (!Array.isArray(enfrentamientos) || !enfrentamientos.length) {
     throw new Error('No se pudieron generar enfrentamientos válidos para guardar.')
@@ -654,6 +675,11 @@ function validarEnfrentamientosAntesDeInsertar(enfrentamientos = []) {
       }
     })
   })
+
+  validarEquiposUnicosPorRonda(
+    enfrentamientos,
+    'Se detectaron equipos repetidos en una misma ronda del bracket.',
+  )
 }
 
 export async function guardarSorteoYGenerarCuartos({

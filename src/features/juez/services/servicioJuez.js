@@ -96,6 +96,22 @@ function normalizarCruce(equipoAOriginal, equipoBOriginal) {
   }
 }
 
+function validarEquiposUnicosEnRonda(enfrentamientos = [], mensajeBase) {
+  const equiposRonda = new Set()
+
+  enfrentamientos.forEach((enfrentamiento) => {
+    ;[enfrentamiento.equipo_a_id, enfrentamiento.equipo_b_id]
+      .filter(Boolean)
+      .forEach((equipoId) => {
+        if (equiposRonda.has(equipoId)) {
+          throw new Error(mensajeBase || 'Se detecto un equipo repetido en la ronda generada.')
+        }
+
+        equiposRonda.add(equipoId)
+      })
+  })
+}
+
 async function listarEquiposPorIds(idsEquipos) {
   try {
     const ids = Array.from(new Set(idsEquipos.filter(Boolean))).slice(0, 500)
@@ -460,6 +476,11 @@ async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
   console.log('CANTIDAD:', nuevosEnfrentamientos.length)
   console.log('INSERTANDO:', nuevosEnfrentamientos)
 
+  validarEquiposUnicosEnRonda(
+    nuevosEnfrentamientos,
+    'No se pudo generar final/tercer lugar porque un equipo quedo repetido en la misma ronda.',
+  )
+
   const { error } = await supabase.from('enfrentamientos').insert(nuevosEnfrentamientos)
 
   if (error) {
@@ -502,6 +523,10 @@ async function generarSiguienteRonda(subcategoriaId, rondaFinalizada) {
         ganadores,
       )
 
+      validarEquiposUnicosEnRonda(
+        actualizados,
+        'No se pudo completar la siguiente ronda porque un equipo quedo repetido en la misma ronda.',
+      )
       console.log('ACTUALIZANDO RONDA EXISTENTE:', actualizados)
       await guardarEnfrentamientosRondaExistente(actualizados)
       return
@@ -520,6 +545,10 @@ async function generarSiguienteRonda(subcategoriaId, rondaFinalizada) {
     return
   }
 
+  validarEquiposUnicosEnRonda(
+    nuevosEnfrentamientos,
+    'No se pudo crear la siguiente ronda porque un equipo quedo repetido en la misma ronda.',
+  )
   console.log('INSERTANDO:', nuevosEnfrentamientos)
 
   const { error } = await supabase
