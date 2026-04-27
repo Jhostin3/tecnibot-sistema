@@ -122,21 +122,59 @@ export async function listarSubcategoriasSorteo() {
   }
 }
 
+async function obtenerResumenHomologacionSubcategoria(subcategoriaId) {
+  try {
+    const { data, error } = await supabase
+      .from('equipos')
+      .select('estado_homologacion')
+      .eq('subcategoria_id', subcategoriaId)
+      .limit(500)
+
+    if (error) {
+      throw new Error('No se pudo revisar el estado de homologacion de la subcategoria.')
+    }
+
+    const equipos = data || []
+    const total = equipos.length
+    const aprobados = equipos.filter((equipo) => equipo.estado_homologacion === 'aprobado').length
+    const rechazados = equipos.filter((equipo) => equipo.estado_homologacion === 'rechazado').length
+    const resueltos = aprobados + rechazados
+
+    return {
+      aprobados,
+      completo: total > 0 && resueltos === total,
+      rechazados,
+      resueltos,
+      total,
+    }
+  } catch (error) {
+    throw new Error(
+      error.message || 'No se pudo revisar el estado de homologacion de la subcategoria.',
+    )
+  }
+}
+
 export async function listarSubcategoriasListasParaSorteo() {
   try {
     const subcategorias = await listarSubcategoriasSorteo()
     const revisiones = await Promise.all(
       subcategorias.map(async (subcategoria) => {
-        const [equiposAprobados, sorteoActual] = await Promise.all([
+        const [equiposAprobados, sorteoActual, resumenHomologacion] = await Promise.all([
           listarEquiposAprobadosPorSubcategoria(subcategoria.id),
           obtenerSorteoPorSubcategoria(subcategoria.id),
+          obtenerResumenHomologacionSubcategoria(subcategoria.id),
         ])
 
         return {
           ...subcategoria,
           campeonAutomatico: equiposAprobados.length === 1,
+          equipos_inscritos: resumenHomologacion.total,
           equipos_aprobados: equiposAprobados.length,
-          lista: equiposAprobados.length >= 1 && !sorteoActual.length,
+          homologacion_completa: resumenHomologacion.completo,
+          lista:
+            resumenHomologacion.completo &&
+            equiposAprobados.length >= 1 &&
+            !sorteoActual.length,
         }
       }),
     )
@@ -784,15 +822,22 @@ export async function regenerarBracketDesdeSorteo(subcategoriaId) {
       throw new Error('Selecciona una subcategoria valida.')
     }
 
-    const [equiposSubcategoria, sorteoActual, enfrentamientosActuales] = await Promise.all([
+    const [equiposSubcategoria, sorteoActual, enfrentamientosActuales, resumenHomologacion] = await Promise.all([
       listarEquiposPorSubcategoria(subcategoriaNormalizada),
       obtenerSorteoPorSubcategoria(subcategoriaNormalizada),
       obtenerEnfrentamientosPorSubcategoria(subcategoriaNormalizada),
+      obtenerResumenHomologacionSubcategoria(subcategoriaNormalizada),
     ])
 
     const equiposAprobados = equiposSubcategoria.filter(
       (equipo) => equipo.estado_homologacion === 'aprobado',
     )
+
+    if (!resumenHomologacion.completo) {
+      throw new Error(
+        'Esta subcategoria todavia no completa la homologacion. Espera a que todos sus equipos queden aprobados o rechazados.',
+      )
+    }
 
     if (!equiposAprobados.length) {
       throw new Error('No hay equipos aprobados para generar el bracket.')

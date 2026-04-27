@@ -28,7 +28,7 @@ function obtenerMensajeValidacion({
   subcategorias = [],
 }) {
   if (!subcategorias || !subcategorias.length) {
-    return 'No hay subcategorias listas para sorteo.'
+    return 'Todavia no hay subcategorias con homologacion completa. Espera a que todos sus equipos queden aprobados o rechazados.'
   }
 
   if (!subcategoriaId) {

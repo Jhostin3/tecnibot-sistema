@@ -13,14 +13,14 @@ export function SelectorSubcategoriaSorteo({
     if (subcategoria.campeonAutomatico) {
       return (
         <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-          1 equipo — campeon automatico
+          1 equipo - campeon automatico
         </span>
       )
     }
 
     return (
       <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-        {subcategoria.equipos_aprobados} equipos aprobados
+        {subcategoria.equipos_aprobados}/{subcategoria.equipos_inscritos} homologados
       </span>
     )
   }
@@ -55,7 +55,7 @@ export function SelectorSubcategoriaSorteo({
           <option value="">Selecciona una subcategoria</option>
           {subcategorias.map((subcategoria) => (
             <option key={subcategoria.id} value={subcategoria.id}>
-              {subcategoria.nombre} - {subcategoria.equipos_aprobados} equipo{subcategoria.equipos_aprobados === 1 ? '' : 's'}
+              {subcategoria.nombre} - {subcategoria.equipos_aprobados} aprobados de {subcategoria.equipos_inscritos}
             </option>
           ))}
         </CampoSeleccion>
