@@ -8,8 +8,8 @@ const etiquetasRonda = {
   tercer_lugar: 'Tercer lugar',
 }
 
-function nombreEquipo(equipo) {
-  return equipo?.nombre_equipo || 'Por definir'
+function nombreEquipo(equipo, respaldo = 'Por definir') {
+  return equipo?.nombre_equipo || equipo?.nombre || respaldo
 }
 
 function claseTarjeta(estado) {
@@ -19,7 +19,15 @@ function claseTarjeta(estado) {
   return 'border border-gray-600'
 }
 
-function FilaEquipo({ color, equipo, ganador, goles, perdedor, clasificadoPorBye = false }) {
+function FilaEquipo({
+  color,
+  equipo,
+  ganador,
+  goles,
+  nombreRespaldo,
+  perdedor,
+  clasificadoPorBye = false,
+}) {
   const colorPunto = color === 'azul' ? 'text-blue-400' : 'text-red-400'
 
   return (
@@ -35,7 +43,7 @@ function FilaEquipo({ color, equipo, ganador, goles, perdedor, clasificadoPorBye
       }`}
     >
       <span className="min-w-0 truncate">
-        <span className={colorPunto}>{'\u25CF'}</span> {nombreEquipo(equipo)}
+        <span className={colorPunto}>{'\u25CF'}</span> {nombreEquipo(equipo, nombreRespaldo)}
       </span>
       {clasificadoPorBye ? (
         <span className="rounded bg-amber-500/20 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-300">
@@ -90,6 +98,12 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
     enfrentamiento.estado === 'pendiente' &&
     enfrentamiento.equipo_a &&
     !enfrentamiento.equipo_b
+  const nombreA = enfrentamiento.equipo_a?.nombre_equipo
+    ?? enfrentamiento.equipo_a_nombre
+    ?? (enfrentamiento.equipo_a_id ? 'Equipo clasificado' : 'Por definir')
+  const nombreB = enfrentamiento.equipo_b?.nombre_equipo
+    ?? enfrentamiento.equipo_b_nombre
+    ?? (enfrentamiento.bye ? 'BYE' : enfrentamiento.equipo_b_id ? 'Equipo clasificado' : 'Por definir')
 
   return (
     <article className={`w-56 rounded-xl bg-gray-800 p-3 ${claseTarjeta(enfrentamiento.estado)}`}>
@@ -109,6 +123,7 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
               clasificadoPorBye={clasificadoPorBye}
               ganador={ganadorA}
               goles={resultadoVisible ? enfrentamiento.resultado.goles_a : null}
+              nombreRespaldo={nombreA}
               perdedor={perdedorA}
             />
             <FilaEquipo
@@ -116,6 +131,7 @@ export function TarjetaEnfrentamiento({ enfrentamiento }) {
               equipo={enfrentamiento.equipo_b}
               ganador={ganadorB}
               goles={resultadoVisible ? enfrentamiento.resultado.goles_b : null}
+              nombreRespaldo={nombreB}
               perdedor={perdedorB}
             />
           </>
