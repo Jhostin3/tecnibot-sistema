@@ -5,6 +5,7 @@ import { IndicadorEnVivo } from '../../components/molecules/IndicadorEnVivo'
 import { BracketVisual } from './components/BracketVisual'
 import { PantallaGanador } from './components/PantallaGanador'
 import { SelectorSubcategoria } from './components/SelectorSubcategoria'
+import { obtenerResumenPodio } from './utils/resumenPodio'
 import { useLlave } from './usarLlave'
 
 export function PaginaLlave() {
@@ -27,9 +28,11 @@ export function PaginaLlave() {
   const subcategoriaActual = subcategorias.find(
     (subcategoria) => subcategoria.id === subcategoriaSeleccionada,
   )
+  const resumenPodio = obtenerResumenPodio(enfrentamientos, ganadorFinal, esCampeonAutomatico)
   const mostrarPodio =
     !cargando &&
-    Boolean(ganadorFinal)
+    Boolean(ganadorFinal) &&
+    (esCampeonAutomatico || resumenPodio.podioCompleto)
   const mostrarBracket =
     !cargando &&
     tieneSorteo &&
