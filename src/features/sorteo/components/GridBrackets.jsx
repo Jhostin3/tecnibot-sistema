@@ -46,7 +46,7 @@ export function GridBrackets({
               onClick={() => navigate(`/bracket/${subcategoria.id}`)}
               type="button"
             >
-              Ver bracket completo →
+              Ver bracket completo {'->'}
             </button>
             {onRegenerar ? (
               <button
@@ -55,7 +55,9 @@ export function GridBrackets({
                 onClick={() => onRegenerar(subcategoria)}
                 type="button"
               >
-                {regenerandoId === subcategoria.id ? 'Regenerando...' : 'Regenerar bracket'}
+                {regenerandoId === subcategoria.id
+                  ? 'Regenerando...'
+                  : 'Regenerar bracket'}
               </button>
             ) : null}
           </div>

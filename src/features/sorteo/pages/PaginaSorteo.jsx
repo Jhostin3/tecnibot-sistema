@@ -1,11 +1,9 @@
 import { ChevronLeft, Trophy } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { MensajeEstado } from '../../../components/molecules/MensajeEstado'
 import { useAutenticacion } from '../../autenticacion/hooks/useAutenticacion'
 import { SidebarHomologador } from '../../homologacion/components/SidebarHomologador'
-import { GridBrackets } from '../components/GridBrackets'
 import { OrdenBatalla } from '../components/OrdenBatalla'
 import { RuletaEquipos } from '../components/RuletaEquipos'
 import { SelectorSubcategoriaSorteo } from '../components/SelectorSubcategoriaSorteo'
@@ -15,7 +13,6 @@ import {
   MAX_EQUIPOS_POR_SUBCATEGORIA,
   MIN_EQUIPOS_PARA_SORTEO,
 } from '../services/servicioSorteo'
-import { listarSubcategoriasConSorteo } from '../services/servicioSorteo'
 import { modosSorteo } from '../utils/modoSorteo'
 
 function obtenerMensajeValidacion({
@@ -44,14 +41,14 @@ function obtenerMensajeValidacion({
   }
 
   if (equipos.length > MAX_EQUIPOS_POR_SUBCATEGORIA) {
-    return 'El sistema soporta hasta 64 equipos por subcategoría'
+    return 'El sistema soporta hasta 64 equipos por subcategoria.'
   }
 
   if (equipos.length < MIN_EQUIPOS_PARA_SORTEO) {
     return `Hay ${equipos.length} equipos aprobados. El sorteo requiere al menos 4 equipos.`
   }
 
-  return `${equipos.length} equipos aprobados → se agregarán ${cantidadByes} BYEs → ${nombrePrimeraRonda} de final`
+  return `${equipos.length} equipos aprobados -> se agregaran ${cantidadByes} BYEs -> ${nombrePrimeraRonda} de final`
 }
 
 function CardCampeonAutomatico({ equipo, guardando, onConfirmar }) {
@@ -95,35 +92,17 @@ function BotonVerBracket({ onClick }) {
       type="button"
     >
       <Trophy className="mr-2 h-5 w-5" />
-      Ver bracket completo →
+      Ver bracket completo {'->'}
     </button>
   )
 }
 
-function PanelModoPresencial({
-  brackets = [],
-  onRegenerar,
-  regenerandoId = '',
-}) {
+function PanelModoPresencial() {
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-teal-200 bg-teal-50 p-6 text-center text-teal-700">
-        Modo presencial activo. Los numeros de bola se asignan al momento de
-        aprobar cada equipo en Homologacion.
-      </div>
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-900">Brackets generados</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Consulta las llaves que ya completaron el sorteo presencial o fuerza una regeneracion si una subcategoria quedo sin enfrentamientos.
-        </p>
-        <div className="mt-4">
-          <GridBrackets
-            brackets={brackets}
-            onRegenerar={onRegenerar}
-            regenerandoId={regenerandoId}
-          />
-        </div>
-      </section>
+    <div className="rounded-xl border border-teal-200 bg-teal-50 p-6 text-center text-teal-700">
+      Modo presencial activo. Los numeros de bola se asignan al momento de
+      aprobar cada equipo en Homologacion. La revision y regeneracion de
+      brackets se gestiona desde el modulo Brackets del torneo.
     </div>
   )
 }
@@ -133,7 +112,6 @@ export function PaginaSorteo() {
   const { perfil } = useAutenticacion()
   const modoSorteo = useModoSorteo()
   const sorteo = useSorteo()
-  const [bracketsPresenciales, setBracketsPresenciales] = useState([])
   const esModoPresencial = modoSorteo === modosSorteo.presencial
   const subcategoriasFiltradas = sorteo.categoriaId
     ? sorteo.subcategorias.filter(
@@ -145,58 +123,10 @@ export function PaginaSorteo() {
     esCampeonAutomatico: sorteo.esCampeonAutomatico,
     equipos: sorteo.equipos,
     nombrePrimeraRonda: sorteo.nombrePrimeraRonda,
-    partidosPrimeraRonda: sorteo.partidosPrimeraRonda,
     sorteoExistente: sorteo.sorteoExistente,
     subcategoriaId: sorteo.subcategoriaId,
     subcategorias: sorteo.subcategorias,
-    tamanoBracket: sorteo.tamanoBracket,
   })
-
-  useEffect(() => {
-    let activo = true
-
-    async function cargarBracketsPresenciales() {
-      if (!esModoPresencial) {
-        setBracketsPresenciales([])
-        return
-      }
-
-      try {
-        const brackets = await listarSubcategoriasConSorteo()
-
-        if (activo) {
-          setBracketsPresenciales(brackets)
-        }
-      } catch {
-        if (activo) {
-          setBracketsPresenciales([])
-        }
-      }
-    }
-
-    cargarBracketsPresenciales()
-
-    return () => {
-      activo = false
-    }
-  }, [esModoPresencial])
-
-  async function manejarRegeneracionManual(subcategoria) {
-    if (!subcategoria?.id) return
-
-    const confirmar = window.confirm(
-      `¿Regenerar el bracket de ${subcategoria.nombre}? Solo se reconstruira esa subcategoria.`,
-    )
-
-    if (!confirmar) return
-
-    await sorteo.regenerarBracket(subcategoria.id, subcategoria.nombre)
-
-    if (esModoPresencial) {
-      const brackets = await listarSubcategoriasConSorteo()
-      setBracketsPresenciales(brackets)
-    }
-  }
 
   const contenido = (
     <section className="space-y-6">
@@ -219,12 +149,9 @@ export function PaginaSorteo() {
           Selecciona una subcategoria lista, gira la ruleta con los equipos aprobados y genera la primera ronda del bracket.
         </p>
       </div>
+
       {esModoPresencial ? (
-        <PanelModoPresencial
-          brackets={bracketsPresenciales}
-          onRegenerar={manejarRegeneracionManual}
-          regenerandoId={sorteo.regenerandoBracketId}
-        />
+        <PanelModoPresencial />
       ) : sorteo.subcategorias.length ? (
         <SelectorSubcategoriaSorteo
           categoriaId={sorteo.categoriaId}
@@ -235,12 +162,16 @@ export function PaginaSorteo() {
           subcategorias={subcategoriasFiltradas}
         />
       ) : null}
+
       {!esModoPresencial ? <MensajeEstado>{sorteo.mensaje}</MensajeEstado> : null}
+
       {!esModoPresencial && (sorteo.cargando || sorteo.cargandoEquipos) ? (
         <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
           Cargando datos del sorteo...
         </div>
-      ) : !esModoPresencial ? (
+      ) : null}
+
+      {!esModoPresencial && !sorteo.cargando && !sorteo.cargandoEquipos ? (
         <>
           <div className="rounded-md border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
             {mensajeValidacion}
@@ -292,11 +223,7 @@ export function PaginaSorteo() {
   const controlesSorteo = (
     <>
       {esModoPresencial ? (
-        <PanelModoPresencial
-          brackets={bracketsPresenciales}
-          onRegenerar={manejarRegeneracionManual}
-          regenerandoId={sorteo.regenerandoBracketId}
-        />
+        <PanelModoPresencial />
       ) : sorteo.subcategorias.length ? (
         <SelectorSubcategoriaSorteo
           categoriaId={sorteo.categoriaId}
@@ -316,44 +243,45 @@ export function PaginaSorteo() {
     </>
   )
 
-  const tableroSorteo = !esModoPresencial && sorteo.subcategoriaId && !sorteo.sorteoExistente.length ? (
-    sorteo.esCampeonAutomatico ? (
-      <div className="p-6">
-        <CardCampeonAutomatico
-          equipo={sorteo.equipoCampeon}
-          guardando={sorteo.guardando}
-          onConfirmar={sorteo.confirmarCampeonAutomatico}
-        />
-      </div>
-    ) : (
-    <div className="flex flex-1 gap-6 overflow-hidden p-6">
-      <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-6">
-        <RuletaEquipos
-          angulo={sorteo.anguloRuleta}
-          compacto
-          duracion={sorteo.duracionGiro}
-          equipoGirado={sorteo.equipoGirado}
-          equipos={sorteo.equiposDisponibles}
-          esUltimo={sorteo.equiposDisponibles.length === 1}
-          girando={sorteo.girando}
-          onAsignarUltimo={sorteo.asignarUltimoEquipo}
-          onGirar={sorteo.girarRuleta}
-        />
-      </div>
-      <OrdenBatalla
-        cantidadByes={sorteo.cantidadByes}
-        compacto
-        guardando={sorteo.guardando}
-        nombrePrimeraRonda={sorteo.nombrePrimeraRonda}
-        onConfirmar={sorteo.guardarSorteo}
-        ordenSorteo={sorteo.ordenSorteo}
-        partidosPrimeraRonda={sorteo.partidosPrimeraRonda}
-        puedeConfirmar={sorteo.puedeConfirmar}
-        tamanoBracket={sorteo.tamanoBracket}
-      />
-    </div>
-    )
-  ) : null
+  const tableroSorteo =
+    !esModoPresencial && sorteo.subcategoriaId && !sorteo.sorteoExistente.length ? (
+      sorteo.esCampeonAutomatico ? (
+        <div className="p-6">
+          <CardCampeonAutomatico
+            equipo={sorteo.equipoCampeon}
+            guardando={sorteo.guardando}
+            onConfirmar={sorteo.confirmarCampeonAutomatico}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-1 gap-6 overflow-hidden p-6">
+          <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-6">
+            <RuletaEquipos
+              angulo={sorteo.anguloRuleta}
+              compacto
+              duracion={sorteo.duracionGiro}
+              equipoGirado={sorteo.equipoGirado}
+              equipos={sorteo.equiposDisponibles}
+              esUltimo={sorteo.equiposDisponibles.length === 1}
+              girando={sorteo.girando}
+              onAsignarUltimo={sorteo.asignarUltimoEquipo}
+              onGirar={sorteo.girarRuleta}
+            />
+          </div>
+          <OrdenBatalla
+            cantidadByes={sorteo.cantidadByes}
+            compacto
+            guardando={sorteo.guardando}
+            nombrePrimeraRonda={sorteo.nombrePrimeraRonda}
+            onConfirmar={sorteo.guardarSorteo}
+            ordenSorteo={sorteo.ordenSorteo}
+            partidosPrimeraRonda={sorteo.partidosPrimeraRonda}
+            puedeConfirmar={sorteo.puedeConfirmar}
+            tamanoBracket={sorteo.tamanoBracket}
+          />
+        </div>
+      )
+    ) : null
 
   if (perfil?.rol === 'homologador') {
     return (
@@ -367,7 +295,11 @@ export function PaginaSorteo() {
                 Cargando datos del sorteo...
               </div>
             ) : null}
-            {!esModoPresencial && !sorteo.cargando && !sorteo.cargandoEquipos && sorteo.subcategoriaId && sorteo.sorteoExistente.length ? (
+            {!esModoPresencial &&
+            !sorteo.cargando &&
+            !sorteo.cargandoEquipos &&
+            sorteo.subcategoriaId &&
+            sorteo.sorteoExistente.length ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <BotonVerBracket
                   onClick={() => navigate(`/bracket/${sorteo.subcategoriaId}`)}

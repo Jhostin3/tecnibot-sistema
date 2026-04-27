@@ -4,22 +4,38 @@ import { useAutenticacion } from '../autenticacion/hooks/useAutenticacion'
 import { SidebarHomologador } from '../homologacion/components/SidebarHomologador'
 import { SidebarOrganizador } from '../organizador/components/SidebarOrganizador'
 import { GridBrackets } from './components/GridBrackets'
-import { listarSubcategoriasConSorteo } from './services/servicioSorteo'
+import {
+  listarSubcategoriasConSorteo,
+  regenerarBracketDesdeSorteo,
+} from './services/servicioSorteo'
 
 export function PaginaListaBrackets() {
   const { perfil } = useAutenticacion()
   const [brackets, setBrackets] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [regenerandoId, setRegenerandoId] = useState('')
   const Sidebar = perfil?.rol === 'homologador' ? SidebarHomologador : SidebarOrganizador
+
+  async function cargarBrackets() {
+    setCargando(true)
+    setError(null)
+
+    try {
+      const subcategorias = await listarSubcategoriasConSorteo()
+      setBrackets(subcategorias)
+    } catch (errorCarga) {
+      setError(errorCarga.message)
+      setBrackets([])
+    } finally {
+      setCargando(false)
+    }
+  }
 
   useEffect(() => {
     let activo = true
 
-    async function cargarBrackets() {
-      setCargando(true)
-      setError(null)
-
+    async function cargarInicial() {
       try {
         const subcategorias = await listarSubcategoriasConSorteo()
 
@@ -38,12 +54,34 @@ export function PaginaListaBrackets() {
       }
     }
 
-    cargarBrackets()
+    void cargarInicial()
 
     return () => {
       activo = false
     }
   }, [])
+
+  async function manejarRegeneracionManual(subcategoria) {
+    const confirmacion = window.confirm(
+      `¿Regenerar el bracket de ${subcategoria.nombre}? Esto volvera a construir la llave usando el sorteo ya guardado.`,
+    )
+
+    if (!confirmacion) {
+      return
+    }
+
+    setRegenerandoId(subcategoria.id)
+    setError(null)
+
+    try {
+      await regenerarBracketDesdeSorteo(subcategoria.id)
+      await cargarBrackets()
+    } catch (errorRegeneracion) {
+      setError(errorRegeneracion.message)
+    } finally {
+      setRegenerandoId('')
+    }
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
@@ -58,7 +96,8 @@ export function PaginaListaBrackets() {
               Brackets del torneo
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Toca una subcategoria para ver su llave completa.
+              Consulta las llaves generadas y fuerza una regeneracion si una
+              subcategoria quedo sin enfrentamientos.
             </p>
           </header>
 
@@ -74,7 +113,13 @@ export function PaginaListaBrackets() {
             </div>
           ) : null}
 
-          {!cargando && !error ? <GridBrackets brackets={brackets} /> : null}
+          {!cargando && !error ? (
+            <GridBrackets
+              brackets={brackets}
+              onRegenerar={manejarRegeneracionManual}
+              regenerandoId={regenerandoId}
+            />
+          ) : null}
         </div>
       </main>
     </div>
