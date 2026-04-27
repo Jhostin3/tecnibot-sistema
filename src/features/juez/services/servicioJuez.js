@@ -33,6 +33,15 @@ const ordenRondas = {
   final: 6,
 }
 
+const ORDEN_RONDAS_ELIMINATORIAS = [
+  'treintaidosavos',
+  'dieciseisavos',
+  'octavos',
+  'cuartos',
+  'semifinal',
+  'final',
+]
+
 function compararPorRondaYOrden(a, b) {
   const ordenRondaA = ordenRondas[a.ronda] || 999
   const ordenRondaB = ordenRondas[b.ronda] || 999
@@ -62,20 +71,14 @@ function normalizarGoles(valor) {
   return numero
 }
 
-function calcularSiguienteRonda(rondaActual, cantidadPartidos) {
-  if (rondaActual === 'final' || rondaActual === 'tercer_lugar') return null
+function obtenerSiguienteRonda(rondaActual) {
+  const indiceActual = ORDEN_RONDAS_ELIMINATORIAS.indexOf(rondaActual)
 
-  const rondasPorPartidos = {
-    1: 'final',
-    2: 'semifinal',
-    4: 'cuartos',
-    8: 'octavos',
-    16: 'dieciseisavos',
-    32: 'treintaidosavos',
+  if (indiceActual === -1) {
+    return null
   }
-  const siguienteCantidad = cantidadPartidos / 2
 
-  return rondasPorPartidos[siguienteCantidad] || null
+  return ORDEN_RONDAS_ELIMINATORIAS[indiceActual + 1] || null
 }
 
 async function listarEquiposPorIds(idsEquipos) {
@@ -171,9 +174,7 @@ export async function listarPartidosActivos() {
 
     return enfrentamientos
       .sort(compararPorRondaYOrden)
-      .map((partido) =>
-      adjuntarDatosPartido(partido, equiposPorId, subcategoriasPorId),
-      )
+      .map((partido) => adjuntarDatosPartido(partido, equiposPorId, subcategoriasPorId))
   } catch (error) {
     throw new Error(error.message || 'No se pudieron cargar los partidos activos.')
   }
@@ -218,9 +219,7 @@ export async function listarPartidosPendientesJuez() {
 
     return enfrentamientos
       .sort(compararPorRondaYOrden)
-      .map((partido) =>
-        adjuntarDatosPartido(partido, equiposPorId, subcategoriasPorId),
-      )
+      .map((partido) => adjuntarDatosPartido(partido, equiposPorId, subcategoriasPorId))
   } catch (error) {
     throw new Error(error.message || 'No se pudieron cargar los partidos pendientes del juez.')
   }
@@ -298,255 +297,190 @@ export async function obtenerPartidoActivoPorId(enfrentamientoId) {
   }
 }
 
-async function listarRondaPorPartido(partido) {
-  try {
-    const { data, error } = await supabase
-      .from('enfrentamientos')
-      .select(seleccionEnfrentamientos)
-      .eq('subcategoria_id', partido.subcategoria_id)
-      .eq('ronda', partido.ronda)
-      .order('orden', { ascending: true })
-      .limit(500)
-
-    if (error) {
-      throw new Error('No se pudo verificar si la ronda termino.')
-    }
-
-    return data || []
-  } catch (error) {
-    throw new Error(error.message || 'No se pudo verificar si la ronda termino.')
-  }
-}
-
-async function existeSiguienteRonda(subcategoriaId, ronda) {
-  try {
-    const { data, error } = await supabase
-      .from('enfrentamientos')
-      .select('id')
-      .eq('subcategoria_id', subcategoriaId)
-      .eq('ronda', ronda)
-      .limit(1)
-
-    if (error) {
-      throw new Error('No se pudo verificar la siguiente ronda.')
-    }
-
-    return Boolean(data?.length)
-  } catch (error) {
-    throw new Error(error.message || 'No se pudo verificar la siguiente ronda.')
-  }
-}
-
-async function completarSiguienteRondaExistente(subcategoriaId, siguienteRonda, ganadores) {
+async function listarEnfrentamientosRonda(subcategoriaId, ronda) {
   const { data, error } = await supabase
     .from('enfrentamientos')
-    .select(seleccionEnfrentamientos)
+    .select('id, orden, ganador_id, bye, estado, equipo_a_id, equipo_b_id')
     .eq('subcategoria_id', subcategoriaId)
-    .eq('ronda', siguienteRonda)
+    .eq('ronda', ronda)
     .order('orden', { ascending: true })
     .limit(500)
 
   if (error) {
-    throw new Error('No se pudo actualizar la siguiente ronda.')
+    throw new Error('No se pudo verificar si la ronda termino.')
   }
 
-  const enfrentamientos = data || []
-  const actualizaciones = []
-  let indiceGanador = 0
+  return data || []
+}
 
-  enfrentamientos.forEach((enfrentamiento) => {
-    let equipoA = enfrentamiento.equipo_a_id
-    let equipoB = enfrentamiento.equipo_b_id
+async function eliminarRonda(subcategoriaId, ronda) {
+  const { error } = await supabase
+    .from('enfrentamientos')
+    .delete()
+    .eq('subcategoria_id', subcategoriaId)
+    .eq('ronda', ronda)
 
-    if (!equipoA && indiceGanador < ganadores.length) {
-      equipoA = ganadores[indiceGanador]
-      indiceGanador += 1
-    }
-
-    if (!equipoB && indiceGanador < ganadores.length) {
-      equipoB = ganadores[indiceGanador]
-      indiceGanador += 1
-    }
-
-    if (
-      equipoA !== enfrentamiento.equipo_a_id ||
-      equipoB !== enfrentamiento.equipo_b_id
-    ) {
-      actualizaciones.push({
-        equipo_a_id: equipoA,
-        equipo_b_id: equipoB,
-        id: enfrentamiento.id,
-      })
-    }
-  })
-
-  if (!actualizaciones.length) {
-    const { error: errorActivacion } = await supabase
-      .from('enfrentamientos')
-      .update({ estado: 'pendiente' })
-      .eq('subcategoria_id', subcategoriaId)
-      .eq('ronda', siguienteRonda)
-
-    if (errorActivacion) {
-      throw new Error('El resultado se guardo, pero no se pudo preparar la siguiente ronda.')
-    }
-
-    return
-  }
-
-  const operaciones = actualizaciones.map((actualizacion) =>
-    supabase
-      .from('enfrentamientos')
-      .update({
-        estado: 'pendiente',
-        equipo_a_id: actualizacion.equipo_a_id,
-        equipo_b_id: actualizacion.equipo_b_id,
-      })
-      .eq('id', actualizacion.id),
-  )
-
-  const resultados = await Promise.all(operaciones)
-  const primerError = resultados.find((resultado) => resultado.error)?.error
-
-  if (primerError) {
-    throw new Error('El resultado se guardo, pero no se pudo completar la siguiente ronda.')
-  }
-
-  const idsActualizados = actualizaciones.map((actualizacion) => actualizacion.id)
-  const idsSinActualizar = enfrentamientos
-    .filter((enfrentamiento) => !idsActualizados.includes(enfrentamiento.id))
-    .map((enfrentamiento) => enfrentamiento.id)
-
-  if (idsSinActualizar.length) {
-    const { error: errorActivacion } = await supabase
-      .from('enfrentamientos')
-      .update({ estado: 'pendiente' })
-      .in('id', idsSinActualizar)
-
-    if (errorActivacion) {
-      throw new Error('El resultado se guardo, pero no se pudo preparar la siguiente ronda.')
-    }
+  if (error) {
+    throw new Error('No se pudo limpiar la siguiente ronda antes de regenerarla.')
   }
 }
 
-async function generarSiguienteRondaSiCorresponde(partido) {
-  const ronda = await listarRondaPorPartido(partido)
-  const rondaFinalizada = ronda.length > 0 && ronda.every((enfrentamiento) =>
-    enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id
-  )
+function construirEnfrentamientosDesdeGanadores(subcategoriaId, ronda, ganadores) {
+  const nuevosEnfrentamientos = []
 
-  if (!rondaFinalizada || partido.ronda === 'final' || partido.ronda === 'tercer_lugar') return
+  for (let i = 0; i < ganadores.length; i += 2) {
+    const equipoA = ganadores[i]
+    const equipoB = ganadores[i + 1] ?? null
+    const esBye = equipoB === null
 
-  if (partido.ronda === 'semifinal') {
-    const semifinales = [...ronda].sort((a, b) => a.orden - b.orden)
-    const [semifinalA, semifinalB] = semifinales
-
-    if (!semifinalA || !semifinalB) return
-
-    const finalExiste = await existeSiguienteRonda(partido.subcategoria_id, 'final')
-    const tercerLugarExiste = await existeSiguienteRonda(partido.subcategoria_id, 'tercer_lugar')
-    const ganadorSemifinalA = semifinalA.ganador_id
-    const ganadorSemifinalB = semifinalB.ganador_id
-    const perdedorSemifinalA =
-      semifinalA.equipo_a_id === semifinalA.ganador_id
-        ? semifinalA.equipo_b_id
-        : semifinalA.equipo_a_id
-    const perdedorSemifinalB =
-      semifinalB.equipo_a_id === semifinalB.ganador_id
-        ? semifinalB.equipo_b_id
-        : semifinalB.equipo_a_id
-    const nuevosEnfrentamientos = []
-
-    if (!finalExiste && ganadorSemifinalA && ganadorSemifinalB) {
-      nuevosEnfrentamientos.push({
-        bye: false,
-        equipo_a_id: ganadorSemifinalA,
-        equipo_b_id: ganadorSemifinalB,
-        estado: 'pendiente',
-        ganador_id: null,
-        orden: 1,
-        ronda: 'final',
-        subcategoria_id: partido.subcategoria_id,
-      })
+    if (!equipoA) {
+      continue
     }
 
-    if (!tercerLugarExiste && perdedorSemifinalA && perdedorSemifinalB) {
-      nuevosEnfrentamientos.push({
-        bye: false,
-        equipo_a_id: perdedorSemifinalA,
-        equipo_b_id: perdedorSemifinalB,
-        estado: 'pendiente',
-        ganador_id: null,
-        orden: 1,
-        ronda: 'tercer_lugar',
-        subcategoria_id: partido.subcategoria_id,
-      })
-    }
+    console.log(`Partido ${i / 2 + 1}: ${equipoA} vs ${equipoB}`)
 
-    if (!nuevosEnfrentamientos.length) return
+    nuevosEnfrentamientos.push({
+      subcategoria_id: subcategoriaId,
+      ronda,
+      equipo_a_id: equipoA,
+      equipo_b_id: equipoB,
+      ganador_id: esBye ? equipoA : null,
+      estado: esBye ? 'finalizado' : 'pendiente',
+      orden: i / 2 + 1,
+      bye: esBye,
+    })
+  }
 
-    console.log('Ganadores extraídos:', [
-      ganadorSemifinalA,
-      ganadorSemifinalB,
-      perdedorSemifinalA,
-      perdedorSemifinalB,
-    ])
-    console.log('Enfrentamientos a insertar:', nuevosEnfrentamientos)
+  return nuevosEnfrentamientos
+}
 
-    const { error } = await supabase.from('enfrentamientos').insert(nuevosEnfrentamientos)
+async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
+  const [semifinalA, semifinalB] = semifinales
 
-    if (error) {
-      throw new Error('El resultado se guardo, pero no se pudieron crear los partidos finales.')
-    }
-
+  if (!semifinalA || !semifinalB) {
     return
   }
 
-  const siguienteRonda = calcularSiguienteRonda(partido.ronda, ronda.length)
+  const ganadorSemifinalA = semifinalA.ganador_id
+  const ganadorSemifinalB = semifinalB.ganador_id
+  const perdedorSemifinalA =
+    semifinalA.equipo_a_id === semifinalA.ganador_id
+      ? semifinalA.equipo_b_id
+      : semifinalA.equipo_a_id
+  const perdedorSemifinalB =
+    semifinalB.equipo_a_id === semifinalB.ganador_id
+      ? semifinalB.equipo_b_id
+      : semifinalB.equipo_a_id
+
+  if (!ganadorSemifinalA || !ganadorSemifinalB) {
+    console.error('No hay suficientes ganadores para generar la final')
+    return
+  }
+
+  await eliminarRonda(subcategoriaId, 'final')
+  await eliminarRonda(subcategoriaId, 'tercer_lugar')
+
+  const nuevosEnfrentamientos = [
+    {
+      subcategoria_id: subcategoriaId,
+      ronda: 'final',
+      equipo_a_id: ganadorSemifinalA,
+      equipo_b_id: ganadorSemifinalB,
+      ganador_id: null,
+      estado: 'pendiente',
+      orden: 1,
+      bye: false,
+    },
+  ]
+
+  if (perdedorSemifinalA && perdedorSemifinalB) {
+    nuevosEnfrentamientos.push({
+      subcategoria_id: subcategoriaId,
+      ronda: 'tercer_lugar',
+      equipo_a_id: perdedorSemifinalA,
+      equipo_b_id: perdedorSemifinalB,
+      ganador_id: null,
+      estado: 'pendiente',
+      orden: 1,
+      bye: false,
+    })
+  }
+
+  console.log('GANADORES EXTRAIDOS:', [
+    ganadorSemifinalA,
+    ganadorSemifinalB,
+    perdedorSemifinalA,
+    perdedorSemifinalB,
+  ].filter(Boolean))
+  console.log('CANTIDAD:', nuevosEnfrentamientos.length)
+  console.log('INSERTANDO:', nuevosEnfrentamientos)
+
+  const { error } = await supabase.from('enfrentamientos').insert(nuevosEnfrentamientos)
+
+  if (error) {
+    console.error('ERROR AL INSERTAR:', error)
+    throw new Error('El resultado se guardo, pero no se pudieron crear los partidos finales.')
+  }
+}
+
+async function generarSiguienteRonda(subcategoriaId, rondaFinalizada) {
+  const enfrentamientos = await listarEnfrentamientosRonda(subcategoriaId, rondaFinalizada)
+  const rondaCompleta =
+    enfrentamientos.length > 0 &&
+    enfrentamientos.every(
+      (enfrentamiento) =>
+        enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id,
+    )
+
+  if (!rondaCompleta || rondaFinalizada === 'final' || rondaFinalizada === 'tercer_lugar') {
+    return
+  }
+
+  if (rondaFinalizada === 'semifinal') {
+    await generarFinalYPartidoTercerLugar(subcategoriaId, enfrentamientos)
+    return
+  }
+
+  const ganadores = enfrentamientos.map((enfrentamiento) => enfrentamiento.ganador_id).filter(Boolean)
+
+  console.log('GANADORES EXTRAIDOS:', ganadores)
+  console.log('CANTIDAD:', ganadores.length)
+
+  if (ganadores.length < 2) {
+    console.error('No hay suficientes ganadores para generar siguiente ronda')
+    return
+  }
+
+  const siguienteRonda = obtenerSiguienteRonda(rondaFinalizada)
 
   if (!siguienteRonda) {
     return
   }
 
-  const ganadores = ronda
-    .sort((a, b) => a.orden - b.orden)
-    .map((enfrentamiento) => enfrentamiento.ganador_id)
+  await eliminarRonda(subcategoriaId, siguienteRonda)
 
-  if (await existeSiguienteRonda(partido.subcategoria_id, siguienteRonda)) {
-    await completarSiguienteRondaExistente(partido.subcategoria_id, siguienteRonda, ganadores)
+  const nuevosEnfrentamientos = construirEnfrentamientosDesdeGanadores(
+    subcategoriaId,
+    siguienteRonda,
+    ganadores,
+  )
+
+  if (!nuevosEnfrentamientos.length) {
     return
   }
 
-  const nuevosEnfrentamientos = []
+  console.log('INSERTANDO:', nuevosEnfrentamientos)
 
-  for (let indice = 0; indice < ganadores.length; indice += 2) {
-    const equipoA = ganadores[indice]
-    const equipoB = ganadores[indice + 1]
-
-    if (!equipoA || !equipoB) continue
-
-    nuevosEnfrentamientos.push({
-      bye: false,
-      equipo_a_id: equipoA,
-      equipo_b_id: equipoB,
-      estado: 'pendiente',
-      ganador_id: null,
-      orden: nuevosEnfrentamientos.length + 1,
-      ronda: siguienteRonda,
-      subcategoria_id: partido.subcategoria_id,
-    })
-  }
-
-  if (!nuevosEnfrentamientos.length) return
-
-  console.log('Ganadores extraídos:', ganadores)
-  console.log('Enfrentamientos a insertar:', nuevosEnfrentamientos)
-
-  const { error } = await supabase.from('enfrentamientos').insert(nuevosEnfrentamientos)
+  const { error } = await supabase
+    .from('enfrentamientos')
+    .insert(nuevosEnfrentamientos)
 
   if (error) {
+    console.error('ERROR AL INSERTAR:', error)
     throw new Error('El resultado se guardo, pero no se pudo crear la siguiente ronda.')
   }
+
+  console.log('Siguiente ronda generada correctamente')
 }
 
 export async function registrarResultadoPartido({
@@ -598,11 +532,7 @@ export async function registrarResultadoPartido({
       throw new Error('El resultado se guardo, pero no se pudo finalizar el partido.')
     }
 
-    await generarSiguienteRondaSiCorresponde({
-      ...enfrentamiento,
-      estado: 'finalizado',
-      ganador_id: ganadorId,
-    })
+    await generarSiguienteRonda(enfrentamiento.subcategoria_id, enfrentamiento.ronda)
 
     return {
       ganador_id: ganadorId,
