@@ -23,6 +23,16 @@ const etiquetasRonda = {
   tercer_lugar: 'Tercer lugar',
 }
 
+const ordenSecuencialRondas = [
+  'treintaidosavos',
+  'dieciseisavos',
+  'octavos',
+  'cuartos',
+  'semifinal',
+  'tercer_lugar',
+  'final',
+]
+
 const ordenRondas = {
   treintaidosavos: 1,
   dieciseisavos: 2,
@@ -50,6 +60,56 @@ function compararEnfrentamientos(a, b) {
 
 function obtenerClaveRonda(enfrentamiento) {
   return `${enfrentamiento.subcategoria_id}-${enfrentamiento.ronda}`
+}
+
+function obtenerOrdenRonda(ronda) {
+  return ordenRondas[ronda] || 999
+}
+
+function obtenerGrupoRondasPorOrden(orden) {
+  return ordenSecuencialRondas.filter((ronda) => obtenerOrdenRonda(ronda) === orden)
+}
+
+async function listarEnfrentamientosPorSubcategoria(subcategoriaId) {
+  const { data, error } = await supabase
+    .from('enfrentamientos')
+    .select(seleccionEnfrentamientos)
+    .eq('subcategoria_id', subcategoriaId)
+    .limit(500)
+
+  if (error) {
+    throw new Error('No se pudieron verificar los enfrentamientos de la subcategoria.')
+  }
+
+  return data || []
+}
+
+function obtenerPrimeraRondaPendiente(enfrentamientos = []) {
+  const pendientes = enfrentamientos
+    .filter((enfrentamiento) => enfrentamiento.estado === 'pendiente' && !enfrentamiento.bye)
+    .sort(compararEnfrentamientos)
+
+  return pendientes[0]?.ronda || null
+}
+
+async function activarRondasPendientes(subcategoriaId, rondas = []) {
+  if (!subcategoriaId || !rondas.length) {
+    return 0
+  }
+
+  const { data, error } = await supabase
+    .from('enfrentamientos')
+    .update({ estado: 'activo' })
+    .eq('subcategoria_id', subcategoriaId)
+    .eq('estado', 'pendiente')
+    .in('ronda', rondas)
+    .select('id')
+
+  if (error) {
+    throw new Error('No se pudo activar la siguiente ronda del torneo.')
+  }
+
+  return data?.length || 0
 }
 
 async function listarEquiposPorIds(idsEquipos) {
@@ -207,49 +267,98 @@ export async function iniciarTorneo(subcategoriaId) {
       throw new Error('La subcategoria seleccionada ya tiene partidos activos.')
     }
 
-    const { data: enfrentamientosPendientes, error } = await supabase
-      .from('enfrentamientos')
-      .select(seleccionEnfrentamientos)
-      .eq('subcategoria_id', subcategoriaId)
-      .eq('estado', 'pendiente')
-      .eq('bye', false)
-      .order('orden', { ascending: true })
-      .limit(500)
+    const enfrentamientosSubcategoria = await listarEnfrentamientosPorSubcategoria(subcategoriaId)
+    const primeraRonda = obtenerPrimeraRondaPendiente(enfrentamientosSubcategoria)
 
-    if (error) {
-      throw new Error('No se pudo verificar la primera ronda del torneo.')
-    }
-
-    if (!enfrentamientosPendientes?.length) {
+    if (!primeraRonda) {
       throw new Error('No hay partidos pendientes para iniciar el torneo.')
     }
 
-    const primeraRonda = [...enfrentamientosPendientes].sort(compararEnfrentamientos)[0]?.ronda
-
-    if (!primeraRonda) {
-      throw new Error('No se pudo determinar la primera ronda del torneo.')
-    }
-
-    const partidosPrimeraRonda = enfrentamientosPendientes.filter(
+    const partidosPrimeraRonda = enfrentamientosSubcategoria.filter(
       (enfrentamiento) => enfrentamiento.ronda === primeraRonda,
     )
-    const ids = partidosPrimeraRonda.map((enfrentamiento) => enfrentamiento.id).filter(Boolean)
+    const cantidadActivada = await activarRondasPendientes(subcategoriaId, [primeraRonda])
 
-    const { error: errorActivacion } = await supabase
-      .from('enfrentamientos')
-      .update({ estado: 'activo' })
-      .eq('subcategoria_id', subcategoriaId)
-      .eq('ronda', primeraRonda)
-      .eq('estado', 'pendiente')
-      .in('id', ids)
-
-    if (errorActivacion) {
-      throw new Error('No se pudo iniciar la primera ronda del torneo.')
+    return {
+      cantidadPartidos: cantidadActivada || partidosPrimeraRonda.length,
+      ronda: primeraRonda,
     }
-
-    return partidosPrimeraRonda.length
   } catch (error) {
     throw new Error(error.message || 'No se pudo iniciar el torneo.')
+  }
+}
+
+export async function verificarYAvanzarRonda(subcategoriaId, rondaActual) {
+  try {
+    if (!subcategoriaId || !rondaActual) {
+      return {
+        avanzo: false,
+        nuevaRonda: null,
+      }
+    }
+
+    const enfrentamientosSubcategoria = await listarEnfrentamientosPorSubcategoria(subcategoriaId)
+    const enfrentamientosRondaActual = enfrentamientosSubcategoria.filter(
+      (enfrentamiento) => enfrentamiento.ronda === rondaActual,
+    )
+
+    if (!enfrentamientosRondaActual.length) {
+      return {
+        avanzo: false,
+        nuevaRonda: null,
+      }
+    }
+
+    const rondaCompleta = enfrentamientosRondaActual.every(
+      (enfrentamiento) => enfrentamiento.estado === 'finalizado',
+    )
+
+    if (!rondaCompleta) {
+      return {
+        avanzo: false,
+        nuevaRonda: null,
+      }
+    }
+
+    const ordenRondaActual = obtenerOrdenRonda(rondaActual)
+    const pendientesSiguientes = enfrentamientosSubcategoria
+      .filter(
+        (enfrentamiento) =>
+          enfrentamiento.estado === 'pendiente' &&
+          !enfrentamiento.bye &&
+          obtenerOrdenRonda(enfrentamiento.ronda) > ordenRondaActual,
+      )
+      .sort(compararEnfrentamientos)
+
+    if (!pendientesSiguientes.length) {
+      return {
+        avanzo: false,
+        nuevaRonda: null,
+        torneoFinalizado: true,
+      }
+    }
+
+    const siguienteOrden = obtenerOrdenRonda(pendientesSiguientes[0].ronda)
+    const rondasActivables = obtenerGrupoRondasPorOrden(siguienteOrden).filter((ronda) =>
+      pendientesSiguientes.some((enfrentamiento) => enfrentamiento.ronda === ronda),
+    )
+
+    if (!rondasActivables.length) {
+      return {
+        avanzo: false,
+        nuevaRonda: null,
+      }
+    }
+
+    await activarRondasPendientes(subcategoriaId, rondasActivables)
+
+    return {
+      avanzo: true,
+      nuevaRonda: rondasActivables[0],
+      torneoFinalizado: false,
+    }
+  } catch (error) {
+    throw new Error(error.message || 'No se pudo verificar y avanzar la ronda.')
   }
 }
 
