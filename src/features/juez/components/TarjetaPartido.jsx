@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
-import { MapPin, X } from 'lucide-react'
-
-import { FormularioResultado } from './FormularioResultado'
+import { useEffect, useMemo, useState } from 'react'
+import { Minus, Plus, Wrench } from 'lucide-react'
 
 const DURACION_TIEMPO = 90
 const DURACION_DESCANSO = 30
@@ -18,10 +16,6 @@ const estadosTimer = {
 
 function obtenerNombreEquipo(equipo, respaldo) {
   return equipo?.nombre_equipo || respaldo
-}
-
-function obtenerNombreRobot(equipo) {
-  return equipo?.nombre_robot || 'Robot sin nombre registrado'
 }
 
 function formatearTiempo(segundos) {
@@ -59,8 +53,61 @@ function obtenerReparacionesGuardadas(partidoId) {
   }
 }
 
+function BotonAccion({ children, clase = '', disabled = false, onClick, type = 'button' }) {
+  return (
+    <button
+      className={`h-10 rounded-xl px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${clase}`}
+      disabled={disabled}
+      onClick={onClick}
+      type={type}
+    >
+      {children}
+    </button>
+  )
+}
+
+function ControlMarcador({ color, goles, nombreEquipo, onDecrementar, onIncrementar }) {
+  const claseNumero = color === 'azul' ? 'text-blue-100' : 'text-cyan-100'
+  const claseBoton =
+    color === 'azul'
+      ? 'border-blue-400/30 bg-blue-500/15 text-blue-100 active:bg-blue-500/25'
+      : 'border-cyan-400/30 bg-cyan-500/15 text-cyan-100 active:bg-cyan-500/25'
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <p className={`max-w-[7rem] truncate text-xs font-bold ${claseNumero}`}>
+        {nombreEquipo}
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          aria-label={`Reducir marcador de ${nombreEquipo}`}
+          className={`flex h-10 w-10 items-center justify-center rounded-lg border ${claseBoton} disabled:cursor-not-allowed disabled:opacity-40`}
+          disabled={goles === 0}
+          onClick={onDecrementar}
+          type="button"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <div className={`w-14 text-center font-mono text-3xl font-bold ${claseNumero}`}>
+          {goles}
+        </div>
+        <button
+          aria-label={`Aumentar marcador de ${nombreEquipo}`}
+          className={`flex h-10 w-10 items-center justify-center rounded-lg border ${claseBoton}`}
+          onClick={onIncrementar}
+          type="button"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
-  const [sheetAbierto, setSheetAbierto] = useState(false)
+  const [golesA, setGolesA] = useState(0)
+  const [golesB, setGolesB] = useState(0)
+  const [errorLocal, setErrorLocal] = useState('')
   const [timer, setTimer] = useState({
     estado: estadosTimer.listo,
     pausado: false,
@@ -75,16 +122,30 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
   const [reparacionesUsadas, setReparacionesUsadas] = useState(() =>
     obtenerReparacionesGuardadas(partido?.id),
   )
+
+  const hayEmpate = useMemo(() => golesA === golesB, [golesA, golesB])
+  const nombreEquipoA = obtenerNombreEquipo(partido?.equipo_a, 'Equipo A')
+  const nombreEquipoB = obtenerNombreEquipo(partido?.equipo_b, 'Equipo B')
   const timerActivo = [
     estadosTimer.primerTiempo,
     estadosTimer.descanso,
     estadosTimer.segundoTiempo,
   ].includes(timer.estado)
+  const puedeSolicitarReparacion = timer.estado !== estadosTimer.finalizado && !reparacion.activa
+  const tituloTimer = {
+    [estadosTimer.descanso]: 'DESCANSO',
+    [estadosTimer.descansoFinalizado]: 'DESCANSO COMPLETO',
+    [estadosTimer.finalizado]: 'TIEMPO FINALIZADO',
+    [estadosTimer.listo]: 'LISTO PARA INICIAR',
+    [estadosTimer.primerTiempoFinalizado]: 'PRIMER TIEMPO TERMINADO',
+    [estadosTimer.primerTiempo]: 'PRIMER TIEMPO',
+    [estadosTimer.segundoTiempo]: 'SEGUNDO TIEMPO',
+  }[timer.estado]
 
   useEffect(() => {
     if (!timerActivo || timer.pausado) return undefined
 
-    const intervalo = setInterval(() => {
+    const intervalo = window.setInterval(() => {
       setTimer((actual) => {
         if (actual.segundos > 1) {
           return {
@@ -95,45 +156,28 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
         if (actual.estado === estadosTimer.primerTiempo) {
           vibrar([500])
-
-          return {
-            estado: estadosTimer.primerTiempoFinalizado,
-            pausado: false,
-            segundos: 0,
-          }
+          return { estado: estadosTimer.primerTiempoFinalizado, pausado: false, segundos: 0 }
         }
 
         if (actual.estado === estadosTimer.descanso) {
-          return {
-            estado: estadosTimer.descansoFinalizado,
-            pausado: false,
-            segundos: 0,
-          }
+          return { estado: estadosTimer.descansoFinalizado, pausado: false, segundos: 0 }
         }
 
         vibrar([1000, 200, 1000])
-
-        return {
-          estado: estadosTimer.finalizado,
-          pausado: false,
-          segundos: 0,
-        }
+        return { estado: estadosTimer.finalizado, pausado: false, segundos: 0 }
       })
     }, 1000)
 
-    return () => clearInterval(intervalo)
+    return () => window.clearInterval(intervalo)
   }, [timer.pausado, timerActivo])
 
   useEffect(() => {
     if (!reparacion.activa) return undefined
 
-    const intervalo = setInterval(() => {
+    const intervalo = window.setInterval(() => {
       setReparacion((actual) => {
         if (actual.segundos > 1) {
-          return {
-            ...actual,
-            segundos: actual.segundos - 1,
-          }
+          return { ...actual, segundos: actual.segundos - 1 }
         }
 
         setTimer((timerActual) => ({
@@ -150,7 +194,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
       })
     }, 1000)
 
-    return () => clearInterval(intervalo)
+    return () => window.clearInterval(intervalo)
   }, [reparacion.activa])
 
   useEffect(() => {
@@ -162,79 +206,39 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
     )
   }, [partido?.id, reparacionesUsadas])
 
-  useEffect(() => {
-    if (!sheetAbierto) return undefined
-
-    const overflowAnterior = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = overflowAnterior
-    }
-  }, [sheetAbierto])
-
   if (!partido) return null
 
   function iniciarPrimerTiempo() {
-    setTimer({
-      estado: estadosTimer.primerTiempo,
-      pausado: false,
-      segundos: DURACION_TIEMPO,
-    })
+    setTimer({ estado: estadosTimer.primerTiempo, pausado: false, segundos: DURACION_TIEMPO })
   }
 
   function terminarPrimerTiempo() {
     vibrar([500])
-    setTimer({
-      estado: estadosTimer.primerTiempoFinalizado,
-      pausado: false,
-      segundos: 0,
-    })
+    setTimer({ estado: estadosTimer.primerTiempoFinalizado, pausado: false, segundos: 0 })
   }
 
-  function iniciarMedioTiempo() {
-    setTimer({
-      estado: estadosTimer.descanso,
-      pausado: false,
-      segundos: DURACION_DESCANSO,
-    })
+  function iniciarDescanso() {
+    setTimer({ estado: estadosTimer.descanso, pausado: false, segundos: DURACION_DESCANSO })
   }
 
   function iniciarSegundoTiempo() {
-    setTimer({
-      estado: estadosTimer.segundoTiempo,
-      pausado: false,
-      segundos: DURACION_TIEMPO,
-    })
+    setTimer({ estado: estadosTimer.segundoTiempo, pausado: false, segundos: DURACION_TIEMPO })
   }
 
   function finalizarPartido() {
     vibrar([1000, 200, 1000])
-    setTimer({
-      estado: estadosTimer.finalizado,
-      pausado: false,
-      segundos: 0,
-    })
+    setTimer({ estado: estadosTimer.finalizado, pausado: false, segundos: 0 })
   }
 
   function alternarPausa() {
-    setTimer((actual) => ({
-      ...actual,
-      pausado: !actual.pausado,
-    }))
+    setTimer((actual) => ({ ...actual, pausado: !actual.pausado }))
   }
 
   function iniciarReparacion(equipo, nombreEquipo) {
     if (!puedeSolicitarReparacion || reparacionesUsadas[equipo]) return
 
-    setTimer((actual) => ({
-      ...actual,
-      pausado: true,
-    }))
-    setReparacionesUsadas((actuales) => ({
-      ...actuales,
-      [equipo]: true,
-    }))
+    setTimer((actual) => ({ ...actual, pausado: true }))
+    setReparacionesUsadas((actuales) => ({ ...actuales, [equipo]: true }))
     setReparacion({
       activa: true,
       equipo,
@@ -243,297 +247,202 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
     })
   }
 
-  function terminarReparacion() {
-    setReparacion({
-      activa: false,
-      equipo: null,
-      nombreEquipo: '',
-      segundos: DURACION_REPARACION,
-    })
-    setTimer((actual) => ({
-      ...actual,
-      pausado: false,
-    }))
+  async function registrarResultado() {
+    setErrorLocal('')
+
+    if (hayEmpate) {
+      setErrorLocal('Debe haber un ganador.')
+      return
+    }
+
+    try {
+      await alGuardarResultado({
+        enfrentamiento: partido,
+        golesA,
+        golesB,
+        observacion: '',
+      })
+    } catch (error) {
+      setErrorLocal(error.message)
+    }
   }
 
-  const esTiempoJuego = [estadosTimer.primerTiempo, estadosTimer.segundoTiempo].includes(
-    timer.estado,
-  )
-  const puedeSolicitarReparacion =
-    timer.estado !== estadosTimer.finalizado &&
-    !reparacion.activa
-  const tituloTimer = {
-    [estadosTimer.descanso]: 'Medio tiempo',
-    [estadosTimer.descansoFinalizado]: 'Medio tiempo finalizado',
-    [estadosTimer.finalizado]: 'Tiempo finalizado',
-    [estadosTimer.listo]: 'Listo para iniciar',
-    [estadosTimer.primerTiempoFinalizado]: 'Primer tiempo terminado',
-    [estadosTimer.primerTiempo]: 'Primer tiempo',
-    [estadosTimer.segundoTiempo]: 'Segundo tiempo',
-  }[timer.estado]
-  const nombreEquipoA = obtenerNombreEquipo(partido.equipo_a, 'Equipo A')
-  const nombreEquipoB = obtenerNombreEquipo(partido.equipo_b, 'Equipo B')
-
   return (
-    <>
-      <article className="overflow-hidden rounded-[28px] border border-slate-700 bg-slate-900/95 p-4 shadow-2xl shadow-black/25 backdrop-blur sm:p-6">
-        <div className="sticky -top-1 z-10 -mx-4 border-b border-slate-700 bg-slate-900/95 px-4 pb-4 pt-1 backdrop-blur sm:static sm:m-0 sm:border-0 sm:bg-transparent sm:p-0">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-3">
-              <p className="inline-flex rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-200">
-                {partido.etiqueta_ronda}
-              </p>
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-300">
-                  Partido en curso
-                </p>
-                <h2 className="mt-1 text-2xl font-black text-white sm:mt-2 sm:text-3xl">
-                  Partido #{partido.orden}
-                </h2>
-                <p className="mt-2 text-sm font-medium text-slate-300 sm:text-base">
-                  {partido.subcategoria?.nombre || 'Subcategoria'}
-                </p>
-              </div>
-            </div>
-            {partido.cancha ? (
-              <p className="inline-flex items-center gap-1 self-start rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-200">
-                <MapPin className="h-4 w-4" />
-                {partido.cancha}
-              </p>
-            ) : null}
-          </div>
+    <article className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950/95 px-4 pb-4 pt-3 shadow-2xl shadow-black/30">
+      <div className="flex h-14 items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div className="min-w-0 flex-1 text-left">
+          <p className="truncate text-lg font-bold text-blue-100">{nombreEquipoA}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-blue-300">Azul</p>
+        </div>
+        <div className="shrink-0 text-sm font-black uppercase tracking-[0.22em] text-slate-500">
+          VS
+        </div>
+        <div className="min-w-0 flex-1 text-right">
+          <p className="truncate text-lg font-bold text-cyan-100">{nombreEquipoB}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">Cian</p>
+        </div>
+      </div>
 
-          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:mt-5 sm:gap-3">
-            <div className="min-w-0 rounded-2xl border border-blue-400/40 bg-gradient-to-br from-blue-900/80 to-blue-700/50 p-3 text-center shadow-lg shadow-blue-950/20 sm:rounded-3xl sm:p-5">
-              <p className="break-words text-lg font-black text-blue-100 sm:text-xl">
-                {nombreEquipoA}
-              </p>
-              <p className="mt-1 hidden break-words text-sm text-blue-200/75 sm:block">
-                {obtenerNombreRobot(partido.equipo_a)}
-              </p>
-            </div>
-
-            <span className="px-1 py-1 text-center text-base font-black tracking-[0.1em] text-slate-400 sm:pt-3 sm:text-lg">
-              VS
-            </span>
-
-            <div className="min-w-0 rounded-2xl border border-cyan-400/40 bg-gradient-to-br from-cyan-900/75 to-cyan-700/45 p-3 text-center shadow-lg shadow-cyan-950/20 sm:rounded-3xl sm:p-5">
-              <p className="break-words text-lg font-black text-cyan-100 sm:text-xl">
-                {nombreEquipoB}
-              </p>
-              <p className="mt-1 hidden break-words text-sm text-cyan-200/75 sm:block">
-                {obtenerNombreRobot(partido.equipo_b)}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 sm:mt-5">
-            <div className="sm:hidden">
-              <button
-                className="min-h-14 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-3 text-base font-black text-slate-950 transition active:from-cyan-400 active:to-sky-300"
-                onClick={() => setSheetAbierto(true)}
-                type="button"
-              >
-                Registrar resultado
-              </button>
-            </div>
-
-            <div className="hidden sm:block">
-              <FormularioResultado
-                alGuardar={alGuardarResultado}
-                guardando={guardando}
-                mostrarEncabezado={false}
-                partido={partido}
-              />
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-900 p-4 text-center text-white shadow-lg shadow-black/20 sm:mt-5 sm:p-6">
-            <div className="mb-3 flex items-center justify-center sm:hidden">
-              <p className="rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-sm font-black uppercase tracking-[0.18em] text-amber-200">
-                {partido.etiqueta_ronda} - Partido {partido.orden}
-              </p>
-            </div>
-            <p
-              className={`text-sm font-black uppercase tracking-[0.18em] sm:text-lg ${
-                timer.estado === estadosTimer.descanso ? 'text-amber-200' : 'text-cyan-100'
-              }`}
-            >
-              {tituloTimer}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 py-3">
+        <section className="flex max-h-32 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 px-3 py-3 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-200">
+            {tituloTimer}
+          </p>
+          <p className="mt-1 font-mono text-4xl font-bold text-white">
+            {formatearTiempo(timer.segundos)}
+          </p>
+          {reparacion.activa ? (
+            <p className="mt-1 text-xs font-semibold text-amber-200">
+              Reparacion: {reparacion.nombreEquipo} · {formatearTiempo(reparacion.segundos)}
             </p>
-
+          ) : null}
+          <div className="mt-3 flex w-full items-center justify-center gap-2">
             {timer.estado === estadosTimer.listo ? (
-              <button
-                className="mt-5 min-h-14 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-3 text-base font-bold text-slate-950 transition active:from-cyan-400 active:to-sky-300"
+              <BotonAccion
+                clase="w-full bg-cyan-500 text-slate-950 active:bg-cyan-400"
                 onClick={iniciarPrimerTiempo}
-                type="button"
               >
-                Iniciar primer tiempo
-              </button>
+                Iniciar
+              </BotonAccion>
             ) : null}
-
-            {timerActivo ? (
+            {timer.estado === estadosTimer.primerTiempo ? (
               <>
-                <p
-                  className={`mt-2 font-mono font-bold ${
-                    timer.estado === estadosTimer.descanso
-                      ? 'text-amber-200 text-3xl sm:text-5xl'
-                      : 'text-cyan-100 text-4xl sm:text-7xl'
-                  }`}
-                >
-                  {formatearTiempo(timer.segundos)}
-                </p>
-                {timer.estado === estadosTimer.descanso ? (
-                  <p className="mt-3 text-sm font-semibold text-amber-200 sm:text-base">
-                    Cambio de cancha
-                  </p>
-                ) : null}
-              </>
-            ) : null}
-
-            {timer.estado === estadosTimer.primerTiempoFinalizado ? (
-              <div className="mt-5 space-y-4">
-                <p className="text-sm font-semibold text-amber-100 sm:text-base">
-                  Primer tiempo terminado - cambio de cancha
-                </p>
-                <button
-                  className="min-h-14 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-3 text-base font-bold text-slate-950 transition active:from-cyan-400 active:to-sky-300"
-                  onClick={iniciarMedioTiempo}
-                  type="button"
-                >
-                  Iniciar medio tiempo (30s)
-                </button>
-              </div>
-            ) : null}
-
-            {timer.estado === estadosTimer.descansoFinalizado ? (
-              <button
-                className="mt-5 min-h-14 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-3 text-base font-bold text-slate-950 transition active:from-cyan-400 active:to-sky-300"
-                onClick={iniciarSegundoTiempo}
-                type="button"
-              >
-                Iniciar segundo tiempo
-              </button>
-            ) : null}
-
-            {timer.estado === estadosTimer.finalizado ? (
-              <p className="mt-5 text-sm font-semibold text-cyan-100 sm:text-base">
-                Tiempo finalizado
-              </p>
-            ) : null}
-
-            {esTiempoJuego ? (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <button
-                  className="min-h-14 rounded-2xl border border-slate-600 bg-slate-800 px-5 py-3 text-base font-bold text-slate-100 transition active:border-cyan-400/30 active:bg-slate-700"
+                <BotonAccion
+                  clase="flex-1 border border-slate-700 bg-slate-800 text-slate-100 active:bg-slate-700"
                   onClick={alternarPausa}
-                  type="button"
                 >
                   {timer.pausado ? 'Reanudar' : 'Pausar'}
-                </button>
-                <button
-                  className="min-h-14 rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-3 text-base font-bold text-slate-950 transition active:from-cyan-400 active:to-sky-300"
-                  onClick={
-                    timer.estado === estadosTimer.primerTiempo
-                      ? terminarPrimerTiempo
-                      : finalizarPartido
-                  }
-                  type="button"
+                </BotonAccion>
+                <BotonAccion
+                  clase="flex-1 bg-amber-400 text-slate-950 active:bg-amber-300"
+                  onClick={terminarPrimerTiempo}
                 >
-                  {timer.estado === estadosTimer.primerTiempo
-                    ? 'Terminar primer tiempo'
-                    : 'Terminar segundo tiempo'}
-                </button>
-              </div>
+                  Terminar
+                </BotonAccion>
+              </>
             ) : null}
-
-            {reparacion.activa ? (
-              <div className="mt-5 rounded-3xl border border-cyan-400/20 bg-cyan-500/10 p-4 backdrop-blur">
-                <p className="text-sm font-black uppercase tracking-[0.22em] text-cyan-100 sm:text-base">
-                  Reparacion - {reparacion.nombreEquipo}
-                </p>
-                <p className="mt-3 font-mono text-4xl font-bold text-cyan-100 sm:text-5xl">
-                  {formatearTiempo(reparacion.segundos)}
-                </p>
-                <button
-                  className="mt-4 min-h-14 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-sky-400 px-5 py-3 text-base font-bold text-slate-950 transition active:from-cyan-400 active:to-sky-300"
-                  onClick={terminarReparacion}
-                  type="button"
+            {timer.estado === estadosTimer.primerTiempoFinalizado ? (
+              <BotonAccion
+                clase="w-full bg-amber-400 text-slate-950 active:bg-amber-300"
+                onClick={iniciarDescanso}
+              >
+                Medio tiempo
+              </BotonAccion>
+            ) : null}
+            {timer.estado === estadosTimer.descanso ? (
+              <>
+                <BotonAccion
+                  clase="flex-1 border border-slate-700 bg-slate-800 text-slate-100 active:bg-slate-700"
+                  onClick={alternarPausa}
                 >
-                  Terminar reparacion
-                </button>
-              </div>
+                  {timer.pausado ? 'Reanudar' : 'Pausar'}
+                </BotonAccion>
+                <BotonAccion
+                  clase="flex-1 bg-cyan-500 text-slate-950 active:bg-cyan-400"
+                  onClick={iniciarSegundoTiempo}
+                >
+                  Saltar
+                </BotonAccion>
+              </>
             ) : null}
-
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:mt-5 sm:grid-cols-2">
-              <button
-                className="min-h-14 rounded-2xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-left text-sm font-bold text-blue-100 transition active:bg-blue-500/15 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-slate-800/50 disabled:text-slate-500 disabled:line-through sm:px-5 sm:text-base"
-                disabled={!puedeSolicitarReparacion || reparacionesUsadas.equipoA}
-                onClick={() => iniciarReparacion('equipoA', nombreEquipoA)}
-                type="button"
+            {timer.estado === estadosTimer.descansoFinalizado ? (
+              <BotonAccion
+                clase="w-full bg-cyan-500 text-slate-950 active:bg-cyan-400"
+                onClick={iniciarSegundoTiempo}
               >
-                {reparacionesUsadas.equipoA
-                  ? `Reparacion usada - ${nombreEquipoA}`
-                  : `Reparacion ${nombreEquipoA}`}
-              </button>
-              <button
-                className="min-h-14 rounded-2xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 text-left text-sm font-bold text-cyan-100 transition active:bg-cyan-500/15 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-slate-800/50 disabled:text-slate-500 disabled:line-through sm:px-5 sm:text-right sm:text-base"
-                disabled={!puedeSolicitarReparacion || reparacionesUsadas.equipoB}
-                onClick={() => iniciarReparacion('equipoB', nombreEquipoB)}
-                type="button"
+                Segundo tiempo
+              </BotonAccion>
+            ) : null}
+            {timer.estado === estadosTimer.segundoTiempo ? (
+              <>
+                <BotonAccion
+                  clase="flex-1 border border-slate-700 bg-slate-800 text-slate-100 active:bg-slate-700"
+                  onClick={alternarPausa}
+                >
+                  {timer.pausado ? 'Reanudar' : 'Pausar'}
+                </BotonAccion>
+                <BotonAccion
+                  clase="flex-1 bg-amber-400 text-slate-950 active:bg-amber-300"
+                  onClick={finalizarPartido}
+                >
+                  Terminar
+                </BotonAccion>
+              </>
+            ) : null}
+            {timer.estado === estadosTimer.finalizado ? (
+              <BotonAccion
+                clase="w-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                disabled
               >
-                {reparacionesUsadas.equipoB
-                  ? `Reparacion usada - ${nombreEquipoB}`
-                  : `Reparacion ${nombreEquipoB}`}
-              </button>
-            </div>
+                Tiempo finalizado
+              </BotonAccion>
+            ) : null}
           </div>
-        </div>
-      </article>
+        </section>
 
-      {sheetAbierto ? (
-        <div className="sm:hidden">
-          <button
-            aria-label="Cerrar marcador"
-            className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm"
-            onClick={() => setSheetAbierto(false)}
-            type="button"
-          />
-          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[82vh] overflow-y-auto overscroll-contain rounded-t-[2rem] border-t border-slate-700 bg-slate-900 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-4 shadow-[0_-20px_60px_rgba(2,6,23,0.8)]">
-            <div className="sticky top-0 z-10 -mx-4 mb-4 bg-slate-900 px-4 pb-3">
-              <div className="mx-auto mb-4 h-1.5 w-16 rounded-full bg-slate-700" />
-            </div>
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <p className="text-base font-black uppercase tracking-[0.18em] text-cyan-200">
-                  Registrar resultado
-                </p>
-                <p className="mt-1 text-sm text-slate-300">
-                  {partido.etiqueta_ronda} - Partido #{partido.orden}
-                </p>
-              </div>
-              <button
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-600 bg-slate-800 text-slate-200"
-                onClick={() => setSheetAbierto(false)}
-                type="button"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <FormularioResultado
-              alCancelar={() => setSheetAbierto(false)}
-              alGuardar={async (payload) => {
-                await alGuardarResultado(payload)
-                setSheetAbierto(false)
-              }}
-              esBottomSheet
-              guardando={guardando}
-              partido={partido}
+        <section className="flex h-24 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 px-2">
+          <div className="flex flex-row items-center justify-center gap-8">
+            <ControlMarcador
+              color="azul"
+              goles={golesA}
+              nombreEquipo={nombreEquipoA}
+              onDecrementar={() => setGolesA((actual) => Math.max(0, actual - 1))}
+              onIncrementar={() => setGolesA((actual) => actual + 1)}
+            />
+            <ControlMarcador
+              color="rojo"
+              goles={golesB}
+              nombreEquipo={nombreEquipoB}
+              onDecrementar={() => setGolesB((actual) => Math.max(0, actual - 1))}
+              onIncrementar={() => setGolesB((actual) => actual + 1)}
             />
           </div>
-        </div>
-      ) : null}
-    </>
+        </section>
+
+        <section className="flex h-12 items-center gap-2">
+          <button
+            className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border px-2 text-xs font-bold transition ${
+              reparacionesUsadas.equipoA
+                ? 'border-slate-800 bg-slate-900 text-slate-500 line-through opacity-50'
+                : 'border-blue-400/30 bg-blue-500/10 text-blue-100 active:bg-blue-500/20'
+            }`}
+            disabled={!puedeSolicitarReparacion || reparacionesUsadas.equipoA}
+            onClick={() => iniciarReparacion('equipoA', nombreEquipoA)}
+            type="button"
+          >
+            <Wrench className="h-3.5 w-3.5" />
+            {nombreEquipoA}
+          </button>
+          <button
+            className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border px-2 text-xs font-bold transition ${
+              reparacionesUsadas.equipoB
+                ? 'border-slate-800 bg-slate-900 text-slate-500 line-through opacity-50'
+                : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100 active:bg-cyan-500/20'
+            }`}
+            disabled={!puedeSolicitarReparacion || reparacionesUsadas.equipoB}
+            onClick={() => iniciarReparacion('equipoB', nombreEquipoB)}
+            type="button"
+          >
+            <Wrench className="h-3.5 w-3.5" />
+            {nombreEquipoB}
+          </button>
+        </section>
+
+        {errorLocal ? (
+          <p className="rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-center text-xs font-semibold text-amber-200">
+            {errorLocal}
+          </p>
+        ) : null}
+      </div>
+
+      <button
+        className="mt-auto h-14 w-full rounded-2xl bg-emerald-500 px-4 text-base font-black text-slate-950 transition active:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-500"
+        disabled={guardando || hayEmpate}
+        onClick={registrarResultado}
+        type="button"
+      >
+        {guardando ? 'Guardando...' : 'Registrar resultado'}
+      </button>
+    </article>
   )
 }
