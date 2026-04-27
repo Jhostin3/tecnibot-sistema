@@ -441,20 +441,31 @@ async function asegurarSinOtraRondaActiva(enfrentamientosObjetivo) {
 export async function iniciarTorneo(subcategoriaId) {
   try {
     if (!subcategoriaId) {
-      throw new Error('Selecciona una subcategoria para iniciar el torneo.')
+      throw new Error('Selecciona una subcategoria antes de iniciar el torneo.')
     }
 
-    const enfrentamientosActivos = await listarEnfrentamientosActivos(subcategoriaId)
+    await reconciliarRondasFaltantes(subcategoriaId)
 
-    if (enfrentamientosActivos.length) {
-      throw new Error('La subcategoria seleccionada ya tiene partidos activos.')
+    const { data: activa, error: errorActiva } = await supabase
+      .from('enfrentamientos')
+      .select('id')
+      .eq('subcategoria_id', subcategoriaId)
+      .eq('estado', 'activo')
+      .limit(1)
+
+    if (errorActiva) {
+      throw new Error('No se pudo verificar si esta subcategoria ya tiene partidos activos.')
+    }
+
+    if (activa?.length) {
+      throw new Error('Esta subcategoria ya tiene partidos activos.')
     }
 
     const enfrentamientosSubcategoria = await listarEnfrentamientosPorSubcategoria(subcategoriaId)
     const primeraRonda = obtenerPrimeraRondaPendiente(enfrentamientosSubcategoria)
 
     if (!primeraRonda) {
-      throw new Error('No hay partidos pendientes para iniciar el torneo.')
+      throw new Error('No hay rondas pendientes para esta subcategoria.')
     }
 
     const partidosPrimeraRonda = enfrentamientosSubcategoria.filter(
