@@ -161,22 +161,25 @@ function ListaPartidos({
 export function PaginaPartidos() {
   const navigate = useNavigate()
   const { perfil } = useAutenticacion()
+  const [pestanaActiva, setPestanaActiva] = useState('pendientes')
+  const [canchas, setCanchas] = useState(obtenerCanchasGuardadas)
+  const [nuevaCancha, setNuevaCancha] = useState('')
+  const [categoriaId, setCategoriaId] = useState('')
+  const [subcategoriaId, setSubcategoriaId] = useState('')
   const {
     activos,
     cargando,
+    contadorRegresivo,
     error,
     finalizados,
     guardando,
     iniciarTorneo,
     mensaje,
     pendientes,
+    rondaActual,
     subcategorias,
-  } = usePartidos()
-  const [pestanaActiva, setPestanaActiva] = useState('pendientes')
-  const [canchas, setCanchas] = useState(obtenerCanchasGuardadas)
-  const [nuevaCancha, setNuevaCancha] = useState('')
-  const [categoriaId, setCategoriaId] = useState('')
-  const [subcategoriaId, setSubcategoriaId] = useState('')
+    torneoFinalizado,
+  } = usePartidos(subcategoriaId)
   const esHomologador = perfil?.rol === 'homologador'
   const etiquetaModulo = esHomologador ? 'Homologador' : 'Organizador'
   const Sidebar = esHomologador ? SidebarHomologador : SidebarOrganizador
@@ -232,6 +235,9 @@ export function PaginaPartidos() {
     pendientes,
     subcategoriaId: subcategoriaIdSeleccionada,
   })
+  const progresoCuenta = contadorRegresivo
+    ? `${Math.max(0, Math.min(100, ((5 - contadorRegresivo) / 5) * 100))}%`
+    : '0%'
   const mensajesVacios = {
     activos: subcategoriaIdSeleccionada
       ? 'No hay partidos en juego para esta subcategoria.'
@@ -399,6 +405,11 @@ export function PaginaPartidos() {
             <p className="mt-1 text-sm text-slate-600">
               {estadoSubcategoria.descripcion}
             </p>
+            {rondaActual ? (
+              <p className="mt-2 text-xs font-semibold uppercase tracking-normal text-cyan-800">
+                Ronda activa: {rondaActual}
+              </p>
+            ) : null}
           </div>
           <button
             className="min-h-10 rounded-md bg-cyan-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
@@ -410,6 +421,31 @@ export function PaginaPartidos() {
           </button>
         </div>
       </section>
+
+      {contadorRegresivo > 0 ? (
+        <section className="rounded-xl border border-cyan-700 bg-cyan-950 p-4 text-cyan-400 shadow-sm">
+          <p className="text-sm font-bold">Ronda completada</p>
+          <p className="mt-1 text-sm">
+            Activando siguiente ronda en {contadorRegresivo}s...
+          </p>
+          <div className="mt-3 h-3 rounded-full bg-cyan-900">
+            <div
+              className="h-3 rounded-full bg-cyan-400 transition-all"
+              style={{ width: progresoCuenta }}
+            />
+          </div>
+          <p className="mt-2 text-right text-sm font-bold">{contadorRegresivo}</p>
+        </section>
+      ) : null}
+
+      {torneoFinalizado && subcategoriaIdSeleccionada ? (
+        <section className="rounded-xl border border-emerald-700 bg-emerald-950 p-4 text-emerald-300 shadow-sm">
+          <p className="text-sm font-bold">Torneo finalizado</p>
+          <p className="mt-1 text-sm">
+            {subcategoriaSeleccionada?.nombre || 'La subcategoria seleccionada'} ya no tiene rondas pendientes.
+          </p>
+        </section>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         {pestanas.map((pestana) => (
