@@ -54,6 +54,59 @@ function agruparPartidos(partidos) {
   }, {})
 }
 
+function obtenerEstadoSubcategoriaSeleccionada({
+  activos = [],
+  finalizados = [],
+  pendientes = [],
+  subcategoriaId,
+}) {
+  if (!subcategoriaId) {
+    return {
+      descripcion: 'Selecciona una subcategoria para revisar su torneo.',
+      habilitado: false,
+      textoBoton: 'Selecciona una subcategoria',
+    }
+  }
+
+  const pendientesSubcategoria = pendientes.filter((partido) => partido.subcategoria_id === subcategoriaId)
+  const activosSubcategoria = activos.filter((partido) => partido.subcategoria_id === subcategoriaId)
+  const finalizadosSubcategoria = finalizados.filter(
+    (partido) => partido.subcategoria_id === subcategoriaId,
+  )
+  const totalPartidos =
+    pendientesSubcategoria.length + activosSubcategoria.length + finalizadosSubcategoria.length
+
+  if (!totalPartidos) {
+    return {
+      descripcion: 'Todavia no hay enfrentamientos registrados para esta subcategoria.',
+      habilitado: false,
+      textoBoton: 'Sin sorteo registrado',
+    }
+  }
+
+  if (activosSubcategoria.length) {
+    return {
+      descripcion: 'La subcategoria seleccionada ya tiene partidos en juego.',
+      habilitado: false,
+      textoBoton: 'Torneo en curso',
+    }
+  }
+
+  if (pendientesSubcategoria.length) {
+    return {
+      descripcion: 'La primera ronda disponible se activara solo para esta subcategoria.',
+      habilitado: true,
+      textoBoton: 'Iniciar torneo',
+    }
+  }
+
+  return {
+    descripcion: 'Todos los partidos de esta subcategoria ya finalizaron.',
+    habilitado: false,
+    textoBoton: 'Torneo finalizado',
+  }
+}
+
 function ListaPartidos({
   mensajeVacio,
   mostrarAcciones = false,
@@ -174,7 +227,12 @@ export function PaginaPartidos() {
     finalizados: filtrarPartidos(finalizados),
     pendientes: filtrarPartidos(pendientes),
   }
-  const puedeIniciarTorneo = pendientes.length > 0 && activos.length === 0
+  const estadoSubcategoria = obtenerEstadoSubcategoriaSeleccionada({
+    activos,
+    finalizados,
+    pendientes,
+    subcategoriaId: subcategoriaIdSeleccionada,
+  })
   const mensajesVacios = {
     activos: 'No hay partidos en juego.',
     finalizados: 'Aun no hay partidos finalizados.',
@@ -284,33 +342,6 @@ export function PaginaPartidos() {
         </div>
       </section>
 
-      {puedeIniciarTorneo ? (
-        <section className="rounded-md border border-cyan-200 bg-cyan-50 p-6 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
-                Inicio automatico
-              </p>
-              <h2 className="mt-1 text-2xl font-bold text-slate-950">
-                Todo listo para iniciar el torneo
-              </h2>
-              <p className="mt-1 text-sm text-slate-600">
-                Se activara automaticamente la primera ronda disponible y el resto del torneo
-                avanzara sin intervencion manual.
-              </p>
-            </div>
-            <button
-              className="min-h-10 rounded-md bg-cyan-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-              disabled={guardando}
-              onClick={() => iniciarTorneo(subcategoriaIdSeleccionada)}
-              type="button"
-            >
-              {guardando ? 'Iniciando...' : 'Iniciar torneo'}
-            </button>
-          </div>
-        </section>
-      ) : null}
-
       <section className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -348,6 +379,30 @@ export function PaginaPartidos() {
               ))}
             </CampoSeleccion>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-md border border-cyan-200 bg-cyan-50 p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-normal text-cyan-800">
+              Inicio automatico
+            </p>
+            <h2 className="mt-1 text-2xl font-bold text-slate-950">
+              Estado del torneo por subcategoria
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              {estadoSubcategoria.descripcion}
+            </p>
+          </div>
+          <button
+            className="min-h-10 rounded-md bg-cyan-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            disabled={guardando || !estadoSubcategoria.habilitado}
+            onClick={() => iniciarTorneo(subcategoriaIdSeleccionada)}
+            type="button"
+          >
+            {guardando ? 'Iniciando...' : estadoSubcategoria.textoBoton}
+          </button>
         </div>
       </section>
 
