@@ -330,19 +330,18 @@ async function eliminarRonda(subcategoriaId, ronda) {
   }
 }
 
-function construirEnfrentamientosDesdeGanadores(subcategoriaId, ronda, ganadores) {
+function construirEnfrentamientosDesdeOrigen(subcategoriaId, ronda, enfrentamientosOrigen) {
   const nuevosEnfrentamientos = []
+  const cantidadPartidos = Math.max(1, Math.ceil(enfrentamientosOrigen.length / 2))
 
-  for (let i = 0; i < ganadores.length; i += 2) {
-    const equipoA = ganadores[i]
-    const equipoB = ganadores[i + 1] ?? null
-    const esBye = equipoB === null
+  for (let indice = 0; indice < cantidadPartidos; indice += 1) {
+    const origenA = enfrentamientosOrigen[indice * 2] || null
+    const origenB = enfrentamientosOrigen[indice * 2 + 1] || null
+    const equipoA = origenA?.ganador_id ?? null
+    const equipoB = origenB?.ganador_id ?? null
+    const esBye = !origenB && Boolean(equipoA)
 
-    if (!equipoA) {
-      continue
-    }
-
-    console.log(`Partido ${i / 2 + 1}: ${equipoA} vs ${equipoB}`)
+    console.log(`Partido ${indice + 1}: ${equipoA} vs ${equipoB}`)
 
     nuevosEnfrentamientos.push({
       subcategoria_id: subcategoriaId,
@@ -351,7 +350,7 @@ function construirEnfrentamientosDesdeGanadores(subcategoriaId, ronda, ganadores
       equipo_b_id: equipoB,
       ganador_id: esBye ? equipoA : null,
       estado: esBye ? 'finalizado' : 'pendiente',
-      orden: i / 2 + 1,
+      orden: indice + 1,
       bye: esBye,
     })
   }
@@ -377,11 +376,6 @@ async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
       ? semifinalB.equipo_b_id
       : semifinalB.equipo_a_id
 
-  if (!ganadorSemifinalA || !ganadorSemifinalB) {
-    console.error('No hay suficientes ganadores para generar la final')
-    return
-  }
-
   await eliminarRonda(subcategoriaId, 'final')
   await eliminarRonda(subcategoriaId, 'tercer_lugar')
 
@@ -390,7 +384,7 @@ async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
       subcategoria_id: subcategoriaId,
       ronda: 'final',
       equipo_a_id: ganadorSemifinalA,
-      equipo_b_id: ganadorSemifinalB,
+      equipo_b_id: ganadorSemifinalB || null,
       ganador_id: null,
       estado: 'pendiente',
       orden: 1,
@@ -398,12 +392,12 @@ async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
     },
   ]
 
-  if (perdedorSemifinalA && perdedorSemifinalB) {
+  if (perdedorSemifinalA || perdedorSemifinalB) {
     nuevosEnfrentamientos.push({
       subcategoria_id: subcategoriaId,
       ronda: 'tercer_lugar',
-      equipo_a_id: perdedorSemifinalA,
-      equipo_b_id: perdedorSemifinalB,
+      equipo_a_id: perdedorSemifinalA || null,
+      equipo_b_id: perdedorSemifinalB || null,
       ganador_id: null,
       estado: 'pendiente',
       orden: 1,
@@ -430,14 +424,8 @@ async function generarFinalYPartidoTercerLugar(subcategoriaId, semifinales) {
 
 async function generarSiguienteRonda(subcategoriaId, rondaFinalizada) {
   const enfrentamientos = await listarEnfrentamientosRonda(subcategoriaId, rondaFinalizada)
-  const rondaCompleta =
-    enfrentamientos.length > 0 &&
-    enfrentamientos.every(
-      (enfrentamiento) =>
-        enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id,
-    )
 
-  if (!rondaCompleta || rondaFinalizada === 'final' || rondaFinalizada === 'tercer_lugar') {
+  if (!enfrentamientos.length || rondaFinalizada === 'final' || rondaFinalizada === 'tercer_lugar') {
     return
   }
 
@@ -451,11 +439,6 @@ async function generarSiguienteRonda(subcategoriaId, rondaFinalizada) {
   console.log('GANADORES EXTRAIDOS:', ganadores)
   console.log('CANTIDAD:', ganadores.length)
 
-  if (ganadores.length < 2) {
-    console.error('No hay suficientes ganadores para generar siguiente ronda')
-    return
-  }
-
   const siguienteRonda = obtenerSiguienteRonda(rondaFinalizada)
 
   if (!siguienteRonda) {
@@ -464,10 +447,10 @@ async function generarSiguienteRonda(subcategoriaId, rondaFinalizada) {
 
   await eliminarRonda(subcategoriaId, siguienteRonda)
 
-  const nuevosEnfrentamientos = construirEnfrentamientosDesdeGanadores(
+  const nuevosEnfrentamientos = construirEnfrentamientosDesdeOrigen(
     subcategoriaId,
     siguienteRonda,
-    ganadores,
+    enfrentamientos,
   )
 
   if (!nuevosEnfrentamientos.length) {
