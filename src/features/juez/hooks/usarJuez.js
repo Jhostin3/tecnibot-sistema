@@ -24,10 +24,6 @@ function construirEstadoInicial() {
   }
 }
 
-function obtenerRondaReferencia(partidos = []) {
-  return partidos[0] || null
-}
-
 export function useJuez() {
   const { perfil } = useAutenticacion()
   const [estadoPanel, setEstadoPanel] = useState(construirEstadoInicial)
@@ -99,10 +95,18 @@ export function useJuez() {
     cargarPartidosIniciales()
 
     const canal = supabase
-      .channel('tecnibot-enfrentamientos-juez-rondas')
+      .channel('tecnibot-juez-enfrentamientos')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'enfrentamientos' },
+        async () => {
+          if (!componenteActivo) return
+          await cargarPartidos({ mostrarCarga: false })
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'resultados' },
         async () => {
           if (!componenteActivo) return
           await cargarPartidos({ mostrarCarga: false })
@@ -210,9 +214,9 @@ export function useJuez() {
     }
   }
 
-  const rondaActual = obtenerRondaReferencia(
-    estadoPanel.partidos.length ? estadoPanel.partidos : estadoPanel.partidosPendientes,
-  )
+  const rondaActual = estadoPanel.partidos.length
+    ? estadoPanel.partidos[0]
+    : estadoPanel.partidosPendientes[0] || null
 
   return {
     cargando: estadoPanel.cargando,
