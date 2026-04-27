@@ -350,35 +350,19 @@ function adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bo
 
 export async function listarBracketPorSubcategoria(subcategoriaId) {
   try {
-    let respuestaEnfrentamientos = await supabase
+    const respuestaEnfrentamientos = await supabase
       .from('enfrentamientos')
       .select(seleccionEnfrentamientos)
       .eq('subcategoria_id', subcategoriaId)
       .order('orden', { ascending: true })
       .limit(500)
 
-    const sorteo = await obtenerSorteoPorSubcategoria(subcategoriaId)
-
-    if (respuestaEnfrentamientos.error) {
-      throw new Error('No se pudo cargar la llave del torneo.')
-    }
-
-    if (!respuestaEnfrentamientos.data?.length && sorteo.length) {
-      await generarEnfrentamientosPresencialesSiCompleto(subcategoriaId)
-
-      respuestaEnfrentamientos = await supabase
-        .from('enfrentamientos')
-        .select(seleccionEnfrentamientos)
-        .eq('subcategoria_id', subcategoriaId)
-        .order('orden', { ascending: true })
-        .limit(500)
-    }
-
     if (respuestaEnfrentamientos.error) {
       throw new Error('No se pudo cargar la llave del torneo.')
     }
 
     const enfrentamientos = respuestaEnfrentamientos.data || []
+    const sorteo = await obtenerSorteoPorSubcategoria(subcategoriaId)
     const idsEquipos = enfrentamientos.flatMap((enfrentamiento) => [
       enfrentamiento.equipo_a_id,
       enfrentamiento.equipo_b_id,
@@ -725,7 +709,7 @@ async function obtenerEnfrentamientosPorSubcategoria(subcategoriaId) {
   }
 }
 
-async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
+async function _generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
   if (!subcategoriaId || typeof subcategoriaId !== 'string') return
 
   const subcategoriaNormalizada = subcategoriaId.trim().replace(/^"+|"+$/g, '')
@@ -933,8 +917,6 @@ export async function registrarNumeroBolaPresencial({
         new Error('No se pudo registrar el numero de bola.')
       )
     }
-
-    await generarEnfrentamientosPresencialesSiCompleto(equipo.subcategoria_id)
   } catch (error) {
     throw new Error(error.message || 'No se pudo registrar el sorteo presencial.')
   }
