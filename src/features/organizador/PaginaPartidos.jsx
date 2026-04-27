@@ -205,21 +205,10 @@ export function PaginaPartidos() {
 
   const filtrarPartidos = useMemo(
     () => (partidos = []) =>
-      partidos.filter((partido) => {
-        const coincideCategoria = categoriaId
-          ? subcategorias.some(
-              (subcategoria) =>
-                subcategoria.id === partido.subcategoria_id &&
-                subcategoria.categoria_id === categoriaId,
-            )
-          : true
-        const coincideSubcategoria = subcategoriaIdSeleccionada
-          ? partido.subcategoria_id === subcategoriaIdSeleccionada
-          : true
-
-        return coincideCategoria && coincideSubcategoria
-      }),
-    [categoriaId, subcategoriaIdSeleccionada, subcategorias],
+      subcategoriaIdSeleccionada
+        ? partidos.filter((partido) => partido.subcategoria_id === subcategoriaIdSeleccionada)
+        : [],
+    [subcategoriaIdSeleccionada],
   )
 
   const partidosPorPestana = {
@@ -234,9 +223,15 @@ export function PaginaPartidos() {
     subcategoriaId: subcategoriaIdSeleccionada,
   })
   const mensajesVacios = {
-    activos: 'No hay partidos en juego.',
-    finalizados: 'Aun no hay partidos finalizados.',
-    pendientes: 'No hay partidos pendientes por activar.',
+    activos: subcategoriaIdSeleccionada
+      ? 'No hay partidos en juego para esta subcategoria.'
+      : 'Selecciona una subcategoria para ver sus partidos en juego.',
+    finalizados: subcategoriaIdSeleccionada
+      ? 'Aun no hay partidos finalizados para esta subcategoria.'
+      : 'Selecciona una subcategoria para ver sus partidos finalizados.',
+    pendientes: subcategoriaIdSeleccionada
+      ? 'No hay partidos pendientes por activar para esta subcategoria.'
+      : 'Selecciona una subcategoria para ver sus partidos pendientes.',
   }
 
   useEffect(() => {
