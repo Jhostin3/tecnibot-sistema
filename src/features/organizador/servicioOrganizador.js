@@ -70,6 +70,72 @@ function obtenerGrupoRondasPorOrden(orden) {
   return ordenSecuencialRondas.filter((ronda) => obtenerOrdenRonda(ronda) === orden)
 }
 
+function obtenerSiguienteRondaEliminatoria(rondaActual) {
+  const rondas = [
+    'treintaidosavos',
+    'dieciseisavos',
+    'octavos',
+    'cuartos',
+    'semifinal',
+    'final',
+  ]
+  const indice = rondas.indexOf(rondaActual)
+
+  if (indice === -1) {
+    return null
+  }
+
+  return rondas[indice + 1] || null
+}
+
+function construirSiguienteRondaDesdeOrigen(subcategoriaId, siguienteRonda, origen) {
+  const cantidadPartidos = Math.max(1, Math.ceil(origen.length / 2))
+
+  return Array.from({ length: cantidadPartidos }, (_, indice) => {
+    const origenA = origen[indice * 2] || null
+    const origenB = origen[indice * 2 + 1] || null
+    const equipoA = origenA?.ganador_id ?? null
+    const equipoB = origenB?.ganador_id ?? null
+    const bye = !origenB && Boolean(equipoA)
+
+    return {
+      subcategoria_id: subcategoriaId,
+      ronda: siguienteRonda,
+      equipo_a_id: equipoA,
+      equipo_b_id: equipoB,
+      ganador_id: bye ? equipoA : null,
+      estado: bye ? 'finalizado' : 'pendiente',
+      orden: indice + 1,
+      bye,
+      cancha: null,
+    }
+  })
+}
+
+async function reemplazarRonda(subcategoriaId, ronda, enfrentamientos) {
+  const { error: errorDelete } = await supabase
+    .from('enfrentamientos')
+    .delete()
+    .eq('subcategoria_id', subcategoriaId)
+    .eq('ronda', ronda)
+
+  if (errorDelete) {
+    throw new Error('No se pudo limpiar la ronda faltante.')
+  }
+
+  if (!enfrentamientos.length) {
+    return
+  }
+
+  const { error: errorInsert } = await supabase
+    .from('enfrentamientos')
+    .insert(enfrentamientos)
+
+  if (errorInsert) {
+    throw new Error('No se pudo reconstruir la ronda faltante.')
+  }
+}
+
 async function listarEnfrentamientosPorSubcategoria(subcategoriaId) {
   const { data, error } = await supabase
     .from('enfrentamientos')
@@ -82,6 +148,123 @@ async function listarEnfrentamientosPorSubcategoria(subcategoriaId) {
   }
 
   return data || []
+}
+
+export async function reconciliarRondasFaltantes(subcategoriaId) {
+  if (!subcategoriaId) {
+    return false
+  }
+
+  const enfrentamientos = await listarEnfrentamientosPorSubcategoria(subcategoriaId)
+
+  if (!enfrentamientos.length) {
+    return false
+  }
+
+  for (const rondaActual of ['treintaidosavos', 'dieciseisavos', 'octavos', 'cuartos']) {
+    const origen = enfrentamientos
+      .filter((enfrentamiento) => enfrentamiento.ronda === rondaActual)
+      .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+
+    if (!origen.length) {
+      continue
+    }
+
+    const rondaCompleta = origen.every(
+      (enfrentamiento) => enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id,
+    )
+
+    if (!rondaCompleta) {
+      continue
+    }
+
+    const siguienteRonda = obtenerSiguienteRondaEliminatoria(rondaActual)
+
+    if (!siguienteRonda) {
+      continue
+    }
+
+    const existentes = enfrentamientos.filter(
+      (enfrentamiento) => enfrentamiento.ronda === siguienteRonda,
+    )
+
+    if (existentes.length) {
+      continue
+    }
+
+    const nuevosEnfrentamientos = construirSiguienteRondaDesdeOrigen(
+      subcategoriaId,
+      siguienteRonda,
+      origen,
+    )
+
+    await reemplazarRonda(subcategoriaId, siguienteRonda, nuevosEnfrentamientos)
+    return true
+  }
+
+  const semifinales = enfrentamientos
+    .filter((enfrentamiento) => enfrentamiento.ronda === 'semifinal')
+    .sort((a, b) => (a.orden || 0) - (b.orden || 0))
+
+  if (semifinales.length === 2) {
+    const semifinalCompleta = semifinales.every(
+      (enfrentamiento) => enfrentamiento.estado === 'finalizado' && enfrentamiento.ganador_id,
+    )
+
+    if (semifinalCompleta) {
+      const finalExistente = enfrentamientos.some((enfrentamiento) => enfrentamiento.ronda === 'final')
+
+      if (!finalExistente) {
+        const [semifinalA, semifinalB] = semifinales
+        const perdedorSemifinalA =
+          semifinalA.equipo_a_id === semifinalA.ganador_id
+            ? semifinalA.equipo_b_id
+            : semifinalA.equipo_a_id
+        const perdedorSemifinalB =
+          semifinalB.equipo_a_id === semifinalB.ganador_id
+            ? semifinalB.equipo_b_id
+            : semifinalB.equipo_a_id
+
+        const nuevosFinales = [
+          {
+            subcategoria_id: subcategoriaId,
+            ronda: 'final',
+            equipo_a_id: semifinalA.ganador_id,
+            equipo_b_id: semifinalB.ganador_id,
+            ganador_id: null,
+            estado: 'pendiente',
+            orden: 1,
+            bye: false,
+            cancha: null,
+          },
+        ]
+
+        if (perdedorSemifinalA && perdedorSemifinalB) {
+          nuevosFinales.push({
+            subcategoria_id: subcategoriaId,
+            ronda: 'tercer_lugar',
+            equipo_a_id: perdedorSemifinalA,
+            equipo_b_id: perdedorSemifinalB,
+            ganador_id: null,
+            estado: 'pendiente',
+            orden: 1,
+            bye: false,
+            cancha: null,
+          })
+        }
+
+        await reemplazarRonda(subcategoriaId, 'final', nuevosFinales.filter((fila) => fila.ronda === 'final'))
+        await reemplazarRonda(
+          subcategoriaId,
+          'tercer_lugar',
+          nuevosFinales.filter((fila) => fila.ronda === 'tercer_lugar'),
+        )
+        return true
+      }
+    }
+  }
+
+  return false
 }
 
 function obtenerPrimeraRondaPendiente(enfrentamientos = []) {

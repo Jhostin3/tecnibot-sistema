@@ -8,6 +8,7 @@ import {
   iniciarTorneo,
   listarEnfrentamientosFinalizados,
   listarEnfrentamientosPorEstado,
+  reconciliarRondasFaltantes,
   verificarYAvanzarRonda,
 } from './servicioOrganizador'
 
@@ -68,6 +69,10 @@ export function usePartidos(subcategoriaIdSeleccionada = '') {
     setError(null)
 
     try {
+      if (subcategoriaIdSeleccionada) {
+        await reconciliarRondasFaltantes(subcategoriaIdSeleccionada)
+      }
+
       const [partidosPendientes, partidosActivos, partidosFinalizados, subcategoriasActuales] =
         await Promise.all([
           listarEnfrentamientosPorEstado('pendiente'),
@@ -88,7 +93,7 @@ export function usePartidos(subcategoriaIdSeleccionada = '') {
         setCargando(false)
       }
     }
-  }, [])
+  }, [subcategoriaIdSeleccionada])
 
   const verificarRondaCompleta = useCallback(async ({
     activosActuales = activos,
@@ -200,6 +205,10 @@ export function usePartidos(subcategoriaIdSeleccionada = '') {
       setError(null)
 
       try {
+        if (subcategoriaIdSeleccionada) {
+          await reconciliarRondasFaltantes(subcategoriaIdSeleccionada)
+        }
+
         const [partidosPendientes, partidosActivos, partidosFinalizados, subcategoriasActuales] =
           await Promise.all([
             listarEnfrentamientosPorEstado('pendiente'),
