@@ -314,14 +314,19 @@ async function listarEnfrentamientosRonda(subcategoriaId, ronda) {
 }
 
 async function eliminarRonda(subcategoriaId, ronda) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('enfrentamientos')
     .delete()
     .eq('subcategoria_id', subcategoriaId)
     .eq('ronda', ronda)
+    .select('id')
 
   if (error) {
     throw new Error('No se pudo limpiar la siguiente ronda antes de regenerarla.')
+  }
+
+  if (data?.length) {
+    console.log(`ELIMINANDO RONDA EXISTENTE: ${ronda}`, data.map((fila) => fila.id))
   }
 }
 
