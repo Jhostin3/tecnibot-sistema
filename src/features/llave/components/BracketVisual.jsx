@@ -77,29 +77,37 @@ function agruparPartidosPorPares(partidos) {
   }, [])
 }
 
-function encontrarPartidoDestinoParaOrigen(origen, rondaDestino) {
-  if (!origen?.enfrentamiento || !rondaDestino) return null
+function calcularCapacidadDestino(partidoDestino) {
+  if (!partidoDestino?.enfrentamiento) return 2
 
-  const ganadorId = origen.enfrentamiento.ganador_id
+  const { equipo_a_id: equipoA, equipo_b_id: equipoB } = partidoDestino.enfrentamiento
 
-  if (ganadorId) {
-    const destinoConGanador = rondaDestino.partidos.find((destino) => (
-      destino.enfrentamiento?.equipo_a_id === ganadorId ||
-      destino.enfrentamiento?.equipo_b_id === ganadorId
-    ))
+  if (equipoA && equipoB) return 0
+  if (equipoA || equipoB) return 1
 
-    if (destinoConGanador) {
-      return destinoConGanador
+  return 2
+}
+
+function crearAsignacionesEntreRondas(rondaOrigen, rondaDestino) {
+  if (!rondaOrigen || !rondaDestino) return []
+
+  const asignaciones = []
+  let indiceOrigen = 0
+
+  rondaDestino.partidos.forEach((destino) => {
+    const capacidad = calcularCapacidadDestino(destino)
+
+    for (let indice = 0; indice < capacidad; indice += 1) {
+      const origen = rondaOrigen.partidos[indiceOrigen]
+
+      if (!origen) return
+
+      asignaciones.push({ destino, origen })
+      indiceOrigen += 1
     }
-  }
+  })
 
-  const destinosDisponibles = rondaDestino.partidos.filter((destino) => (
-    !destino.enfrentamiento ||
-    !destino.enfrentamiento.equipo_a_id ||
-    !destino.enfrentamiento.equipo_b_id
-  ))
-
-  return destinosDisponibles[0] || null
+  return asignaciones
 }
 
 function crearRutaConectorSimple(origen, destino) {
@@ -238,18 +246,9 @@ export function BracketVisual({ enfrentamientos }) {
       }
 
       const rondaDestino = rondas[indiceRonda + 1]
-      const destinosAsignados = new Set()
+      const asignaciones = crearAsignacionesEntreRondas(ronda, rondaDestino)
 
-      ronda.partidos.forEach((origen) => {
-        const destino = encontrarPartidoDestinoParaOrigen(origen, {
-          ...rondaDestino,
-          partidos: rondaDestino.partidos.filter((partido) => !destinosAsignados.has(partido.id)),
-        })
-
-        if (!destino) return
-
-        destinosAsignados.add(destino.id)
-
+      asignaciones.forEach(({ origen, destino }) => {
         const rectOrigen = posiciones.get(origen.id)
         const rectDestino = posiciones.get(destino.id)
 
