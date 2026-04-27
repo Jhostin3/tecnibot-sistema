@@ -108,7 +108,7 @@ export function PaginaPartidoActivo() {
     <section className="h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.12),_transparent_20%),radial-gradient(circle_at_20%_0%,_rgba(250,204,21,0.08),_transparent_18%),linear-gradient(180deg,_#020617_0%,_#0f172a_24%,_#111827_100%)]">
       <div className="mx-auto flex h-full w-full max-w-md flex-col overflow-hidden px-3 py-3">
         {!cargando && partido && !partidoFinalizado ? (
-          <header className="mb-3 flex h-12 items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/90 px-3 shadow-lg shadow-black/20">
+          <header className="mb-2 flex h-12 items-center justify-between gap-2 rounded-2xl border border-slate-800 bg-slate-950/90 px-3 shadow-lg shadow-black/20">
             <button
               className="inline-flex items-center gap-1 text-sm font-semibold text-slate-100 transition active:text-cyan-200"
               onClick={() => navigate('/juez')}
@@ -117,7 +117,7 @@ export function PaginaPartidoActivo() {
               <ArrowLeft className="h-4 w-4" />
               Volver
             </button>
-            <p className="rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-amber-200">
+            <p className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">
               {partido.etiqueta_ronda} P#{partido.orden}
             </p>
             <div className="w-[72px]" />

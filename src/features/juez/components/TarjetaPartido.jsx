@@ -269,7 +269,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950/95 px-4 pb-4 pt-3 shadow-2xl shadow-black/30">
-      <div className="flex h-14 items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="flex h-14 items-center justify-between gap-2 border-b border-slate-800 pb-2">
         <div className="min-w-0 flex-1 text-left">
           <p className="truncate text-lg font-bold text-blue-100">{nombreEquipoA}</p>
           <p className="text-xs font-semibold uppercase tracking-widest text-blue-300">Azul</p>
@@ -283,8 +283,8 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 py-3">
-        <section className="flex max-h-32 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 px-3 py-3 text-center">
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 py-2.5">
+        <section className="flex h-32 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 px-3 py-2 text-center">
           <p className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-200">
             {tituloTimer}
           </p>
@@ -296,7 +296,7 @@ export function TarjetaPartido({ alGuardarResultado, guardando, partido }) {
               Reparacion: {reparacion.nombreEquipo} · {formatearTiempo(reparacion.segundos)}
             </p>
           ) : null}
-          <div className="mt-3 flex w-full items-center justify-center gap-2">
+          <div className="mt-2 flex w-full items-center justify-center gap-2">
             {timer.estado === estadosTimer.listo ? (
               <BotonAccion
                 clase="w-full bg-cyan-500 text-slate-950 active:bg-cyan-400"
