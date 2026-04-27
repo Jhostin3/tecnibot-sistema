@@ -199,15 +199,21 @@ export function PaginaBracketCompleto() {
         ) : null}
 
         {!bracket.cargando && !bracket.mensaje ? (
-          <div className="flex min-w-[1120px] gap-16 overflow-visible pb-6 sm:min-w-max">
-            {rondas.map((ronda) => (
-              <ColumnaRonda
-                key={ronda.ronda}
-                partidos={ronda.partidos}
-                titulo={ronda.titulo}
-              />
-            ))}
-          </div>
+          rondas.length ? (
+            <div className="flex min-w-[1120px] gap-16 overflow-visible pb-6 sm:min-w-max">
+              {rondas.map((ronda) => (
+                <ColumnaRonda
+                  key={ronda.ronda}
+                  partidos={ronda.partidos}
+                  titulo={ronda.titulo}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">
+              Aun no se ha generado el bracket para esta subcategoria.
+            </div>
+          )
         ) : null}
       </main>
     </section>

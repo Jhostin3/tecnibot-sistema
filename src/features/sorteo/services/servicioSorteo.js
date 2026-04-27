@@ -350,15 +350,29 @@ function adjuntarDatosBracket(enfrentamientos, equiposPorId, resultadosPorId, bo
 
 export async function listarBracketPorSubcategoria(subcategoriaId) {
   try {
-    const [respuestaEnfrentamientos, sorteo] = await Promise.all([
-      supabase
+    let respuestaEnfrentamientos = await supabase
+      .from('enfrentamientos')
+      .select(seleccionEnfrentamientos)
+      .eq('subcategoria_id', subcategoriaId)
+      .order('orden', { ascending: true })
+      .limit(500)
+
+    const sorteo = await obtenerSorteoPorSubcategoria(subcategoriaId)
+
+    if (respuestaEnfrentamientos.error) {
+      throw new Error('No se pudo cargar la llave del torneo.')
+    }
+
+    if (!respuestaEnfrentamientos.data?.length && sorteo.length) {
+      await generarEnfrentamientosPresencialesSiCompleto(subcategoriaId)
+
+      respuestaEnfrentamientos = await supabase
         .from('enfrentamientos')
         .select(seleccionEnfrentamientos)
         .eq('subcategoria_id', subcategoriaId)
         .order('orden', { ascending: true })
-        .limit(500),
-      obtenerSorteoPorSubcategoria(subcategoriaId),
-    ])
+        .limit(500)
+    }
 
     if (respuestaEnfrentamientos.error) {
       throw new Error('No se pudo cargar la llave del torneo.')
@@ -694,20 +708,20 @@ async function generarEnfrentamientosPresencialesSiCompleto(subcategoriaId) {
 
   if (enfrentamientosActuales.length) return
 
-  const todosAprobados =
-    equiposSubcategoria.length > 0 &&
-    equiposSubcategoria.every((equipo) => equipo.estado_homologacion === 'aprobado')
+  const equiposAprobados = equiposSubcategoria.filter(
+    (equipo) => equipo.estado_homologacion === 'aprobado',
+  )
 
-  if (!todosAprobados) return
+  if (equiposAprobados.length === 0) return
 
   const bolasPorEquipo = new Map(
     sorteoActual.map((asignacion) => [asignacion.equipo_id, asignacion]),
   )
-  const todosConBola = equiposSubcategoria.every((equipo) => bolasPorEquipo.has(equipo.id))
+  const todosConBola = equiposAprobados.every((equipo) => bolasPorEquipo.has(equipo.id))
 
   if (!todosConBola) return
 
-  const asignaciones = equiposSubcategoria
+  const asignaciones = equiposAprobados
     .map((equipo) => bolasPorEquipo.get(equipo.id))
     .sort((a, b) => Number(a.numero_bola) - Number(b.numero_bola))
     .map((asignacion) => ({
