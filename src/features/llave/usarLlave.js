@@ -190,8 +190,15 @@ export function useLlave() {
       refrescarEstadosSubcategorias()
     }, INTERVALO_REFRESCO_LLAVE)
 
+    const recargarBracket = () => {
+      if (!componenteActivo || !subcategoriaSeleccionada) return
+
+      cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
+      refrescarEstadosSubcategorias()
+    }
+
     const canal = supabase
-      .channel(`tecnibot-enfrentamientos-${subcategoriaSeleccionada || 'general'}`)
+      .channel(`bracket-${subcategoriaSeleccionada || 'general'}`)
       .on(
         'postgres_changes',
         {
@@ -201,28 +208,7 @@ export function useLlave() {
           filter: `subcategoria_id=eq.${subcategoriaSeleccionada}`,
         },
         () => {
-          if (!componenteActivo) return
-
-          if (subcategoriaSeleccionada) {
-            cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
-          }
-
-          refrescarEstadosSubcategorias()
-        },
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'resultados',
-        },
-        () => {
-          if (!componenteActivo) return
-
-          if (subcategoriaSeleccionada) {
-            cargarLlave(subcategoriaSeleccionada, { mostrarCarga: false })
-          }
+          recargarBracket()
         },
       )
       .subscribe((estadoCanal) => {
